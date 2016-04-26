@@ -11,7 +11,7 @@ subroutine fmain () bind(c)
   integer :: n_cell, max_grid_size, nsteps, plot_int
   integer, parameter :: ncomp = 1, nghost = 1  ! one component, one ghost
   integer :: istep
-  double precision :: dt, time
+  real(double) :: dt, time
   type(ParmParse) :: pp
   type(Box) :: domain
   type(BoxArray) :: bs
@@ -23,8 +23,8 @@ subroutine fmain () bind(c)
   ! "query" means it may not may not be in the inputs file
   call parmparse_build(pp)
 
-  call pp%get("n_cell", n_cell);  ! # of cells in each dimension
-  call pp%get("nsteps", nsteps) ! # of steps
+  call pp%get("n_cell", n_cell)  ! # of cells in each dimension
+  call pp%get("nsteps", nsteps)  ! # of steps
 
   max_grid_size = 32   ! default max grid size
   call pp%query("max_grid_size", max_grid_size);

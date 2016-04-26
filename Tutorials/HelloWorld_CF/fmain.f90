@@ -8,12 +8,12 @@ subroutine fmain () bind(c)
   integer, parameter :: ncell=64, sz=32
 
   integer :: lo(3), hi(3), i, j, k
-  double precision :: rmin, rmax, rnm0, rnm1, rnm2
+  real(double)   :: rmin, rmax, rnm0, rnm1, rnm2
   type(Box)      :: domain, bx
   type(BoxArray) :: ba
   type(MultiFab) :: mf
   type(MFIter)   :: mfi
-  double precision, pointer, dimension(:,:,:,:) :: p
+  real(double), pointer, dimension(:,:,:,:) :: p
 
   ! define the lower and upper corner of a 3D domain
   lo = 0

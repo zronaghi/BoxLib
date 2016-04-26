@@ -1,6 +1,7 @@
 
 module boxlib_module
 
+  use bl_types_module
   use bl_space_module
   use box_module
   use boxarray_module

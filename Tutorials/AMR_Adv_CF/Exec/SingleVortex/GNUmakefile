@@ -11,7 +11,7 @@ TINY_PROFILE = FALSE
 COMP      = g++
 FCOMP     = gfortran
 
-DIM       = 3
+DIM       = 2
 
 Bpack   := ./Make.package 
 Blocs   := . 

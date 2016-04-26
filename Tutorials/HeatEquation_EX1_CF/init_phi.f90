@@ -20,7 +20,10 @@ contains
     integer :: lo(4), hi(4)
     type(Box) :: bx
     type(mfiter) :: mfi
-    double precision, pointer :: p(:,:,:,:)
+    real(double), pointer :: p(:,:,:,:)
+    real(double) :: problo(bl_num_dims)
+
+    problo = geometry_get_prob_lo()
 
     !$omp parallel private(bx,p,lo,hi)
     call mfiter_build(mfi, phi, tiling=.true.)
@@ -32,10 +35,10 @@ contains
        select case (bl_num_dims)
        case (2)
           call init_phi_2d(bx%lo(1:2), bx%hi(1:2), p(:,:,1,1), lo(1:2), hi(1:2), &
-               geom%problo(1:2), geom%dx(1:2))
+               problo, geom%dx(1:2))
        case (3)
           call init_phi_3d(bx%lo, bx%hi, p(:,:,:,1), lo(1:3), hi(1:3), &
-               geom%problo, geom%dx)
+               problo, geom%dx)
        end select
     end do
     !$omp end parallel
@@ -44,13 +47,13 @@ contains
 
   subroutine init_phi_2d(lo, hi, phi, dlo, dhi, prob_lo, dx)
     integer          :: lo(2), hi(2), dlo(2), dhi(2)
-    double precision :: phi(dlo(1):dhi(1),dlo(2):dhi(2))
-    double precision :: prob_lo(2)
-    double precision :: dx(2)
+    real(double) :: phi(dlo(1):dhi(1),dlo(2):dhi(2))
+    real(double) :: prob_lo(2)
+    real(double) :: dx(2)
  
     ! local varables
     integer          :: i,j
-    double precision :: x,y,r2
+    real(double) :: x,y,r2
 
     do j=lo(2),hi(2)
        y = prob_lo(2) + (dble(j)+0.5d0) * dx(2)
@@ -67,13 +70,13 @@ contains
 
   subroutine init_phi_3d(lo, hi, phi, dlo, dhi, prob_lo, dx)
     integer          :: lo(3), hi(3), dlo(3), dhi(3)
-    double precision :: phi(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
-    double precision :: prob_lo(3)
-    double precision :: dx(3)
+    real(double) :: phi(dlo(1):dhi(1),dlo(2):dhi(2),dlo(3):dhi(3))
+    real(double) :: prob_lo(3)
+    real(double) :: dx(3)
 
     ! local varables
     integer          :: i,j,k
-    double precision :: x,y,z,r2
+    real(double) :: x,y,z,r2
 
     do k=lo(3),hi(3)
        z = prob_lo(3) + (dble(k)+0.5d0) * dx(3)

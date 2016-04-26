@@ -14,13 +14,13 @@ contains
   subroutine advance (old_phi, new_phi, geom, dt)
     type(multifab) :: old_phi, new_phi
     type(geometry) :: geom
-    double precision :: dt
+    real(double) :: dt
 
     integer :: plo(4), phi(4)
-    double precision :: dx
+    real(double) :: dx
     type(box) :: bx
     type(mfiter) :: mfi
-    double precision, dimension(:,:,:,:), pointer :: po, pn
+    real(double), dimension(:,:,:,:), pointer :: po, pn
 
     ! For simplicity, we assume dx(1) == dx(2) == dx(3)
     dx = geom%dx(1)
@@ -54,14 +54,14 @@ contains
 
   subroutine update_phi_2d (lo, hi, pold, pnew, plo, phi, dx, dt)
     integer, intent(in) :: lo(2), hi(2), plo(2), phi(2)
-    double precision, intent(in   ) :: pold(plo(1):phi(1), plo(2):phi(2))
-    double precision, intent(inout) :: pnew(plo(1):phi(1), plo(2):phi(2))
-    double precision, intent(in) :: dx, dt
+    real(double), intent(in   ) :: pold(plo(1):phi(1), plo(2):phi(2))
+    real(double), intent(inout) :: pnew(plo(1):phi(1), plo(2):phi(2))
+    real(double), intent(in) :: dx, dt
 
     integer :: i,j
-    double precision :: dxinv, dtdx
-    double precision :: fx(lo(1):hi(1)+1,lo(2):hi(2)  )
-    double precision :: fy(lo(1):hi(1)  ,lo(2):hi(2)+1)
+    real(double) :: dxinv, dtdx
+    real(double) :: fx(lo(1):hi(1)+1,lo(2):hi(2)  )
+    real(double) :: fy(lo(1):hi(1)  ,lo(2):hi(2)+1)
     
     dxinv = 1.d0/dx
     dtdx = dt*dxinv
@@ -94,15 +94,15 @@ contains
 
   subroutine update_phi_3d (lo, hi, pold, pnew, plo, phi, dx, dt)
     integer, intent(in) :: lo(3), hi(3), plo(3), phi(3)
-    double precision, intent(in   ) :: pold(plo(1):phi(1), plo(2):phi(2), plo(3):phi(3))
-    double precision, intent(inout) :: pnew(plo(1):phi(1), plo(2):phi(2), plo(3):phi(3))
-    double precision, intent(in) :: dx, dt
+    real(double), intent(in   ) :: pold(plo(1):phi(1), plo(2):phi(2), plo(3):phi(3))
+    real(double), intent(inout) :: pnew(plo(1):phi(1), plo(2):phi(2), plo(3):phi(3))
+    real(double), intent(in) :: dx, dt
 
     integer :: i,j,k
-    double precision :: dxinv, dtdx
-    double precision :: fx(lo(1):hi(1)+1,lo(2):hi(2)  ,lo(3):hi(3))
-    double precision :: fy(lo(1):hi(1)  ,lo(2):hi(2)+1,lo(3):hi(3))
-    double precision :: fz(lo(1):hi(1)  ,lo(2):hi(2)  ,lo(3):hi(3)+1)
+    real(double) :: dxinv, dtdx
+    real(double) :: fx(lo(1):hi(1)+1,lo(2):hi(2)  ,lo(3):hi(3))
+    real(double) :: fy(lo(1):hi(1)  ,lo(2):hi(2)+1,lo(3):hi(3))
+    real(double) :: fz(lo(1):hi(1)  ,lo(2):hi(2)  ,lo(3):hi(3)+1)
     
     dxinv = 1.d0/dx
     dtdx = dt*dxinv

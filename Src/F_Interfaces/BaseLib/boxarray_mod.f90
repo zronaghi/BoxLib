@@ -9,9 +9,10 @@ module boxarray_module
 
   private
 
-  public :: boxarray_build
+  public :: boxarray_build, boxarray_destroy
 
   type, public :: BoxArray
+     integer     :: i = 0
      logical     :: owner = .false.
      type(c_ptr) :: p = c_null_ptr
    contains
@@ -59,15 +60,15 @@ contains
     call fi_new_boxarray(ba%p, bx%lo, bx%hi)
   end subroutine boxarray_build_bx
 
-  subroutine boxarray_destroy (this)
-    type(BoxArray) :: this
+  impure elemental subroutine boxarray_destroy (this)
+    type(BoxArray), intent(inout) :: this
     if (this%owner) then
-       this%owner = .false.
        if (c_associated(this%p)) then
           call fi_delete_boxarray(this%p)
-          this%p = c_null_ptr
        end if
     end if
+    this%owner = .false.
+    this%p = c_null_ptr
   end subroutine boxarray_destroy
 
   subroutine boxarray_assign (dst, src)

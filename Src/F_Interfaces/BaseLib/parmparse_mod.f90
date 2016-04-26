@@ -2,6 +2,7 @@
 module parmparse_module
 
   use iso_c_binding
+  use bl_types_module
   use string_module
 
   implicit none
@@ -14,11 +15,13 @@ module parmparse_module
      type(c_ptr) :: p = c_null_ptr
    contains
      generic :: get      => get_int, get_double, get_logical !, get_string
-!     generic :: getarr   =>
+     generic :: getarr   => getarr_int, getarr_double
      generic :: query    => query_int, query_double, query_logical  !, query_string
-!     generic :: queryarr =>
+     generic :: queryarr => queryarr_int, queryarr_double
      procedure, private :: get_int, get_double, get_logical
+     procedure, private :: getarr_int, getarr_double
      procedure, private :: query_int, query_double, query_logical
+     procedure, private :: queryarr_int, queryarr_double
      final :: parmparse_destroy
   end type ParmParse
 
@@ -62,6 +65,24 @@ module parmparse_module
        integer(c_int) :: v
      end subroutine fi_parmparse_get_bool
 
+     subroutine fi_parmparse_getarr_int (pp, name, v, n) bind(c)
+       use iso_c_binding
+       implicit none
+       type(c_ptr), value :: pp
+       character(c_char), intent(in) :: name(*)
+       integer(c_int), value :: n
+       integer(c_int) :: v(*)
+     end subroutine fi_parmparse_getarr_int
+
+     subroutine fi_parmparse_getarr_double (pp, name, v, n) bind(c)
+       use iso_c_binding
+       implicit none
+       type(c_ptr), value :: pp
+       character(c_char), intent(in) :: name(*)
+       integer(c_int), value :: n
+       real(c_double) :: v(*)
+     end subroutine fi_parmparse_getarr_double
+
      subroutine fi_parmparse_query_int (pp, name, v) bind(c)
        use iso_c_binding
        implicit none
@@ -85,6 +106,24 @@ module parmparse_module
        character(c_char), intent(in) :: name(*)
        integer(c_int) :: v
      end subroutine fi_parmparse_query_bool
+
+     subroutine fi_parmparse_queryarr_int (pp, name, v, n) bind(c)
+       use iso_c_binding
+       implicit none
+       type(c_ptr), value :: pp
+       character(c_char), intent(in) :: name(*)
+       integer(c_int), value :: n
+       integer(c_int) :: v(*)
+     end subroutine fi_parmparse_queryarr_int
+
+     subroutine fi_parmparse_queryarr_double (pp, name, v, n) bind(c)
+       use iso_c_binding
+       implicit none
+       type(c_ptr), value :: pp
+       character(c_char), intent(in) :: name(*)
+       integer(c_int), value :: n
+       real(c_double) :: v(*)
+     end subroutine fi_parmparse_queryarr_double
   end interface
 
 contains
@@ -117,7 +156,7 @@ contains
   subroutine get_double (this, name, v)
     class(ParmParse), intent(in) :: this
     character(*), intent(in) :: name
-    double precision :: v
+    real(double) :: v
     call fi_parmparse_get_double (this%p, string_f_to_c(name), v)
   end subroutine get_double
 
@@ -130,6 +169,22 @@ contains
     v = i.eq.1
   end subroutine get_logical
 
+  subroutine getarr_int (this, name, v, n)
+    class(ParmParse), intent(in) :: this
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: n
+    integer, intent(inout) :: v(n)
+    call fi_parmparse_getarr_int (this%p, string_f_to_c(name), v, n)
+  end subroutine getarr_int
+
+  subroutine getarr_double (this, name, v, n)
+    class(ParmParse), intent(in) :: this
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: n
+    real(double), intent(inout) :: v(n)
+    call fi_parmparse_getarr_double (this%p, string_f_to_c(name), v, n)
+  end subroutine getarr_double
+
   subroutine query_int (this, name, v)
     class(ParmParse), intent(in) :: this
     character(len=*), intent(in) :: name
@@ -140,7 +195,7 @@ contains
   subroutine query_double (this, name, v)
     class(ParmParse), intent(in) :: this
     character(*), intent(in) :: name
-    double precision :: v
+    real(double) :: v
     call fi_parmparse_query_double (this%p, string_f_to_c(name), v)
   end subroutine query_double
 
@@ -152,5 +207,21 @@ contains
     call fi_parmparse_query_bool (this%p, string_f_to_c(name), i)
     v = i.eq.1
   end subroutine query_logical
+
+  subroutine queryarr_int (this, name, v, n)
+    class(ParmParse), intent(in) :: this
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: n
+    integer, intent(inout) :: v(n)
+    call fi_parmparse_queryarr_int (this%p, string_f_to_c(name), v, n)
+  end subroutine queryarr_int
+
+  subroutine queryarr_double (this, name, v, n)
+    class(ParmParse), intent(in) :: this
+    character(len=*), intent(in) :: name
+    integer, intent(in) :: n
+    real(double), intent(inout) :: v(n)
+    call fi_parmparse_queryarr_double (this%p, string_f_to_c(name), v, n)
+  end subroutine queryarr_double
 
 end module parmparse_module

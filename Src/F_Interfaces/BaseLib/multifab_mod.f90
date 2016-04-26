@@ -2,7 +2,8 @@
 module multifab_module
 
   use iso_c_binding
-  use bl_space_module, only : ndims => bl_num_dims
+  use bl_types_module
+  use bl_space_module, only : bl_num_dims
   use box_module
   use boxarray_module
   use geometry_module
@@ -17,7 +18,7 @@ module multifab_module
   type, public   :: MultiFab
      integer(c_int) :: nc  =  0
      integer(c_int) :: ng  =  0
-     type(BoxArray) :: ba
+     type(BoxArray) :: ba  =  BoxArray()
      type   (c_ptr) :: p   =  c_null_ptr
    contains
      procedure :: ncomp         => multifab_ncomp
@@ -164,22 +165,24 @@ contains
     type(BoxArray), intent(in ) :: ba
     integer, intent(in) :: nc, ng
     logical, intent(in), optional :: nodal(:)
-    integer :: lnodal(3)
+    integer :: lnodal(3), i
     mf%nc = nc
     mf%ng = ng
     lnodal = 0 
     if (present(nodal)) then
-       where (nodal .eqv. .true.) lnodal = 1
+       do i = 1, bl_num_dims
+          if (nodal(i)) lnodal(i) = 1
+       end do
     end if
     call fi_new_multifab(mf%p, mf%ba%p, ba%p, mf%nc, mf%ng, lnodal)
   end subroutine multifab_build
 
-  subroutine multifab_destroy (this)
-    type(MultiFab) :: this
+  impure elemental subroutine multifab_destroy (this)
+    type(MultiFab), intent(inout) :: this
     if (c_associated(this%p)) then
        call fi_delete_multifab(this%p)
-       this%p = c_null_ptr
     end if
+    this%p = c_null_ptr
   end subroutine multifab_destroy
 
   subroutine multifab_swap(mf1, mf2)
@@ -192,10 +195,11 @@ contains
     batmp= mf1%ba;  mf1%ba = mf2%ba;  mf2%ba = batmp
     ptmp = mf1%p;   mf1%p  = mf2%p;   mf2%p  = ptmp
     ! the code below causes internal compiler error for gfortran 5.2
-    ! tmp = mf1
-    ! mf1 = mf2
-    ! mf2 = tmp
-    ! tmp%p = c_null_ptr
+    !type(MultiFab) :: tmp
+    !tmp = mf1
+    !mf1 = mf2
+    !mf2 = tmp
+    !tmp%p = c_null_ptr
   end subroutine multifab_swap
 
   pure integer function multifab_ncomp (this)
@@ -211,9 +215,9 @@ contains
   function multifab_dataPtr (this, mfi) result(dp)
     class(MultiFab) :: this
     type(MFIter), intent(in) :: mfi
-    double precision, pointer, dimension(:,:,:,:) :: dp
+    real(double), pointer, dimension(:,:,:,:) :: dp
     type(c_ptr) :: cp
-    double precision, pointer :: fp(:,:,:,:)
+    real(double), pointer :: fp(:,:,:,:)
     integer(c_int) :: lo(3), hi(3), n(4)
     lo = 1;  hi = 1
     call fi_multifab_dataptr(this%p, mfi%p, cp, lo, hi)
@@ -227,7 +231,7 @@ contains
     class(MultiFab), intent(in) :: this
     integer(c_int), intent(in) :: comp
     integer(c_int), intent(in), optional :: nghost
-    double precision :: r
+    real(double) :: r
     if (present(nghost)) then
        r = fi_multifab_min(this%p, comp-1, nghost)
     else
@@ -239,7 +243,7 @@ contains
     class(MultiFab), intent(in) :: this
     integer(c_int), intent(in) :: comp
     integer(c_int), intent(in), optional :: nghost
-    double precision :: r
+    real(double) :: r
     if (present(nghost)) then
        r = fi_multifab_max(this%p, comp-1, nghost)
     else
@@ -250,7 +254,7 @@ contains
   function multifab_norm0 (this, comp) result(r)
     class(MultiFab), intent(in) :: this
     integer(c_int), intent(in), optional :: comp
-    double precision :: r
+    real(double) :: r
     if (present(comp)) then
        r = fi_multifab_norm0(this%p, comp-1)
     else
@@ -261,7 +265,7 @@ contains
   function multifab_norm1 (this, comp) result(r)
     class(MultiFab), intent(in) :: this
     integer(c_int), intent(in), optional :: comp
-    double precision :: r
+    real(double) :: r
     if (present(comp)) then
        r = fi_multifab_norm1(this%p, comp-1)
     else
@@ -272,7 +276,7 @@ contains
   function multifab_norm2 (this, comp) result(r)
     class(MultiFab), intent(in) :: this
     integer(c_int), intent(in), optional :: comp
-    double precision :: r
+    real(double) :: r
     if (present(comp)) then
        r = fi_multifab_norm2(this%p, comp-1)
     else
@@ -332,8 +336,8 @@ contains
     this%counter = -1
     if (c_associated(this%p)) then
        call fi_delete_mfiter(this%p)
-       this%p = c_null_ptr
     end if
+    this%p = c_null_ptr
   end subroutine mfiter_clear
 
   logical function mfiter_next (this)

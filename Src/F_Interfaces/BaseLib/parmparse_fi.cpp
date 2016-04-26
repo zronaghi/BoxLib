@@ -30,6 +30,22 @@ extern "C"
 	*v = b;
     }
 
+    void fi_parmparse_getarr_int (ParmParse* pp, const char* name, int* v, int n)
+    {
+	std::vector<int> lv(n);
+	pp->getarr(name, lv);
+	for (int i = 0; i < n; ++i)
+	    v[i] = lv[i];
+    }
+
+    void fi_parmparse_getarr_double (ParmParse* pp, const char* name, double* v, int n)
+    {
+	std::vector<double> lv(n);
+	pp->getarr(name, lv);
+	for (int i = 0; i < n; ++i)
+	    v[i] = lv[i];
+    }
+
     void fi_parmparse_query_int (ParmParse* pp, const char* name, int* v)
     {
 	pp->query(name, *v);
@@ -45,5 +61,25 @@ extern "C"
 	bool b = *v;
 	pp->query(name, b);
 	*v = b;
+    }
+
+    void fi_parmparse_queryarr_int (ParmParse* pp, const char* name, int* v, int n)
+    {
+	std::vector<int> lv(n);
+	for (int i = 0; i < n; ++i)
+	    lv[i] = v[i];
+	pp->queryarr(name, lv);
+	for (int i = 0; i < n; ++i)
+	    v[i] = lv[i];
+    }
+
+    void fi_parmparse_queryarr_double (ParmParse* pp, const char* name, double* v, int n)
+    {
+	std::vector<double> lv(n);
+	for (int i = 0; i < n; ++i)
+	    lv[i] = v[i];
+	pp->queryarr(name, lv);
+	for (int i = 0; i < n; ++i)
+	    v[i] = lv[i];
     }
 }
