@@ -25,7 +25,7 @@ contains
 
     problo = geometry_get_prob_lo()
 
-    !$omp parallel private(bx,p,lo,hi)
+    !$omp parallel private(bx,p,lo,hi,mfi)
     call mfiter_build(mfi, phi, tiling=.true.)
     do while(mfi%next())
        bx = mfi%tilebox()

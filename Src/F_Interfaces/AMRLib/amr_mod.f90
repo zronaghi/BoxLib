@@ -8,13 +8,14 @@ module amr_module
 
   private
 
-  public :: amr_parm_init, amr_init, amr_finalize, amr_level_type_init
+  public :: amr_parm_init, amr_init, amr_finalize, amr_level_type_init, amr_get_geometry, &
+       amr_get_level
 
   type amrlevel_ptr
      class(amrlevel), pointer :: p =>null()
   end type amrlevel_ptr
 
-  type(geometry), allocatable :: geoms(:)
+  type(geometry), allocatable, target :: geoms(:)
   type(amrlevel_ptr), allocatable :: amrlevels(:)
 
   ! These will become runtime parameters
@@ -65,9 +66,12 @@ contains
 
     allocate(geoms(0:max_level))
 
+    domain = Box((/0,0,0/), n_cell-1)
     do i = 0, max_level
-       ! domain.refine()
        call geometry_build(geoms(i), domain)
+       if (i < max_level) then
+          call domain%refine(ref_ratio(i))
+       end if
     end do
 
     allocate(amrlevels(0:max_level))
@@ -80,11 +84,25 @@ contains
     ! build level 0 data
     call amrlevel_builder%amrlevel_build(amrlevels(0)%p, ba0, level=0)
 
+    call amrlevels(0)%p%amrlevel_init_data()
+
   end subroutine amr_init
 
   subroutine amr_finalize ()
     print *, "TODO: need to deallocate resources in amr_finalize()"
   end subroutine amr_finalize
+
+  subroutine amr_get_geometry(geom, level)
+    type(geometry), pointer, intent(inout) :: geom
+    integer, intent(in) :: level
+    geom => geoms(level)
+  end subroutine amr_get_geometry
+
+  subroutine amr_get_level(a_level, level)
+    class(amrlevel), pointer, intent(inout) :: a_level
+    integer, intent(in) :: level
+    a_level => amrlevels(level)%p
+  end subroutine amr_get_level
 
 end module amr_module
 

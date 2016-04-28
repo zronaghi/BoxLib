@@ -12,8 +12,6 @@ subroutine fmain () bind(c)
 
   call amrlevel_init()
 
-  print *, '******** after amrlevel_init()'
-
   call amr_init()
 
 !  call advance()

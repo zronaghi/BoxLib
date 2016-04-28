@@ -2,7 +2,6 @@
 module adv_amrlevel_module
 
   use boxlib_module
-  use amr_module
   use amrlevel_module
 
   implicit none
@@ -20,6 +19,7 @@ module adv_amrlevel_module
      type(multifab), allocatable :: velocity(:)
    contains
      procedure, nopass :: amrlevel_build
+     procedure         :: amrlevel_init_data
      final :: adv_amrlevel_destroy
   end type adv_amrlevel
 
@@ -31,6 +31,7 @@ contains
 
   ! We need to let amr_moudle know out extended amrlevel type
   subroutine amrlevel_init ()
+    use amr_module, only : amr_level_type_init
     type(adv_amrlevel) :: a_level
     call amr_level_type_init(a_level)
   end subroutine amrlevel_init
@@ -64,5 +65,17 @@ contains
     end do
 
   end subroutine amrlevel_build
+
+  ! initialize data from scratch
+  subroutine amrlevel_init_data(this)
+    use amr_module, only : amr_get_geometry
+    use init_phi_module, only : init_phi_on_level
+    implicit none
+    class(adv_amrlevel), intent(inout) :: this
+    type(geometry), pointer :: geom
+    real(double) :: prob_lo(bl_num_dims)
+    call amr_get_geometry(geom, this%level)
+    call init_phi_on_level(this%phi_new, geom)
+  end subroutine amrlevel_init_data
 
 end module adv_amrlevel_module

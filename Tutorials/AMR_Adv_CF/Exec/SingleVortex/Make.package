@@ -1,1 +1,2 @@
-f90EXE_sources += Prob.f90
+f90EXE_sources += init_phi.f90
+

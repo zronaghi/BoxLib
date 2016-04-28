@@ -14,6 +14,7 @@ module amrlevel_module
    contains
      procedure :: amrlevel_ctor
      procedure(levelbuild), nopass, deferred :: amrlevel_build
+     procedure(initdata)  ,         deferred :: amrlevel_init_data
   end type amrlevel
 
   abstract interface
@@ -25,6 +26,12 @@ module amrlevel_module
        type(boxarray), intent(in) :: ba
        integer, intent(in) :: level
      end subroutine levelbuild
+
+     subroutine initdata(this)
+       import amrlevel
+       implicit none
+       class(amrlevel), intent(inout) :: this
+     end subroutine initdata
   end interface
 
 contains
