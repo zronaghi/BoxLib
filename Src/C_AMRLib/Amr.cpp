@@ -655,6 +655,8 @@ Amr::InitAmr (int max_level_in, Array<int> n_cell_in)
     rebalance_grids = 0;
     pp.query("rebalance_grids", rebalance_grids);
 
+    amr_regrid = new AmrRegrid(max_level, max_grid_size, blocking_factor, geom);
+
 #ifdef USE_PARTICLES
     m_gdb = new AmrParGDB(this);
 #endif
@@ -788,6 +790,8 @@ Amr::~Amr ()
 #ifdef USE_PARTICLES
     delete m_gdb;
 #endif
+
+    delete amr_regrid;
 
     Amr::Finalize();
 }
@@ -2369,7 +2373,7 @@ Amr::regrid (int  lbase,
     Array<BoxArray> new_grid_places(max_level+1);
 
     if (lbase <= std::min(finest_level,max_level-1))
-      grid_places(lbase,time,new_finest, new_grid_places);
+	grid_places(time, lbase, finest_level, new_finest, new_grid_places);
 
     bool regrid_level_zero =
         (lbase == 0 && new_grid_places[0] != amr_level[0].boxArray()) && (!initial);
@@ -2788,8 +2792,9 @@ Amr::ProjPeriodic (BoxList&        blout,
 }
 
 void
-Amr::grid_places (int              lbase,
-                  Real             time,
+Amr::grid_places (Real             time,
+		  int              lbase,
+		  int              finest_level,
                   int&             new_finest,
                   Array<BoxArray>& new_grids)
 {
@@ -3233,7 +3238,7 @@ Amr::bldFineLevels (Real strt_time)
     {
         int new_finest;
 
-        grid_places(finest_level,strt_time,new_finest,grids);
+        grid_places(strt_time,finest_level,finest_level,new_finest,grids);
 
         if (new_finest <= finest_level) break;
         //

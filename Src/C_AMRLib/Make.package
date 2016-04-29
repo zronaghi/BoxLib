@@ -4,13 +4,13 @@ ifeq ($(LBASE),amr)
   AMRLIB_BASE=LIB
 endif
 
-C$(AMRLIB_BASE)_sources += Amr.cpp AmrLevel.cpp Cluster.cpp \
+C$(AMRLIB_BASE)_sources += Amr.cpp AmrLevel.cpp AmrRegrid.cpp Cluster.cpp \
                 Derive.cpp ErrorList.cpp FluxRegister.cpp \
                 Interpolater.cpp StateData.cpp \
                 StateDescriptor.cpp TagBox.cpp \
                 AuxBoundaryData.cpp FillPatchUtil.cpp
 
-C$(AMRLIB_BASE)_headers += Amr.H AmrLevel.H \
+C$(AMRLIB_BASE)_headers += Amr.H AmrLevel.H AmrRegrid.H \
                 Cluster.H Derive.H ErrorList.H FluxRegister.H \
                 LevelBld.H Interpolater.H StateData.H \
                 StateDescriptor.H TagBox.H PROB_AMR_F.H \

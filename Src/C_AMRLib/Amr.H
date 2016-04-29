@@ -18,6 +18,8 @@
 #include <ParGDB.H>
 #endif
 
+#include <AmrRegrid.H>
+
 class AmrLevel;
 class LevelBld;
 class BoxDomain;
@@ -543,8 +545,9 @@ protected:
     //
     // Define new grid locations (called from regrid) and put into new_grids.
     //
-    void grid_places (int              lbase,
-                      Real             time,
+    void grid_places (Real             time,
+		      int              lbase,
+		      int              finest_level,
                       int&             new_finest,
                       Array<BoxArray>& new_grids);
 
@@ -653,6 +656,9 @@ protected:
     int              rebalance_grids;
 
     bool             bUserStopRequest;
+
+    AmrRegrid*       amr_regrid;
+
     //
     // The static data ...
     //
