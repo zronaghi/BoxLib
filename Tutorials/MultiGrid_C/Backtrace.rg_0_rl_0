@@ -1,0 +1,51 @@
+=== If no file names and line numbers are shown below, one can run
+            addr2line -Cfie my_exefile my_line_address
+    to convert `my_line_address` (e.g., 0x4a6b) into file name and line number.
+
+=== Please note that the line number reported by addr2line may not be accurate.
+    One can use
+            readelf -wl my_exefile | grep my_line_address'
+    to find out the offset for that line.
+
+ 0: [0x4eb3c7]
+    BLBackTrace::print_backtrace_info(_IO_FILE*)
+    /global/homes/z/zronagh/BoxLib/Brian-Thorsten/cpp_kernel_example/Tutorials/MultiGrid_C/../../Src/C_BaseLib/BLBackTrace.cpp:87
+
+ 1: [0x4ec0d9]
+    BLBackTrace::handler(int)
+    /global/homes/z/zronagh/BoxLib/Brian-Thorsten/cpp_kernel_example/Tutorials/MultiGrid_C/../../Src/C_BaseLib/BLBackTrace.cpp:49
+
+ 2: [0x43feb1]
+    MultiGrid::solve(MultiFab&, MultiFab const&, double, double, LinOp::BC_Mode)
+    /global/homes/z/zronagh/BoxLib/Brian-Thorsten/cpp_kernel_example/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:301
+
+ 3: [0x411c16]
+    std::_Vector_base<void*, std::allocator<void*> >::_Vector_impl::_Vector_impl(std::allocator<void*> const&)
+    /opt/gcc/6.2.0/snos/include/g++/bits/stl_vector.h:91
+    std::_Vector_base<void*, std::allocator<void*> >::_Vector_base(unsigned long, std::allocator<void*> const&)
+    /opt/gcc/6.2.0/snos/include/g++/bits/stl_vector.h:135
+    std::vector<void*, std::allocator<void*> >::vector(unsigned long, std::allocator<void*> const&)
+    /opt/gcc/6.2.0/snos/include/g++/bits/stl_vector.h:280
+    Array<void*>::Array(unsigned long)
+    /global/homes/z/zronagh/BoxLib/Brian-Thorsten/cpp_kernel_example/Tutorials/MultiGrid_C/../../Src/C_BaseLib/Array.H:23
+    PArray<MultiFab>::PArray(int, PArrayPolicy)
+    /global/homes/z/zronagh/BoxLib/Brian-Thorsten/cpp_kernel_example/Tutorials/MultiGrid_C/../../Src/C_BaseLib/PArray.H:213
+    solve_with_Cpp(MultiFab&, MultiFab&, double, double, MultiFab&, PArray<MultiFab>&, MultiFab&, BoxArray const&, Geometry const&)
+    /global/homes/z/zronagh/BoxLib/Brian-Thorsten/cpp_kernel_example/Tutorials/MultiGrid_C/main.cpp:709
+
+ 4: [0x412448]
+    solve(MultiFab&, MultiFab const&, MultiFab&, double, double, MultiFab&, PArray<MultiFab>&, MultiFab&, MultiFab&, BoxArray const&, Geometry const&, solver_t)
+    /global/homes/z/zronagh/BoxLib/Brian-Thorsten/cpp_kernel_example/Tutorials/MultiGrid_C/main.cpp:627
+
+ 5: [0x40b2c4]
+    main
+    /global/homes/z/zronagh/BoxLib/Brian-Thorsten/cpp_kernel_example/Tutorials/MultiGrid_C/main.cpp:309
+
+ 6: [0xa8aae0]
+    __libc_start_main
+    /home/abuild/rpmbuild/BUILD/glibc-2.19/csu/libc-start.c:319
+
+ 7: [0x40f2c7]
+    _start
+    /home/abuild/rpmbuild/BUILD/glibc-2.19/csu/../sysdeps/x86_64/start.S:125
+

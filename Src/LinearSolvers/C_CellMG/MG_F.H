@@ -69,6 +69,12 @@
 
 #include <ArrayLim.H>
 
+void C_AVERAGE(const Box* bx,
+        const int ng,
+        const int nc,
+        Real* c,
+        const Real* f);
+
 extern "C"
 {
     void FORT_AVERAGE (

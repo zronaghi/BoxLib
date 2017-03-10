@@ -770,17 +770,26 @@ MultiGrid::average (MultiFab&       c,
     for (MFIter cmfi(c,tiling); cmfi.isValid(); ++cmfi)
     {
         BL_ASSERT(c.boxArray().get(cmfi.index()) == cmfi.validbox());
-
+        const int 	 ng   = c.nGrow();
         const int        nc   = c.nComp();
         const Box&       bx   = cmfi.tilebox();
         FArrayBox&       cfab = c[cmfi];
         const FArrayBox& ffab = f[cmfi];
 
+#ifdef USE_CPP_KERNELS
+//#warn Using CPP kernels
+	C_AVERAGE(&bx,
+		  ng,    //ask brian
+		  nc,
+		  cfab.dataPtr(),
+		  ffab.dataPtr());
+#else
         FORT_AVERAGE(cfab.dataPtr(),
                      ARLIM(cfab.loVect()), ARLIM(cfab.hiVect()),
                      ffab.dataPtr(),
                      ARLIM(ffab.loVect()), ARLIM(ffab.hiVect()),
                      bx.loVect(), bx.hiVect(), &nc);
+#endif
     }
 }
 
