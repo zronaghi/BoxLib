@@ -86,7 +86,7 @@ VPATH_LOCATIONS += $(Fmlocs)
 FINCLUDE_LOCATIONS += $(Fmincs)
 
 #programs += faverage
-#programs += fcompare
+programs += fcompare
 programs += fextract
 #programs += fextrema
 #programs += fIDLdump

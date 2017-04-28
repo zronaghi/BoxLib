@@ -75,6 +75,12 @@ void C_AVERAGE(const Box* bx,
         Real* c,
         const Real* f);
 
+void C_INTERP(const Box* bx,
+        const int ng,
+        const int nc,
+        Real* f,
+        const Real* c);
+
 extern "C"
 {
     void FORT_AVERAGE (

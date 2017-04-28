@@ -27,10 +27,10 @@ DEBUG	= FALSE
 DIM	= 3
 #DIM	= 2
 
-COMP =gcc
-FCOMP =gfortran
-#COMP = Intel
-#FCOMP = Intel
+COMP = intel
+FCOMP = ifort
+#COMP = gnu
+#FCOMP = gfortran
 
 USE_HYPRE = FALSE
 USE_F90_SOLVERS = TRUE
@@ -46,7 +46,7 @@ HPGMG_BOTTOM_SOLVER= BICGSTAB
 HPGMG_SMOOTHER = GSRB
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
-CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA -DUSE_CPP_KERNELS
+CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA #-DUSE_CPP_KERNELS
 #CPPFLAGS += -DCG_USE_OLD_CONVERGENCE_CRITERIA
 
 # USE_MPI must be TRUE if USE_HYPRE
