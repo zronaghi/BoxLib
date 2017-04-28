@@ -81,6 +81,35 @@ void C_INTERP(const Box* bx,
         Real* f,
         const Real* c);
 
+#if (BL_SPACEDIM == 3)
+void C_GSRB_3D(const Box* bx,
+        const Box* bbx,
+        const int ng,
+        const int nc,
+        const int rb,
+        const Real alpha,
+        const Real beta,
+        Real* phi,
+        const Real* rhs,
+        const Real* a,
+        const Real* bX,
+        const Real* bY,
+        const Real* bZ,
+        const Real* f0,
+        const int* m0,
+        const Real* f1,
+        const int* m1,
+        const Real* f2,
+        const int* m2,
+        const Real* f3,
+        const int* m3,
+        const Real* f4,
+        const int* m4,
+        const Real* f5,
+        const int* m5,
+        const Real* h);
+#endif
+
 extern "C"
 {
     void FORT_AVERAGE (
