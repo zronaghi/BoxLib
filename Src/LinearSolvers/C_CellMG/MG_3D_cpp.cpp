@@ -4,7 +4,7 @@
 #include "CONSTANTS.H"
 #include "MG_F.H"
 #include <ArrayLim.H>
-
+#include <Kokkos_Core.hpp>
 //ask Brian CONSTANTS
 //MultiGrid.cpp
 
@@ -18,10 +18,10 @@ const Real* f){
 	//const Box* bx;
 	//Real *cp, *fp;
     
-	int i2, j2, k2;
-	int ijkn;
-	int i2p1_j2p1_k2_n, i2_j2p1_k2_n, i2p1_j2_k2_n, i2_j2_k2_n;
-	int i2p1_j2p1_k2p1_n, i2_j2p1_k2p1_n, i2p1_j2_k2p1_n, i2_j2_k2p1_n;     
+	//int i2, j2, k2;
+	//int ijkn;
+	//int i2p1_j2p1_k2_n, i2_j2p1_k2_n, i2p1_j2_k2_n, i2_j2_k2_n;
+	//int i2p1_j2p1_k2p1_n, i2_j2p1_k2p1_n, i2p1_j2_k2p1_n, i2_j2_k2p1_n;     
 
 	//const int ng;
 	//c-field offsets
@@ -37,16 +37,26 @@ const Real* f){
 	const int *hi = bx->hiVect();
 
 	//const int offset = 
-	int abs_i, abs_j, abs_k;
-
+	//int abs_i, abs_j, abs_k;
+	//typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Rank<3>> t_policy;	
+	typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,Kokkos::Experimental::Iterate::Right,Kokkos::Experimental::Iterate::Right>> t_policy;	
+	Kokkos::OpenMP::print_configuration(std::cout);
 	for (int n = 0; n<nc; n++){
-		for (int k = 0; k < bx->length(2); ++k) {
+		Kokkos::Experimental::md_parallel_for(t_policy({0,0,0},{bx->length(2),bx->length(1),bx->length(0)},{4,4,32}), 
+							  	KOKKOS_LAMBDA(const int &k, const int &j, const int &i){
+		//for (int k = 0; k < bx->length(2); ++k) {
+			int i2, j2, k2;
+			int ijkn;
+			int i2p1_j2p1_k2_n, i2_j2p1_k2_n, i2p1_j2_k2_n, i2_j2_k2_n;
+			int i2p1_j2p1_k2p1_n, i2_j2p1_k2p1_n, i2p1_j2_k2p1_n, i2_j2_k2p1_n;     
+			int abs_i, abs_j, abs_k;
+
 			k2 = 2*k;
 			//k2p1 = k2 + 1
-			for (int j = 0; j < bx->length(1); ++j) {
+			//for (int j = 0; j < bx->length(1); ++j) {
 				j2 = 2*j;
 				//j2p1 = j2 + 1
-				for (int i = 0; i < bx->length(0); ++i) {
+				//for (int i = 0; i < bx->length(0); ++i) {
 					i2 = 2*i;
 					//i2p1 = i2 + 1
 
@@ -68,9 +78,9 @@ const Real* f){
 
 					c[ijkn] =  (f[i2p1_j2p1_k2_n] + f[i2_j2p1_k2_n] + f[i2p1_j2_k2_n] + f[i2_j2_k2_n])*(0.125);
 					c[ijkn] += (f[i2p1_j2p1_k2p1_n] + f[i2_j2p1_k2p1_n] + f[i2p1_j2_k2p1_n] + f[i2_j2_k2p1_n])*(0.125);
-				}
-			}
-		}
+//				}
+//			}
+		});
 	}
 }
 
