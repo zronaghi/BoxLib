@@ -564,6 +564,9 @@ int             redBlackFlag)
 		&nc, h[level], &redBlackFlag);
 #endif
 #endif
+		//DEBUG
+		//exit(1);
+		//DEBUG
 	}
 }
 

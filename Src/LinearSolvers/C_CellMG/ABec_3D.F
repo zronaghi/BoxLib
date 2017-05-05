@@ -132,6 +132,13 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
                   cf5 = merge(f5(i,j,bhi(3)), 0.0D0,
      $                 (k .eq. bhi(3)) .and. (m5(i,j,bhi(3)+1).gt.0))
 
+                  cf0=0.d0
+                  cf1=0.d0
+                  cf2=0.d0
+                  cf3=0.d0
+                  cf4=0.d0
+                  cf5=0.d0
+
                   gamma = alpha*a(i,j,k)
      $                 +   dhx*(bX(i,j,k)+bX(i+1,j,k))
      $                 +   dhy*(bY(i,j,k)+bY(i,j+1,k))
@@ -142,7 +149,7 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
      $                 +  dhy*(bY(i,j,k)*cf1 + bY(i,j+1,k)*cf4)
      $                 +  dhz*(bZ(i,j,k)*cf2 + bZ(i,j,k+1)*cf5))
 
-                  rho =  dhx*( bX(i  ,j,k)*phi(i-1,j,k,n)
+                  rho = dhx*(  bX(i  ,j,k)*phi(i-1,j,k,n)
      $                 +       bX(i+1,j,k)*phi(i+1,j,k,n) )
      $                 + dhy*( bY(i,j  ,k)*phi(i,j-1,k,n)
      $                 +       bY(i,j+1,k)*phi(i,j+1,k,n) )

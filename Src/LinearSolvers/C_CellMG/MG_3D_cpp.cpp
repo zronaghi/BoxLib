@@ -9,6 +9,7 @@
 //ask Brian CONSTANTS
 //MultiGrid.cpp
 
+//Average Kernel
 void C_AVERAGE(const Box* bx,
 const int ng,
 const int nc,
@@ -76,6 +77,7 @@ const Real* f){
 }
 
 
+//Interpolation Kernel
 void C_INTERP(const Box* bx,
 const int ng,
 const int nc,
@@ -148,6 +150,8 @@ const Real* c){
 	}
 }
 
+
+//GSRB kernel
 void C_GSRB_3D(
 const Box* bx,
 const Box* bbx,
@@ -189,6 +193,13 @@ const Real* h)
 	const int *blo = bbx->loVect();
 	const int *bhi = bbx->hiVect();
 	
+	//std::cout << "bbox: lg=(" << bbx->length(0) << "," << bbx->length(1) << "," << bbx->length(2) << ")" << std::endl;
+	//std::cout << "bbox: lo=(" << blo[0] << "," << blo[1] << "," << blo[2] << ")" << std::endl;
+	//std::cout << "bbox: hi=(" << bhi[0] << "," << bhi[1] << "," << bhi[2] << ")" << std::endl;
+	//std::cout << "tbox: lg=(" << bx->length(0) << "," << bx->length(1) << "," << bx->length(2) << ")" << std::endl;
+	//std::cout << "tbox: lo=(" << lo[0] << "," << lo[1] << "," << lo[2] << ")" << std::endl;
+	//std::cout << "tbox: hi=(" << hi[0] << "," << hi[1] << "," << hi[2] << ")" << std::endl;
+	
 	//some parameters
 	Real omega= 1.15;
 	Real dhx = beta/(h[0]*h[0]);
@@ -199,11 +210,11 @@ const Real* h)
 	int indf, indm;
 		
 	for (int n = 0; n<nc; n++){
-		for (int k = lo[2]; k <= hi[2]; ++k) {
-			for (int j = lo[1]; j <= hi[1]; ++j) {
+		for (int k = 0; k < bx->length(2); ++k) {
+			for (int j = 0; j < bx->length(1); ++j) {
 				//might need to revisit this in terms of offsets:
 				int ioff = (lo[0] + j + k + rb)%2;
-				for (int i = lo[0] + ioff; i <= hi[0]; i+=2) {
+				for (int i = ioff; i < bx->length(0); i+=2) {
 					
 					//diagonal index
 					int i_j_k = (i + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
@@ -214,35 +225,37 @@ const Real* h)
 					int i_j_kp1 = (i + ng) + (j + ng)*BL_jStride + (k+1 + ng)*BL_kStride;
 					int i_j_km1 = (i + ng) + (j + ng)*BL_jStride + (k-1 + ng)*BL_kStride;
 					
-					std::cout << i << " " << j << " " << k << std::endl;
+					//std::cout << i << " " << j << " " << k << std::endl;
+					//std::cout << i_j_k << " " << ip1_j_k << " " << im1_j_k << " " << i_jp1_k << " " << i_jm1_k << " " << i_j_kp1 << " " << i_j_km1 << std::endl;
 					
-					//deal with BC:
+					//deal with BC: for indexing, we need to shift it relative to blo!
 					//cf0:
-					indf = (blo[0] + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
-					indm = (blo[0]-1 + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
-					Real cf0 = ( i==blo[0] && (m0[indm]>0) ? f0[indf] : 0. );
+					indf = (blo[0]-blo[0] + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
+					indm = (blo[0]-blo[0]-1 + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
+					Real cf0 = 0.; // ( (i+lo[0])==blo[0] && (m0[indm]>0) ? f0[indf] : 0. );
 					//cf1:
-					indf = (i + ng) + (blo[1] + ng)*BL_jStride + (k + ng)*BL_kStride;
-					indm = (i + ng) + (blo[1]-1 + ng)*BL_jStride + (k + ng)*BL_kStride;
-					Real cf1 = ( j==blo[1] && (m1[indm]>0) ? f1[indf] : 0. );
+					indf = (i + ng) + (blo[1]-blo[1] + ng)*BL_jStride + (k + ng)*BL_kStride;
+					indm = (i + ng) + (blo[1]-blo[1]-1 + ng)*BL_jStride + (k + ng)*BL_kStride;
+					Real cf1 = 0.; //( (j+lo[1])==blo[1] && (m1[indm]>0) ? f1[indf] : 0. );
 					//cf2
-					indf = (i + ng) + (j + ng)*BL_jStride + (blo[2] + ng)*BL_kStride;
-					indm = (i + ng) + (j + ng)*BL_jStride + (blo[2]-1 + ng)*BL_kStride;
-					Real cf2 = ( k==blo[2] && (m2[indm]>0) ? f2[indf] : 0. );
+					indf = (i + ng) + (j + ng)*BL_jStride + (blo[2]-blo[2] + ng)*BL_kStride;
+					indm = (i + ng) + (j + ng)*BL_jStride + (blo[2]-blo[2]-1 + ng)*BL_kStride;
+					Real cf2 = 0.; //( (k+lo[2])==blo[2] && (m2[indm]>0) ? f2[indf] : 0. );
 					//cf3
-					indf = (bhi[0] + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
-					indm = (bhi[0]+1 + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
-					Real cf3 = ( i==bhi[0] && (m3[indm]>0) ? f3[indf] : 0. );
+					indf = (bhi[0]-blo[0] + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
+					indm = (bhi[0]-blo[0]+1 + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
+					Real cf3 = 0.; //( (i+lo[0])==bhi[0] && (m3[indm]>0) ? f3[indf] : 0. );
 					//cf4
-					indf = (i + ng) + (bhi[1] + ng)*BL_jStride + (k + ng)*BL_kStride;
-					indm = (i + ng) + (bhi[1]+1 + ng)*BL_jStride + (k + ng)*BL_kStride;
-					Real cf4 = ( j==bhi[1] && (m4[indm]>0) ? f4[indf] : 0. );
+					indf = (i + ng) + (bhi[1]-blo[1] + ng)*BL_jStride + (k + ng)*BL_kStride;
+					indm = (i + ng) + (bhi[1]-blo[1]+1 + ng)*BL_jStride + (k + ng)*BL_kStride;
+					Real cf4 = 0.; //( (j+lo[1])==bhi[1] && (m4[indm]>0) ? f4[indf] : 0. );
 					//cf5
-					indf = (i + ng) + (j + ng)*BL_jStride + (bhi[2] + ng)*BL_kStride;
-					indm = (i + ng) + (j + ng)*BL_jStride + (bhi[2]+1 + ng)*BL_kStride;
-					Real cf5 = ( k==bhi[2] && (m5[indm]>0) ? f5[indf] : 0. );
-
-					double gamma = alpha * a[i_j_k] 
+					indf = (i + ng) + (j + ng)*BL_jStride + (bhi[2]-blo[2] + ng)*BL_kStride;
+					indm = (i + ng) + (j + ng)*BL_jStride + (bhi[2]-blo[2]+1 + ng)*BL_kStride;
+					Real cf5 = 0.; //( (k+lo[2])==bhi[2] && (m5[indm]>0) ? f5[indf] : 0. );
+					
+					//assign ORA constants
+					double gamma = alpha * a[i_j_k]
 									+ dhx * (bX[i_j_k] + bX[ip1_j_k])
 									+ dhy * (bY[i_j_k] + bY[i_jp1_k])
 									+ dhz * (bZ[i_j_k] + bZ[i_j_kp1]);
@@ -258,6 +271,8 @@ const Real* h)
 					
 					double res = rhs[i_j_k + n*BL_nStride] - gamma * phi[i_j_k + n*BL_nStride] + rho;
 					phi[i_j_k + n*BL_nStride] += omega/g_m_d * res;
+					
+					//std::cout << gamma << " " << g_m_d << " " << rho << " " << res << " " << phi[i_j_k + n*BL_nStride] << std::endl;
 				}
 			}
 		}
