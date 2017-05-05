@@ -85,7 +85,7 @@ public:
     //
     // constructor
     //
-    MultiGrid (LinOp& _lp);
+    MultiGrid (LinOp& _lp, const bool use_C_kernels = false);
     //
     // destructor
     //
@@ -375,6 +375,8 @@ private:
     //
     MultiGrid (const MultiGrid&);
     MultiGrid& operator= (const MultiGrid&);
+
+    bool use_C_kernels;
 };
 
 #endif /*_MULTIGRID_H_*/
