@@ -40,7 +40,6 @@ const Real* f){
 	//int abs_i, abs_j, abs_k;
 	//typedef typename Kokkos::Experimental::MDRangePolicy<Kokkos::Rank<3>> t_policy;	
 	typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,Kokkos::Experimental::Iterate::Right,Kokkos::Experimental::Iterate::Right>> t_policy;	
-	Kokkos::OpenMP::print_configuration(std::cout);
 	for (int n = 0; n<nc; n++){
 		Kokkos::Experimental::md_parallel_for(t_policy({0,0,0},{bx->length(2),bx->length(1),bx->length(0)},{4,4,32}), 
 							  	KOKKOS_LAMBDA(const int &k, const int &j, const int &i){
