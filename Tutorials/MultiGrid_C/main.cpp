@@ -659,8 +659,13 @@ void solve(MultiFab& soln, const MultiFab& anaSoln, MultiFab& gphi,
   }
 
   if (plot_soln) {
-    writePlotFile("SOLN-"+ss, soln, geom);
-    writePlotFile("GPHI-"+ss, gphi, geom);
+      if (use_C_kernels) {
+        writePlotFile("SOLN-C_KERNELS", soln, geom);
+        writePlotFile("GPHI-C_KERNELS", gphi, geom);
+      } else {
+        writePlotFile("SOLN-"+ss, soln, geom);
+        writePlotFile("GPHI-"+ss, gphi, geom);
+      }
   }
 
   if (plot_err || comp_norm) {
