@@ -217,13 +217,13 @@ const Real* h)
 				for (int i = ioff; i < bx->length(0); i+=2) {
 					
 					//diagonal index
-					int i_j_k = (i + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
-					int ip1_j_k = (i+1 + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
-					int im1_j_k = (i-1 + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
-					int i_jp1_k = (i + ng) + (j+1 + ng)*BL_jStride + (k + ng)*BL_kStride;
-					int i_jm1_k = (i + ng) + (j-1 + ng)*BL_jStride + (k + ng)*BL_kStride;
-					int i_j_kp1 = (i + ng) + (j + ng)*BL_jStride + (k+1 + ng)*BL_kStride;
-					int i_j_km1 = (i + ng) + (j + ng)*BL_jStride + (k-1 + ng)*BL_kStride;
+					int i_j_k =   (i + ng)   + (j + ng)   * BL_jStride + (k + ng)   * BL_kStride;
+					int ip1_j_k = (i+1 + ng) + (j + ng)   * BL_jStride + (k + ng)   * BL_kStride;
+					int im1_j_k = (i-1 + ng) + (j + ng)   * BL_jStride + (k + ng)   * BL_kStride;
+					int i_jp1_k = (i + ng)   + (j+1 + ng) * BL_jStride + (k + ng)   * BL_kStride;
+					int i_jm1_k = (i + ng)   + (j-1 + ng) * BL_jStride + (k + ng)   * BL_kStride;
+					int i_j_kp1 = (i + ng)   + (j + ng)   * BL_jStride + (k+1 + ng) * BL_kStride;
+					int i_j_km1 = (i + ng)   + (j + ng)   * BL_jStride + (k-1 + ng) * BL_kStride;
 					
 					//std::cout << i << " " << j << " " << k << std::endl;
 					//std::cout << i_j_k << " " << ip1_j_k << " " << im1_j_k << " " << i_jp1_k << " " << i_jm1_k << " " << i_j_kp1 << " " << i_j_km1 << std::endl;
