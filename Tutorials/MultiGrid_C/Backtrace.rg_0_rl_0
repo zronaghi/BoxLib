@@ -7,93 +7,67 @@
             readelf -wl my_exefile | grep my_line_address'
     to find out the offset for that line.
 
- 0: [0x56b795]
+ 0: [0x56bf25]
     BLBackTrace::print_backtrace_info(_IO_FILE*)
     /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/C_BaseLib/BLBackTrace.cpp:86
     BLBackTrace::handler(int)
     /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/C_BaseLib/BLBackTrace.cpp:48
 
- 1: [0xa1ab10]
+ 1: [0xa41f10]
     __restore_rt
     sigaction.c:?
 
- 2: [0xa1aacb]
+ 2: [0xa41ecb]
     raise
     /home/abuild/rpmbuild/BUILD/glibc-2.19/nptl/../nptl/sysdeps/unix/sysv/linux/pt-raise.c:37
 
- 3: [0xc79ae8]
+ 3: [0xd005a8]
     abort
     /home/abuild/rpmbuild/BUILD/glibc-2.19/stdlib/abort.c:80
 
- 4: [0xa73132]
+ 4: [0xaaa9c2]
     MPID_Abort
     ??:?
 
- 5: [0xa3d589]
+ 5: [0xa73799]
     PMPI_Abort
     ??:?
 
- 6: [0x56b75a]
+ 6: [0x56beea]
     BLBackTrace::handler(int)
     /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/C_BaseLib/BLBackTrace.cpp:76
 
- 7: [0xa1ab10]
+ 7: [0xa41f10]
     __restore_rt
     sigaction.c:?
 
- 8: [0x437f0d]
-    FabArray<FArrayBox>::FBEP_nowait(int, int, Periodicity const&, bool, bool)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/C_BaseLib/FabArray.H:4591
+ 8: [0x441614]
+    C_GSRB_3D(Box const*, Box const*, int, int, int, double, double, double*, double const*, double const*, double const*, double const*, double const*, double const*, int const*, double const*, int const*, double const*, int const*, double const*, int const*, double const*, int const*, double const*, int const*, double const*)
+    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MG_3D_cpp.cpp:220
 
- 9: [0x4337ce]
-    FabArray<FArrayBox>::FillBoundary(int, int, Periodicity const&, bool)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/C_BaseLib/FabArray.H:4507
-    LinOp::applyBC(MultiFab&, int, int, int, LinOp::BC_Mode, bool, int)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/LinOp.cpp:205
+ 9: [0x428809]
+    ABecLaplacian::Fsmooth(MultiFab&, MultiFab const&, int, int)
+    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/ABecLaplacian.cpp:522
 
-10: [0x43366b]
-    LinOp::apply(MultiFab&, MultiFab&, int, LinOp::BC_Mode, bool, int, int, int, int)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/LinOp.cpp:169
+10: [0x4340a5]
+    LinOp::smooth(MultiFab&, MultiFab const&, int, LinOp::BC_Mode)
+    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/LinOp.cpp:279
 
-11: [0x42d19a]
-    CGSolver::solve_bicgstab(MultiFab&, MultiFab const&, double, double, LinOp::BC_Mode)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/CGSolver.cpp:974
-
-12: [0x43e960]
-    MultiGrid::coarsestSmooth(MultiFab&, MultiFab&, int, double, double, LinOp::BC_Mode, int, double&)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:716
-
-13: [0x43e024]
+11: [0x43e865]
     MultiGrid::relax(MultiFab&, MultiFab&, int, double, double, LinOp::BC_Mode, double&)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:656
+    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:632
 
-14: [0x43e240]
-    MultiGrid::relax(MultiFab&, MultiFab&, int, double, double, LinOp::BC_Mode, double&)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:615
-
-15: [0x43e240]
-    MultiGrid::relax(MultiFab&, MultiFab&, int, double, double, LinOp::BC_Mode, double&)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:615
-
-16: [0x43e240]
-    MultiGrid::relax(MultiFab&, MultiFab&, int, double, double, LinOp::BC_Mode, double&)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:615
-
-17: [0x43e240]
-    MultiGrid::relax(MultiFab&, MultiFab&, int, double, double, LinOp::BC_Mode, double&)
-    /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:615
-
-18: [0x43d0f7]
+12: [0x43d4b7]
     MultiGrid::errorEstimate(int, LinOp::BC_Mode, bool)
     /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:216
     MultiGrid::solve_(MultiFab&, double, double, LinOp::BC_Mode, double, double)
     /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:435
 
-19: [0x43c3cd]
+13: [0x43c78d]
     MultiGrid::solve(MultiFab&, MultiFab const&, double, double, LinOp::BC_Mode)
     /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/../../Src/LinearSolvers/C_CellMG/MultiGrid.cpp:300
 
-20: [0x40e5f6]
+14: [0x40e9b6]
     __gnu_cxx::new_allocator<void*>::allocate(unsigned long, void const*)
     /usr/include/c++/4.8/ext/new_allocator.h:104
     std::_Vector_base<void*, std::allocator<void*> >::_M_allocate(unsigned long)
@@ -117,15 +91,15 @@
     solve(MultiFab&, MultiFab const&, MultiFab&, double, double, MultiFab&, PArray<MultiFab>&, MultiFab&, MultiFab&, BoxArray const&, Geometry const&, solver_t)
     /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/main.cpp:627
 
-21: [0x40bafd]
+15: [0x40bebd]
     main
     /global/project/projectdirs/mpccc/tkurth/Portability/BoxLib/Tutorials/MultiGrid_C/main.cpp:309
 
-22: [0xc71070]
+16: [0xcf7b30]
     __libc_start_main
     /home/abuild/rpmbuild/BUILD/glibc-2.19/csu/libc-start.c:319
 
-23: [0x40a807]
+17: [0x40abc7]
     _start
     /home/abuild/rpmbuild/BUILD/glibc-2.19/csu/../sysdeps/x86_64/start.S:125
 

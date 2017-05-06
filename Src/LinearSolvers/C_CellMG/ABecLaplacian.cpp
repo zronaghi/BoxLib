@@ -490,6 +490,12 @@ int             redBlackFlag)
 #endif
 
 #if (BL_SPACEDIM == 3)
+		//std::cout << "phi= (" << solnfab.loVect()[0] << "," << solnfab.loVect()[1] << "," << solnfab.loVect()[2] << ")" << std::endl;
+		//std::cout << "a  = (" << afab.loVect()[0] << "," << afab.loVect()[1] << "," << afab.loVect()[2] << ")" << std::endl;
+		//std::cout << "bx = (" << bxfab.loVect()[0] << "," << bxfab.loVect()[1] << "," << bxfab.loVect()[2] << ")" << std::endl;
+		//std::cout << "m0 = (" << m0.loVect()[0] << "," << m0.loVect()[1] << "," << m0.loVect()[2] << ")" << std::endl;
+		//std::cout << "f0 = (" << f0fab.loVect()[0] << "," << f0fab.loVect()[1] << "," << f0fab.loVect()[2] << ")" << std::endl;
+		
 #ifdef USE_CPP_KERNELS
 #warning USING CPP GSRB
 		Real* phipt       = solnfab.dataPtr();
@@ -565,9 +571,16 @@ int             redBlackFlag)
 #endif
 #endif
 		//DEBUG
-		//exit(1);
+		//if ( ParallelDescriptor::IOProcessor(color()) )
+		//{
+		//	std::cout << solnfab;
+		//}
+		exit(1);
 		//DEBUG
 	}
+	//DEBUG
+	//exit(1);
+	//DEBUG
 }
 
 void

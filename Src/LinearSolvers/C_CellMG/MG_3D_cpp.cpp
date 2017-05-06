@@ -181,10 +181,13 @@ const int* m5,
 const Real* h)
 {
 
-	//field offsets
+	//field offsets (with ghosts)
 	const int BL_jStride = bx->length(0) + 2*ng;
 	const int BL_kStride = BL_jStride * (bx->length(1) + 2*ng);
 	const int BL_nStride = BL_kStride * (bx->length(2) + 2*ng);
+	//field offsets (without ghosts)
+	const int BL_jStride_nogho = bx->length(0);
+	const int BL_kStride_nogho = BL_jStride_nogho * (bx->length(1));
 
 	//box extends:
 	const int *lo = bx->loVect();
@@ -208,7 +211,25 @@ const Real* h)
 	
 	//useful params:
 	int indf, indm;
-		
+	
+	//DEBUG
+	for (int k = lo[2]; k <= hi[2]; ++k) {
+		for (int j = lo[1]; j <= hi[1]; ++j) {
+			//might need to revisit this in terms of offsets:
+			int ioff = (lo[0] + j + k + rb)%2;
+			for (int i = lo[0]+ioff; i <= hi[0]; i+=2) {
+				if(i==blo[0]){
+					//indf = (blo[0]-blo[0] + ng) + (j+ng) * BL_jStride + (k+ng) * BL_kStride;
+					//indm = 0 + (j+ng) * BL_jStride + (k+ng) * BL_kStride;
+					int indm1=bx->index(IntVect(blo[0],j+1,k+1));
+					std::cout << i << " " << j << " " << k << " " << indm1 << " " << m0[indm1] << std::endl;
+				}
+			}
+		}
+	}
+	return;
+	//DEBUG
+	
 	for (int n = 0; n<nc; n++){
 		for (int k = 0; k < bx->length(2); ++k) {
 			for (int j = 0; j < bx->length(1); ++j) {
@@ -216,7 +237,7 @@ const Real* h)
 				int ioff = (lo[0] + j + k + rb)%2;
 				for (int i = ioff; i < bx->length(0); i+=2) {
 					
-					//diagonal index
+					//index (with ghost zones)
 					int i_j_k =   (i + ng)   + (j + ng)   * BL_jStride + (k + ng)   * BL_kStride;
 					int ip1_j_k = (i+1 + ng) + (j + ng)   * BL_jStride + (k + ng)   * BL_kStride;
 					int im1_j_k = (i-1 + ng) + (j + ng)   * BL_jStride + (k + ng)   * BL_kStride;
@@ -224,50 +245,63 @@ const Real* h)
 					int i_jm1_k = (i + ng)   + (j-1 + ng) * BL_jStride + (k + ng)   * BL_kStride;
 					int i_j_kp1 = (i + ng)   + (j + ng)   * BL_jStride + (k+1 + ng) * BL_kStride;
 					int i_j_km1 = (i + ng)   + (j + ng)   * BL_jStride + (k-1 + ng) * BL_kStride;
+					//index (without ghost zones)
+					int i_j_k_nogho   =   i     + j     * BL_jStride_nogho +     k * BL_kStride_nogho;
+					int ip1_j_k_nogho =   (i+1) + j     * BL_jStride_nogho +     k * BL_kStride_nogho;
+					int i_jp1_k_nogho =   i     + (j+1) * BL_jStride_nogho +     k * BL_kStride_nogho;
+					int i_j_kp1_nogho =   i     + j     * BL_jStride_nogho + (k+1) * BL_kStride_nogho;
 					
 					//std::cout << i << " " << j << " " << k << std::endl;
 					//std::cout << i_j_k << " " << ip1_j_k << " " << im1_j_k << " " << i_jp1_k << " " << i_jm1_k << " " << i_j_kp1 << " " << i_j_km1 << std::endl;
 					
-					//deal with BC: for indexing, we need to shift it relative to blo!
+					//deal with BC: for indexing, we need to shift it relative to blo! also, f-fields do not have ghost zones
 					//cf0:
-					indf = (blo[0]-blo[0] + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
+					indf = (blo[0]-blo[0]) + j * BL_jStride_nogho + k * BL_kStride_nogho;
 					indm = (blo[0]-blo[0]-1 + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
-					Real cf0 = 0.; // ( (i+lo[0])==blo[0] && (m0[indm]>0) ? f0[indf] : 0. );
+					Real cf0 = ( ((i+lo[0])==blo[0]) && (m0[indm]>0) ? f0[indf] : 0. );
+					
+					if(i+lo[0]==blo[0]){
+						indf = (blo[0]-blo[0] + ng) + (j+ng) * BL_jStride + (k+ng) * BL_kStride;
+						indm = 0 + (j+ng) * BL_jStride + (k+ng) * BL_kStride;
+						int indm1=bx->index(IntVect(blo[0]-1,j+lo[1],k+lo[2]));
+						std::cout << i << " " << j << " " << k << " " << indm << " " << m0[indm] << " " << indm1 << " " << m0[indm1] << std::endl;
+					}
+					
 					//cf1:
-					indf = (i + ng) + (blo[1]-blo[1] + ng)*BL_jStride + (k + ng)*BL_kStride;
+					indf = i + (blo[1]-blo[1]) * BL_jStride_nogho + k * BL_kStride_nogho;
 					indm = (i + ng) + (blo[1]-blo[1]-1 + ng)*BL_jStride + (k + ng)*BL_kStride;
-					Real cf1 = 0.; //( (j+lo[1])==blo[1] && (m1[indm]>0) ? f1[indf] : 0. );
+					Real cf1 = 0.;//( ((j+lo[1])==blo[1]) && (m1[indm]>0) ? f1[indf] : 0. );
 					//cf2
-					indf = (i + ng) + (j + ng)*BL_jStride + (blo[2]-blo[2] + ng)*BL_kStride;
+					indf = i + j * BL_jStride_nogho + (blo[2]-blo[2]) * BL_kStride_nogho;
 					indm = (i + ng) + (j + ng)*BL_jStride + (blo[2]-blo[2]-1 + ng)*BL_kStride;
-					Real cf2 = 0.; //( (k+lo[2])==blo[2] && (m2[indm]>0) ? f2[indf] : 0. );
+					Real cf2 = 0.;//( ((k+lo[2])==blo[2]) && (m2[indm]>0) ? f2[indf] : 0. );
 					//cf3
-					indf = (bhi[0]-blo[0] + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
+					indf = (bhi[0]-blo[0]) + j * BL_jStride_nogho + k * BL_kStride_nogho;
 					indm = (bhi[0]-blo[0]+1 + ng) + (j + ng)*BL_jStride + (k + ng)*BL_kStride;
-					Real cf3 = 0.; //( (i+lo[0])==bhi[0] && (m3[indm]>0) ? f3[indf] : 0. );
+					Real cf3 = 0.;//( ((i+lo[0])==bhi[0]) && (m3[indm]>0) ? f3[indf] : 0. );
 					//cf4
-					indf = (i + ng) + (bhi[1]-blo[1] + ng)*BL_jStride + (k + ng)*BL_kStride;
+					indf = i + (bhi[1]-blo[1]) * BL_jStride_nogho + k * BL_kStride_nogho;
 					indm = (i + ng) + (bhi[1]-blo[1]+1 + ng)*BL_jStride + (k + ng)*BL_kStride;
-					Real cf4 = 0.; //( (j+lo[1])==bhi[1] && (m4[indm]>0) ? f4[indf] : 0. );
+					Real cf4 = 0.;//( ((j+lo[1])==bhi[1]) && (m4[indm]>0) ? f4[indf] : 0. );
 					//cf5
-					indf = (i + ng) + (j + ng)*BL_jStride + (bhi[2]-blo[2] + ng)*BL_kStride;
+					indf = i + j * BL_jStride_nogho + (bhi[2]-blo[2]) * BL_kStride_nogho;
 					indm = (i + ng) + (j + ng)*BL_jStride + (bhi[2]-blo[2]+1 + ng)*BL_kStride;
-					Real cf5 = 0.; //( (k+lo[2])==bhi[2] && (m5[indm]>0) ? f5[indf] : 0. );
+					Real cf5 = 0.;//( ((k+lo[2])==bhi[2]) && (m5[indm]>0) ? f5[indf] : 0. );
 					
 					//assign ORA constants
-					double gamma = alpha * a[i_j_k]
-									+ dhx * (bX[i_j_k] + bX[ip1_j_k])
-									+ dhy * (bY[i_j_k] + bY[i_jp1_k])
-									+ dhz * (bZ[i_j_k] + bZ[i_j_kp1]);
+					double gamma = alpha * a[i_j_k_nogho]
+									+ dhx * (bX[i_j_k_nogho] + bX[ip1_j_k_nogho])
+									+ dhy * (bY[i_j_k_nogho] + bY[i_jp1_k_nogho])
+									+ dhz * (bZ[i_j_k_nogho] + bZ[i_j_kp1_nogho]);
 					
 					double g_m_d = gamma
-									- dhx * (bX[i_j_k]*cf0 + bX[ip1_j_k]*cf3)
-									- dhy * (bY[i_j_k]*cf1 + bY[i_jp1_k]*cf4)
-									- dhz * (bZ[i_j_k]*cf2 + bZ[i_j_kp1]*cf5);
+									- dhx * (bX[i_j_k_nogho]*cf0 + bX[ip1_j_k_nogho]*cf3)
+									- dhy * (bY[i_j_k_nogho]*cf1 + bY[i_jp1_k_nogho]*cf4)
+									- dhz * (bZ[i_j_k_nogho]*cf2 + bZ[i_j_kp1_nogho]*cf5);
 					
-					double rho =  dhx * (bX[i_j_k]*phi[im1_j_k + n*BL_nStride] + bX[ip1_j_k]*phi[ip1_j_k + n*BL_nStride])
-								+ dhy * (bY[i_j_k]*phi[i_jm1_k + n*BL_nStride] + bY[i_jp1_k]*phi[i_jp1_k + n*BL_nStride])
-								+ dhz * (bZ[i_j_k]*phi[i_j_km1 + n*BL_nStride] + bZ[i_j_kp1]*phi[i_j_kp1 + n*BL_nStride]);
+					double rho =  dhx * (bX[i_j_k_nogho]*phi[im1_j_k + n*BL_nStride] + bX[ip1_j_k_nogho]*phi[ip1_j_k + n*BL_nStride])
+								+ dhy * (bY[i_j_k_nogho]*phi[i_jm1_k + n*BL_nStride] + bY[i_jp1_k_nogho]*phi[i_jp1_k + n*BL_nStride])
+								+ dhz * (bZ[i_j_k_nogho]*phi[i_j_km1 + n*BL_nStride] + bZ[i_j_kp1_nogho]*phi[i_j_kp1 + n*BL_nStride]);
 					
 					double res = rhs[i_j_k + n*BL_nStride] - gamma * phi[i_j_k + n*BL_nStride] + rho;
 					phi[i_j_k + n*BL_nStride] += omega/g_m_d * res;
