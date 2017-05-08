@@ -779,11 +779,10 @@ const MultiFab& f)
 #ifdef USE_CPP_KERNELS
 #warning USING CPP AVERAGING
 		C_AVERAGE(
-			&bx,
-			ng,
+			bx,
 			nc,
-			cfab.dataPtr(),
-			ffab.dataPtr());
+			cfab,
+			ffab);
 #else
 		FORT_AVERAGE(
 			cfab.dataPtr(),
@@ -829,11 +828,10 @@ const MultiFab& c)
 #ifdef USE_CPP_KERNELS
 #warning USING CPP INTERPOLAION
 		C_INTERP(
-			&bx,
-			ng,
+			bx,
 			nc,
-			ffab.dataPtr(),
-			cfab.dataPtr());
+			ffab,
+			cfab);
 #else
 		FORT_INTERP(
 			ffab.dataPtr(),

@@ -70,17 +70,15 @@
 #include <ArrayLim.H>
 #include <Mask.H>
 
-void C_AVERAGE(const Box* bx,
-        const int ng,
+void C_AVERAGE(const Box& bx,
         const int nc,
-        Real* c,
-        const Real* f);
+        FArrayBox& c,
+        const FArrayBox& f);
 
-void C_INTERP(const Box* bx,
-        const int ng,
+void C_INTERP(const Box& bx,
         const int nc,
-        Real* f,
-        const Real* c);
+        FArrayBox& f,
+        const FArrayBox& c);
 
 #if (BL_SPACEDIM == 3)
 void C_GSRB_3D(const Box& bx,
