@@ -168,66 +168,53 @@ const Real* h)
 	}
 }
 
-////-----------------------------------------------------------------------
-////
-////     Fill in a matrix x vector operator here
-////
-//      subroutine C_ADOTX(
-//     $     y,DIMS(y),
-//     $     x,DIMS(x),
-//     $     alpha, beta,
-//     $     a, DIMS(a),
-//     $     bX,DIMS(bX),
-//     $     bY,DIMS(bY),
-//     $     bZ,DIMS(bZ),
-//     $     lo,hi,nc,
-//     $     h
-//     $     )
-//      implicit none
-//      REAL_T alpha, beta
-//      integer lo(BL_SPACEDIM), hi(BL_SPACEDIM), nc
-//      integer DIMDEC(y)
-//      integer DIMDEC(x)
-//      integer DIMDEC(a)
-//      integer DIMDEC(bX)
-//      integer DIMDEC(bY)
-//      integer DIMDEC(bZ)
-//      REAL_T  y(DIMV(y),nc)
-//      REAL_T  x(DIMV(x),nc)
-//      REAL_T  a(DIMV(a))
-//      REAL_T bX(DIMV(bX))
-//      REAL_T bY(DIMV(bY))
-//      REAL_T bZ(DIMV(bZ))
-//      REAL_T h(BL_SPACEDIM)
+//-----------------------------------------------------------------------
 //
-//      integer i,j,k,n
-//      REAL_T dhx,dhy,dhz
+//     Fill in a matrix x vector operator here
 //
-//      dhx = beta/h(1)**2
-//      dhy = beta/h(2)**2
-//      dhz = beta/h(3)**2
-//
-//      do n = 1, nc
-//         do k = lo(3), hi(3)
-//            do j = lo(2), hi(2)
-//               do i = lo(1), hi(1)
-//                  y(i,j,k,n) = alpha*a(i,j,k)*x(i,j,k,n)
-//     $                 - dhx*
-//     $                 (   bX(i+1,j,k)*( x(i+1,j,k,n) - x(i  ,j,k,n) )
-//     $                 -   bX(i  ,j,k)*( x(i  ,j,k,n) - x(i-1,j,k,n) ) )
-//     $                 - dhy*
-//     $                 (   bY(i,j+1,k)*( x(i,j+1,k,n) - x(i,j  ,k,n) )
-//     $                 -   bY(i,j  ,k)*( x(i,j  ,k,n) - x(i,j-1,k,n) ) )
-//     $                 - dhz*
-//     $                 (   bZ(i,j,k+1)*( x(i,j,k+1,n) - x(i,j,k  ,n) )
-//     $                 -   bZ(i,j,k  )*( x(i,j,k  ,n) - x(i,j,k-1,n) ) )
-//               end do
-//            end do
-//         end do
-//      end do
-//
-//      end
-//
+void C_ADOTX(
+const Box& bx,
+const int nc,
+FArrayBox& y,
+const FArrayBox& x,
+Real alpha,
+Real beta,
+const FArrayBox& a,
+const FArrayBox& bX,
+const FArrayBox& bY,
+const FArrayBox& bZ,
+const Real* h)
+{
+
+	//box extends:
+	const int *lo = bx.loVect();
+	const int *hi = bx.hiVect();
+	
+	//some parameters
+	Real dhx = beta/(h[0]*h[0]);
+	Real dhy = beta/(h[1]*h[1]);
+	Real dhz = beta/(h[2]*h[2]);
+
+	for (int n = 0; n<nc; n++){
+		for (int k = lo[2]; k <= hi[2]; ++k) {
+			for (int j = lo[1]; j <= hi[1]; ++j) {
+				for (int i = lo[0]; i <= hi[0]; ++i) {
+					y(IntVect(i,j,k),n) = alpha*a(IntVect(i,j,k))*x(IntVect(i,j,k),n)
+										- dhx * (   bX(IntVect(i+1,j,  k  )) * ( x(IntVect(i+1,j,  k),  n) - x(IntVect(i,  j,  k  ),n) )
+												  - bX(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i-1,j,  k  ),n) ) 
+												)
+										- dhy * (   bY(IntVect(i,  j+1,k  )) * ( x(IntVect(i,  j+1,k),  n) - x(IntVect(i,  j  ,k  ),n) )
+												  - bY(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j-1,k  ),n) )
+												)
+										- dhz * (   bZ(IntVect(i,  j,  k+1)) * ( x(IntVect(i,  j,  k+1),n) - x(IntVect(i,  j  ,k  ),n) )
+												  - bZ(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j,  k-1),n) )
+												);
+				}
+			}
+		}
+	}
+}
+
 ////-----------------------------------------------------------------------
 ////
 ////     Fill in a matrix x vector operator here

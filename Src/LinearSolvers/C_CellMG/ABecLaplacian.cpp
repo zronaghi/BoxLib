@@ -693,11 +693,14 @@ int             level)
 	const MultiFab& bY  = bCoefficients(1,level);,
 	const MultiFab& bZ  = bCoefficients(2,level););
 
-	const bool tiling = true;
+	//set number of comps to 1 for the moment:
+	const int nc = 1;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+	const bool tiling = false;
+
+	//#ifdef _OPENMP
+	//#pragma omp parallel
+	//#endif
 	for (MFIter ymfi(y,tiling); ymfi.isValid(); ++ymfi)
 	{
 		const Box&       tbx  = ymfi.tilebox();
@@ -724,20 +727,35 @@ int             level)
 		h[level]);
 #endif
 #if (BL_SPACEDIM ==3)
-		FORT_ADOTX(yfab.dataPtr(dst_comp),
-		ARLIM(yfab.loVect()), ARLIM(yfab.hiVect()),
-		xfab.dataPtr(src_comp),
-		ARLIM(xfab.loVect()), ARLIM(xfab.hiVect()),
-		&alpha, &beta, afab.dataPtr(), 
-		ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-		bxfab.dataPtr(), 
-		ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-		byfab.dataPtr(), 
-		ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-		bzfab.dataPtr(), 
-		ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-		tbx.loVect(), tbx.hiVect(), &num_comp,
-		h[level]);
+		if(use_C_kernels){
+			C_ADOTX(tbx,
+				nc,
+				yfab,
+				xfab,
+				alpha,
+				beta,
+				afab,
+				bxfab,
+				byfab,
+				bzfab,
+				h[level]);
+		}
+		else{
+			FORT_ADOTX(yfab.dataPtr(dst_comp),
+				ARLIM(yfab.loVect()), ARLIM(yfab.hiVect()),
+				xfab.dataPtr(src_comp),
+				ARLIM(xfab.loVect()), ARLIM(xfab.hiVect()),
+				&alpha, &beta, afab.dataPtr(), 
+				ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+				bxfab.dataPtr(), 
+				ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+				byfab.dataPtr(), 
+				ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+				bzfab.dataPtr(), 
+				ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+				tbx.loVect(), tbx.hiVect(), &num_comp,
+				h[level]);
+		}
 #endif
 	}
 }

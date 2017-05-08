@@ -79,6 +79,18 @@ void C_INTERP(const Box& bx,
         const int nc,
         FArrayBox& f,
         const FArrayBox& c);
+		
+void C_ADOTX(const Box& bx,
+		const int nc,
+		FArrayBox& y,
+		const FArrayBox& x,
+		Real alpha,
+		Real beta,
+		const FArrayBox& a,
+		const FArrayBox& bX,
+		const FArrayBox& bY,
+		const FArrayBox& bZ,
+		const Real* h);
 
 #if (BL_SPACEDIM == 3)
 void C_GSRB_3D(const Box& bx,

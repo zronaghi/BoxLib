@@ -121,11 +121,11 @@ CGSolver::CGSolver (LinOp& _lp,
 {
     Initialize();
 	
-	if (use_C_kernels) {
+	/*if (use_C_kernels) {
 		if (ParallelDescriptor::IOProcessor()) {
 			std::cout << "WARNING: using C++ CG solver with C kernels" << std::endl;
 		}
-	}
+	}*/
 	
     maxiter = def_maxiter;
     verbose = def_verbose;
