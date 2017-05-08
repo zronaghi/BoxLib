@@ -1,12 +1,12 @@
-
 #include <winstd.H>
 #include <Laplacian.H>
 #include <LP_F.H>
 
 Laplacian::Laplacian (const BndryData& bd,
-Real             _h)
+Real             _h,
+const bool& _use_C_kernels)
 	:
-LinOp(bd,_h) {}
+LinOp(bd,_h,_use_C_kernels) {}
 
 Laplacian::~Laplacian() {}
 

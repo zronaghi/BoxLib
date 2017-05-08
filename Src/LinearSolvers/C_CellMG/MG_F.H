@@ -83,7 +83,6 @@ void C_INTERP(const Box& bx,
 #if (BL_SPACEDIM == 3)
 void C_GSRB_3D(const Box& bx,
         const Box& bbx,
-        const int ng,
         const int nc,
         const int rb,
         const Real alpha,

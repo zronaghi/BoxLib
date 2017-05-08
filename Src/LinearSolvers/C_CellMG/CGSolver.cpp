@@ -110,14 +110,23 @@ CGSolver::Finalize ()
 
 CGSolver::CGSolver (LinOp& _lp,
                     bool   _use_mg_precond,
-                    int    _lev)
+                    int    _lev,
+					const bool& _use_C_kernels)
     :
     Lp(_lp),
     mg_precond(0),
     lev(_lev),
-    use_mg_precond(_use_mg_precond)
+    use_mg_precond(_use_mg_precond),
+	use_C_kernels(_use_C_kernels)
 {
     Initialize();
+	
+	if (use_C_kernels) {
+		if (ParallelDescriptor::IOProcessor()) {
+			std::cout << "WARNING: using C++ CG solver with C kernels" << std::endl;
+		}
+	}
+	
     maxiter = def_maxiter;
     verbose = def_verbose;
     set_mg_precond();

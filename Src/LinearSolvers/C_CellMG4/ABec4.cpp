@@ -13,11 +13,12 @@ Real ABec4::alpha_def = 1.0;
 Real ABec4::beta_def  = 1.0;
 
 ABec4::ABec4 (const BndryData& _bd,
-	      const Real*      _h)
+	      const Real*      _h,
+		  const bool& _use_C_kernels)
     :
-    LinOp(_bd,_h)
+    LinOp(_bd,_h,_use_C_kernels)
 {
-    LO_Op = new ABec2(_bd,_h);
+    LO_Op = new ABec2(_bd,_h,_use_C_kernels);
 
     buildWorkSpace();
 

@@ -69,9 +69,10 @@ LinOp::bndryData (const BndryData& bd)
 }
 
 LinOp::LinOp (const BndryData& _bgb,
-              const Real       _h)
+              const Real       _h,
+			  const bool& _use_C_kernels)
     :
-    bgb(new BndryData(_bgb))
+    bgb(new BndryData(_bgb)), use_C_kernels(_use_C_kernels)
 {
     Real _hh[BL_SPACEDIM];
     for (int i = 0; i < BL_SPACEDIM; i++)
@@ -82,17 +83,19 @@ LinOp::LinOp (const BndryData& _bgb,
 }
 
 LinOp::LinOp (const BndryData& _bgb,
-              const Real*      _h)
+              const Real*      _h,
+			  const bool& _use_C_kernels)
     :
-    bgb(new BndryData(_bgb))
+    bgb(new BndryData(_bgb)), use_C_kernels(_use_C_kernels)
 {
     initConstruct(_h);
 }
 
 LinOp::LinOp (BndryData*  _bgb,
-              const Real* _h)
+              const Real* _h,
+			  const bool& _use_C_kernels)
     :
-    bgb(_bgb)
+    bgb(_bgb), use_C_kernels(_use_C_kernels)
 {
     initConstruct(_h);
 }
@@ -113,6 +116,12 @@ LinOp::initConstruct (const Real* _h)
     // We'll reserve() space to cut down on copying during resize()s.
     //
     const int N = 10;
+	
+	if (use_C_kernels) {
+		if (ParallelDescriptor::IOProcessor()) {
+			std::cout << "WARNING: using C++ kernels in LinOp" << std::endl;
+		}
+	}
 
     h.reserve(N);
     gbox.reserve(N);

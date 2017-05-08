@@ -94,7 +94,6 @@ const FArrayBox& c){
 void C_GSRB_3D(
 const Box& bx,
 const Box& bbx,
-const int ng,
 const int nc,
 const int rb,
 const Real alpha,

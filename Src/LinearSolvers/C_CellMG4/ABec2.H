@@ -14,8 +14,9 @@ public:
   // constructor for box array, boundary data and vector mesh spacing
   //
   ABec2 (const BndryData& bd,
-         const Real*      h)
-    : ABecLaplacian(bd,h) {}
+         const Real*      h,
+		 const bool& use_C_kernels)
+    : ABecLaplacian(bd,h,use_C_kernels) {}
 
   virtual ~ABec2 () {}
 

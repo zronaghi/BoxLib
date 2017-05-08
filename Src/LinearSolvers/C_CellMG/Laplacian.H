@@ -41,7 +41,8 @@ public:
     // constructor;
     //
     Laplacian (const BndryData& bd,
-               Real             _h);
+               Real             _h,
+			   const bool& _use_C_kernels=false);
     //
     // destructor
     //

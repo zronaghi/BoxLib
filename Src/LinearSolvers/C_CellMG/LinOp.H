@@ -86,19 +86,22 @@ public:
     // Allocate a LinOp for this box array, boundary and (uniform) spacing info.
     //
     LinOp (const BndryData& mgb,
-           const Real       _h);
+           const Real       _h,
+		   const bool& _use_C_kernels=false);
     //
     // Allocate a LinOp for this box array, boundary data and spacing array info.
     //
     LinOp (const BndryData& mgb,
-           const Real*      _h);
+           const Real*      _h,
+		   const bool& _use_C_kernels=false);
     //
     // Allocate a LinOp for this box array, boundary data and spacing array info.
     //
     // LinOp assumes ownership of the pointer.
     //
     LinOp (BndryData*  mgb,
-           const Real* _h);
+           const Real* _h,
+		   const bool& _use_C_kernels=false);
     //
     // The destructor.
     //
@@ -330,6 +333,9 @@ protected:
     // Number of grow cells required for this operator
     //
    static int LinOp_grow;
+   
+   //using C-kernels?
+   bool use_C_kernels;
 
 private:
     //

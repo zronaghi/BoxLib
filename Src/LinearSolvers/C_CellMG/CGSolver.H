@@ -90,7 +90,8 @@ public:
     //
     CGSolver (LinOp& _lp,
               bool   _use_mg_precond = false,
-              int    _lev = 0);
+              int    _lev = 0,
+			  const bool& _use_C_kernels=false);
     //
     // The Destructor.
     //
@@ -200,6 +201,9 @@ private:
     //
     CGSolver (const CGSolver&);
     CGSolver& operator= (const CGSolver&);
+	
+	//specialized for our stuff
+	bool use_C_kernels;
 };
 
 #endif /*_CGSOLVER_H_*/

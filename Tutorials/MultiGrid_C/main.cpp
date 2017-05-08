@@ -33,6 +33,7 @@
 #include <writePlotFile.H>
 
 int  verbose       = 2;     
+bool use_C_kernels = false;
 Real tolerance_rel = 1.e-8;
 Real tolerance_abs = 0.0;
 int  maxiter       = 100; 
@@ -73,8 +74,9 @@ void solve(MultiFab& soln, const MultiFab& anaSoln, MultiFab& gphi,
 void solve4(MultiFab& soln, const MultiFab& anaSoln, 
 	     Real a, Real b, MultiFab& alpha, MultiFab& beta, 
 	     MultiFab& rhs, const BoxArray& bs, const Geometry& geom);
-void solve_with_Cpp(MultiFab& soln, MultiFab& gphi, Real a, Real b, MultiFab& alpha, 
-		    PArray<MultiFab>& beta, MultiFab& rhs, const BoxArray& bs, const Geometry& geom);
+void solve_with_Cpp(MultiFab& soln, MultiFab& gphi, Real a, Real b, MultiFab& alpha,
+		    PArray<MultiFab>& beta, MultiFab& rhs, const BoxArray& bs, const Geometry& geom,
+            const bool use_C_kernels);
 
 #ifdef USE_F90_SOLVERS
 void solve_with_F90(MultiFab& soln, MultiFab& gphi, Real a, Real b, MultiFab& alpha, 
@@ -104,7 +106,8 @@ int main(int argc, char* argv[])
   ParmParse ppmg("mg");  
   ppmg.query("v", verbose);
   ppmg.query("maxorder", maxorder);
-  
+  ppmg.query("use_C_kernels", use_C_kernels);
+
   ParmParse pp;
 
   {
@@ -624,7 +627,7 @@ void solve(MultiFab& soln, const MultiFab& anaSoln, MultiFab& gphi,
 
   if (solver == BoxLib_C) {
     ss = "CPP";
-    solve_with_Cpp(soln, gphi, a, b, alpha, beta, rhs, bs, geom);
+    solve_with_Cpp(soln, gphi, a, b, alpha, beta, rhs, bs, geom, use_C_kernels);
   }
 #ifdef USE_F90_SOLVERS
   else if (solver == BoxLib_F) {
@@ -656,8 +659,13 @@ void solve(MultiFab& soln, const MultiFab& anaSoln, MultiFab& gphi,
   }
 
   if (plot_soln) {
-    writePlotFile("SOLN-"+ss, soln, geom);
-    writePlotFile("GPHI-"+ss, gphi, geom);
+      if (use_C_kernels) {
+        writePlotFile("SOLN-C_KERNELS", soln, geom);
+        writePlotFile("GPHI-C_KERNELS", gphi, geom);
+      } else {
+        writePlotFile("SOLN-"+ss, soln, geom);
+        writePlotFile("GPHI-"+ss, gphi, geom);
+      }
   }
 
   if (plot_err || comp_norm) {
@@ -684,19 +692,20 @@ void solve(MultiFab& soln, const MultiFab& anaSoln, MultiFab& gphi,
   }
 }
 
-void solve_with_Cpp(MultiFab& soln, MultiFab& gphi, Real a, Real b, MultiFab& alpha, 
-		    PArray<MultiFab>& beta, MultiFab& rhs, const BoxArray& bs, const Geometry& geom)
+void solve_with_Cpp(MultiFab& soln, MultiFab& gphi, Real a, Real b, MultiFab& alpha,
+		    PArray<MultiFab>& beta, MultiFab& rhs, const BoxArray& bs, const Geometry& geom,
+            const bool use_C_kernels)
 {
   BL_PROFILE("solve_with_Cpp()");
 
   BndryData bd(bs, 1, geom);
   set_boundary(bd, rhs, 0);
 
-  ABecLaplacian abec_operator(bd, dx);
+  ABecLaplacian abec_operator(bd, dx, use_C_kernels);
   abec_operator.setScalars(a, b);
   abec_operator.setCoefficients(alpha, beta);
 
-  MultiGrid mg(abec_operator);
+  MultiGrid mg(abec_operator, use_C_kernels);
   mg.setVerbose(verbose);
   
   if (fixediter) {

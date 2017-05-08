@@ -11,9 +11,10 @@ Real ABecLaplacian::alpha_def = 1.0;
 Real ABecLaplacian::beta_def  = 1.0;
 
 ABecLaplacian::ABecLaplacian (const BndryData& _bd,
-Real             _h)
+Real             _h,
+const bool& _use_C_kernels)
 	:
-LinOp(_bd,_h),
+LinOp(_bd,_h,_use_C_kernels),
 alpha(alpha_def),
 beta(beta_def)
 {
@@ -21,9 +22,10 @@ beta(beta_def)
 }
 
 ABecLaplacian::ABecLaplacian (const BndryData& _bd,
-const Real*      _h)
+const Real*      _h,
+const bool& _use_C_kernels)
 	:
-LinOp(_bd,_h),
+LinOp(_bd,_h,_use_C_kernels),
 alpha(alpha_def),
 beta(beta_def)
 {
@@ -31,9 +33,10 @@ beta(beta_def)
 }
 
 ABecLaplacian::ABecLaplacian (BndryData*  _bd,
-const Real* _h)
+const Real* _h,
+const bool& _use_C_kernels)
 	:
-LinOp(_bd,_h),
+LinOp(_bd,_h,_use_C_kernels),
 alpha(alpha_def),
 beta(beta_def)
 {
@@ -490,59 +493,57 @@ int             redBlackFlag)
 #endif
 
 #if (BL_SPACEDIM == 3)
-		
-#ifdef USE_CPP_KERNELS
-#warning USING CPP GSRB		
-		C_GSRB_3D(
-		tbx,
-		vbx,
-		ng,
-		nc,
-		redBlackFlag,
-		alpha,
-		beta,
-		solnfab,
-		rhsfab,
-		afab,
-		bxfab,
-		byfab,
-		bzfab,
-		f0fab,
-		m0,
-		f1fab,
-		m1,
-		f2fab,
-		m2,
-		f3fab,
-		m3,
-		f4fab,
-		m4,
-		f5fab,
-		m5,
-		h[level]);
-#else //USE_CPP_KERNELS
-		FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
-		rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
-		&alpha, &beta,
-		afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-		bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-		byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-		bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-		f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
-		m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
-		f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
-		m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
-		f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
-		m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
-		f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
-		m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
-		f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
-		m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
-		f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
-		m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
-		tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
-		&nc, h[level], &redBlackFlag);
-#endif //USE_CPP_KERNELS
+		if(use_C_kernels){
+			C_GSRB_3D(
+				tbx,
+				vbx,
+				nc,
+				redBlackFlag,
+				alpha,
+				beta,
+				solnfab,
+				rhsfab,
+				afab,
+				bxfab,
+				byfab,
+				bzfab,
+				f0fab,
+				m0,
+				f1fab,
+				m1,
+				f2fab,
+				m2,
+				f3fab,
+				m3,
+				f4fab,
+				m4,
+				f5fab,
+				m5,
+				h[level]);
+		}
+		else{
+			FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
+					rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
+					&alpha, &beta,
+					afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+					bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+					byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+					bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+					f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
+					m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
+					f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
+					m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
+					f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
+					m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
+					f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
+					m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
+					f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
+					m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
+					f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
+					m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
+					tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
+					&nc, h[level], &redBlackFlag);
+		}
 #endif //(BL_SPACEDIM == 3)
 	}
 }

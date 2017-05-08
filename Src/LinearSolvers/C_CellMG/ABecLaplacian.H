@@ -66,19 +66,22 @@ public:
     // constructor for box array, boundary data and scalar mesh spacing
     //
     ABecLaplacian (const BndryData& bd,
-                   Real             _h);
+                   Real             _h,
+				   const bool& _use_C_kernels=false);
     //
     // constructor for box array, boundary data and vector mesh spacing
     //
     ABecLaplacian (const BndryData& bd,
-                   const Real*      _h);
+                   const Real*      _h,
+				   const bool& _use_C_kernels=false);
     //
     // constructor for box array, boundary data and vector mesh spacing
     //
     // The ABecLaplacian assumes ownership of the pointer.
     //
     ABecLaplacian (BndryData*   bd,
-                   const Real* _h);
+                   const Real* _h,
+				   const bool& _use_C_kernels=false);
     //
     // destructor
     //
