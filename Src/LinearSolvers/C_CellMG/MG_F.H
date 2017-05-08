@@ -68,6 +68,7 @@
 #endif
 
 #include <ArrayLim.H>
+#include <Mask.H>
 
 void C_AVERAGE(const Box* bx,
         const int ng,
@@ -82,31 +83,31 @@ void C_INTERP(const Box* bx,
         const Real* c);
 
 #if (BL_SPACEDIM == 3)
-void C_GSRB_3D(const Box* bx,
-        const Box* bbx,
+void C_GSRB_3D(const Box& bx,
+        const Box& bbx,
         const int ng,
         const int nc,
         const int rb,
         const Real alpha,
         const Real beta,
-        Real* phi,
-        const Real* rhs,
-        const Real* a,
-        const Real* bX,
-        const Real* bY,
-        const Real* bZ,
-        const Real* f0,
-        const int* m0,
-        const Real* f1,
-        const int* m1,
-        const Real* f2,
-        const int* m2,
-        const Real* f3,
-        const int* m3,
-        const Real* f4,
-        const int* m4,
-        const Real* f5,
-        const int* m5,
+        FArrayBox& phi,
+        const FArrayBox& rhs,
+        const FArrayBox& a,
+        const FArrayBox& bX,
+        const FArrayBox& bY,
+        const FArrayBox& bZ,
+        const FArrayBox& f0,
+        const Mask& m0,
+        const FArrayBox& f1,
+        const Mask& m1,
+        const FArrayBox& f2,
+        const Mask& m2,
+        const FArrayBox& f3,
+        const Mask& m3,
+        const FArrayBox& f4,
+        const Mask& m4,
+        const FArrayBox& f5,
+        const Mask& m5,
         const Real* h);
 #endif
 

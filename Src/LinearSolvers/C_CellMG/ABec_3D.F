@@ -132,15 +132,6 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
                   cf5 = merge(f5(i,j,bhi(3)), 0.0D0,
      $                 (k .eq. bhi(3)) .and. (m5(i,j,bhi(3)+1).gt.0))
 	 
-	 if (i.eq.blo(1)) then
-		 write(*,*) i-lo(1)," ",j-lo(2)," ",k-lo(3)," ",m0(blo(1)-1,j,k)," ",f0(blo(1),j,k)
-	 end if
-	 cf1=0.d0
-	 cf2=0.d0
-	 cf3=0.d0
-	 cf4=0.d0
-	 cf5=0.d0
-	 
                   gamma = alpha*a(i,j,k)
      $                 +   dhx*(bX(i,j,k)+bX(i+1,j,k))
      $                 +   dhy*(bY(i,j,k)+bY(i,j+1,k))

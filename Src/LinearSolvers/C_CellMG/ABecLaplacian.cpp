@@ -490,63 +490,37 @@ int             redBlackFlag)
 #endif
 
 #if (BL_SPACEDIM == 3)
-		//std::cout << "phi= (" << solnfab.loVect()[0] << "," << solnfab.loVect()[1] << "," << solnfab.loVect()[2] << ")" << std::endl;
-		//std::cout << "a  = (" << afab.loVect()[0] << "," << afab.loVect()[1] << "," << afab.loVect()[2] << ")" << std::endl;
-		//std::cout << "bx = (" << bxfab.loVect()[0] << "," << bxfab.loVect()[1] << "," << bxfab.loVect()[2] << ")" << std::endl;
-		//std::cout << "m0 = (" << m0.loVect()[0] << "," << m0.loVect()[1] << "," << m0.loVect()[2] << ")" << std::endl;
-		//std::cout << "f0 = (" << f0fab.loVect()[0] << "," << f0fab.loVect()[1] << "," << f0fab.loVect()[2] << ")" << std::endl;
 		
 #ifdef USE_CPP_KERNELS
-#warning USING CPP GSRB
-		Real* phipt       = solnfab.dataPtr();
-		const Real* rhspt = rhsfab.dataPtr();
-		const Real* apt   = afab.dataPtr();
-		const Real* bXpt  = bxfab.dataPtr();
-		const Real* bYpt  = byfab.dataPtr();
-		const Real* bZpt  = bzfab.dataPtr();
-		//boundaries
-		const Real* f0pt  = f0fab.dataPtr();
-		const Real* f1pt  = f1fab.dataPtr();
-		const Real* f2pt  = f2fab.dataPtr();
-		const Real* f3pt  = f3fab.dataPtr();
-		const Real* f4pt  = f4fab.dataPtr();
-		const Real* f5pt  = f5fab.dataPtr();
-		//masks
-		const int* m0pt  = m0.dataPtr();
-		const int* m1pt  = m1.dataPtr();
-		const int* m2pt  = m2.dataPtr();
-		const int* m3pt  = m3.dataPtr();
-		const int* m4pt  = m4.dataPtr();
-		const int* m5pt  = m5.dataPtr();
-		
+#warning USING CPP GSRB		
 		C_GSRB_3D(
-			&tbx,
-		&vbx,
+		tbx,
+		vbx,
 		ng,
 		nc,
 		redBlackFlag,
 		alpha,
 		beta,
-		phipt,
-		rhspt,
-		apt,
-		bXpt,
-		bYpt,
-		bZpt,
-		f0pt,
-		m0pt,
-		f1pt,
-		m1pt,
-		f2pt,
-		m2pt,
-		f3pt,
-		m3pt,
-		f4pt,
-		m4pt,
-		f5pt,
-		m5pt,
+		solnfab,
+		rhsfab,
+		afab,
+		bxfab,
+		byfab,
+		bzfab,
+		f0fab,
+		m0,
+		f1fab,
+		m1,
+		f2fab,
+		m2,
+		f3fab,
+		m3,
+		f4fab,
+		m4,
+		f5fab,
+		m5,
 		h[level]);
-#else
+#else //USE_CPP_KERNELS
 		FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
 		rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
 		&alpha, &beta,
@@ -568,19 +542,9 @@ int             redBlackFlag)
 		m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
 		tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
 		&nc, h[level], &redBlackFlag);
-#endif
-#endif
-		//DEBUG
-		//if ( ParallelDescriptor::IOProcessor(color()) )
-		//{
-		//	std::cout << solnfab;
-		//}
-		exit(1);
-		//DEBUG
+#endif //USE_CPP_KERNELS
+#endif //(BL_SPACEDIM == 3)
 	}
-	//DEBUG
-	//exit(1);
-	//DEBUG
 }
 
 void
