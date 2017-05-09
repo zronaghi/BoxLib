@@ -215,56 +215,115 @@ const Real* h)
 	}
 }
 
-////-----------------------------------------------------------------------
-////
-////     Fill in a matrix x vector operator here
-////
-//      subroutine C_NORMA(
-//     &     res,
-//     $     alpha, beta,
-//     $     a, DIMS(a),
-//     $     bX,DIMS(bX),
-//     $     bY,DIMS(bY),
-//     $     bZ,DIMS(bZ),
-//     $     lo,hi,nc,
-//     $     h
-//     $     )
-//      implicit none
-//      REAL_T alpha, beta, res
-//      integer lo(BL_SPACEDIM), hi(BL_SPACEDIM), nc
-//      integer DIMDEC(a)
-//      integer DIMDEC(bX)
-//      integer DIMDEC(bY)
-//      integer DIMDEC(bZ)
-//      REAL_T  a(DIMV(a))
-//      REAL_T bX(DIMV(bX))
-//      REAL_T bY(DIMV(bY))
-//      REAL_T bZ(DIMV(bZ))
-//      REAL_T h(BL_SPACEDIM)
+//-----------------------------------------------------------------------
 //
-//      integer i,j,k,n
-//      REAL_T dhx,dhy,dhz
+//     Fill in a matrix x vector operator here
 //
-//      dhx = beta/h(1)**2
-//      dhy = beta/h(2)**2
-//      dhz = beta/h(3)**2
+void C_NORMA(
+const Box& bx,
+const int nc,
+Real& res,
+const Real alpha,
+const Real beta,
+const FArrayBox& a,
+const FArrayBox& bX,
+const FArrayBox& bY,
+const FArrayBox& bZ,
+const Real* h)
+{
+
+	//box extends:
+	const int *lo = bx.loVect();
+	const int *hi = bx.hiVect();
+	
+	//some parameters
+	Real dhx = beta/(h[0]*h[0]);
+	Real dhy = beta/(h[1]*h[1]);
+	Real dhz = beta/(h[2]*h[2]);
+	
+	//initialize to zero
+    res = 0.0;
+
+	for (int n = 0; n<nc; n++){
+		for (int k = lo[2]; k <= hi[2]; ++k) {
+			for (int j = lo[1]; j <= hi[1]; ++j) {
+				for (int i = lo[0]; i <= hi[0]; ++i) {
+					Real tmpval= alpha*a(IntVect(i,j,k))
+								+ dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )
+								+ dhy * ( bY(IntVect(i,j+1,k)) + bY(IntVect(i,j,k)) )
+								+ dhz * ( bZ(IntVect(i,j,k+1)) + bZ(IntVect(i,j,k)) );
+					res = std::max(res,std::abs(tmpval));
+					
+					//now add the rest
+					res +=    std::abs( dhx * bX(IntVect(i+1,j,k)) ) + std::abs( dhx * bX(IntVect(i,j,k)) )
+							+ std::abs( dhy * bY(IntVect(i,j+1,k)) ) + std::abs( dhy * bY(IntVect(i,j,k)) )
+							+ std::abs( dhz * bZ(IntVect(i,j,k+1)) ) + std::abs( dhz * bZ(IntVect(i,j,k)) );
+				}
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------
 //
-//      res = 0.0D0
+//     Fill in fluxes
 //
-//      do n = 1, nc
-//         do k = lo(3), hi(3)
-//            do j = lo(2), hi(2)
-//               do i = lo(1), hi(1)
-//                  res = max(res, abs(alpha*a(i,j,k)
-//     &                 + dhx*(bX(i+1,j,k) + bX(i,j,k))
-//     &                 + dhy*(bY(i,j+1,k) + bY(i,j,k))
-//     $                 + dhz*(bZ(i,j,k+1) + bZ(i,j,k)))
-//     &                 + abs( -dhx*bX(i+1,j,k)) + abs( -dhx*bX(i,j,k))
-//     &                 + abs( -dhy*bY(i,j+1,k)) + abs( -dhy*bY(i,j,k))
-//     &                 + abs( -dhz*bZ(i,j,k+1)) + abs( -dhz*bZ(i,j,k)))
-//               end do
-//            end do
-//         end do
-//      end do
-//
-//      end
+void C_FLUX(
+const Box& xbx,
+const Box& ybx,
+const Box& zbx,
+const int nc,
+FArrayBox& x,
+FArrayBox& xflux,
+FArrayBox& yflux,
+FArrayBox& zflux,
+Real alpha,
+Real beta,
+const FArrayBox& a,
+const FArrayBox& bX,
+const FArrayBox& bY,
+const FArrayBox& bZ,
+const Real* h)
+{
+
+	//box extends:
+	const int *xlo = xbx.loVect();
+	const int *xhi = xbx.hiVect();
+	const int *ylo = ybx.loVect();
+	const int *yhi = ybx.hiVect();
+	const int *zlo = zbx.loVect();
+	const int *zhi = zbx.hiVect();
+	
+	//some parameters
+	Real dhx = beta/(h[0]*h[0]);
+	Real dhy = beta/(h[1]*h[1]);
+	Real dhz = beta/(h[2]*h[2]);
+
+	//fill the fluxes:
+	for (int n = 0; n<nc; n++){
+		//x-flux
+		for (int k = xlo[2]; k <= xhi[2]; ++k) {
+			for (int j = xlo[1]; j <= xhi[1]; ++j) {
+				for (int i = xlo[0]; i <= xhi[0]; ++i) {
+					xflux(IntVect(i,j,k),n) = - dhx * bX(IntVect(i,j,k))*( x(IntVect(i,j,k),n) - x(IntVect(i-1,j,k),n) );
+				}
+			}
+		}
+		//y-flux
+		for (int k = ylo[2]; k <= yhi[2]; ++k) {
+			for (int j = ylo[1]; j <= yhi[1]; ++j) {
+				for (int i = ylo[0]; i <= yhi[0]; ++i) {
+					yflux(IntVect(i,j,k),n) = - dhy * bY(IntVect(i,j,k))*( x(IntVect(i,j,k),n) - x(IntVect(i,j-1,k),n) );
+				}
+			}
+		}
+		//z-flux
+		for (int k = zlo[2]; k <= zhi[2]; ++k) {
+			for (int j = zlo[1]; j <= zhi[1]; ++j) {
+				for (int i = zlo[0]; i <= zhi[0]; ++i) {
+					zflux(IntVect(i,j,k),n) = - dhz * bZ(IntVect(i,j,k))*( x(IntVect(i,j,k),n) - x(IntVect(i,j,k-1),n) );
+				}
+			}
+		}
+	}
+}

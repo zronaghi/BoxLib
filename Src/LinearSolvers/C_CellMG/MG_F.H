@@ -70,20 +70,50 @@
 #include <ArrayLim.H>
 #include <Mask.H>
 
-void C_AVERAGE(const Box& bx,
+void C_AVERAGE(
+		const Box& bx,
         const int nc,
         FArrayBox& c,
         const FArrayBox& f);
 
-void C_INTERP(const Box& bx,
+void C_INTERP(
+		const Box& bx,
         const int nc,
         FArrayBox& f,
         const FArrayBox& c);
+
+void C_NORMA(
+		const Box& bx,
+		const int nc,
+		Real& res,
+		const Real alpha,
+		const Real beta,
+		const FArrayBox& a,
+		const FArrayBox& bX,
+		const FArrayBox& bY,
+		const FArrayBox& bZ,
+		const Real* h);
 		
 void C_ADOTX(const Box& bx,
 		const int nc,
 		FArrayBox& y,
 		const FArrayBox& x,
+		Real alpha,
+		Real beta,
+		const FArrayBox& a,
+		const FArrayBox& bX,
+		const FArrayBox& bY,
+		const FArrayBox& bZ,
+		const Real* h);
+		
+void C_FLUX(const Box& xbx,
+		const Box& ybx,
+		const Box& zbx,
+		const int nc,
+		FArrayBox& x,
+		FArrayBox& xflux,
+		FArrayBox& yflux,
+		FArrayBox& zflux,
 		Real alpha,
 		Real beta,
 		const FArrayBox& a,

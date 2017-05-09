@@ -90,15 +90,30 @@ Real
 			tbx.loVect(), tbx.hiVect(), &nc,
 			h[level]);
 #elif (BL_SPACEDIM==3)
-	    
-			FORT_NORMA(&tres,
-			&alpha, &beta,
-			afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-			bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-			byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-			bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-			tbx.loVect(), tbx.hiVect(), &nc,
-			h[level]);
+			
+			if(use_C_kernels){
+				C_NORMA(
+					tbx,
+					nc,
+					tres,
+					alpha,
+					beta,
+					afab,
+					bxfab,
+					byfab,
+					bzfab,
+					h[level]);
+			}
+			else{
+				FORT_NORMA(&tres,
+					&alpha, &beta,
+					afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+					bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+					byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+					bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+					tbx.loVect(), tbx.hiVect(), &nc,
+					h[level]);
+			}
 #endif
 
 			res = std::max(res, tres);
@@ -337,7 +352,7 @@ int src_comp, int dst_comp, int num_comp, int bnd_comp)
 	D_TERM(const MultiFab& bX = bCoefficients(0,level);,
 	const MultiFab& bY = bCoefficients(1,level);,
 	const MultiFab& bZ = bCoefficients(2,level););
-
+	
 	const bool tiling = true;
 
 #ifdef _OPENMP
@@ -359,40 +374,69 @@ int src_comp, int dst_comp, int num_comp, int bnd_comp)
 		FArrayBox& yfluxfab = yflux[inmfi];,
 		FArrayBox& zfluxfab = zflux[inmfi];);
 
+#if (BL_SPACEDIM == 2)
 		FORT_FLUX(infab.dataPtr(src_comp),
-		ARLIM(infab.loVect()), ARLIM(infab.hiVect()),
-		&alpha, &beta, a[inmfi].dataPtr(), 
-		ARLIM(a[inmfi].loVect()), ARLIM(a[inmfi].hiVect()),
-		bxfab.dataPtr(), 
-		ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-#if (BL_SPACEDIM >= 2)
-		byfab.dataPtr(), 
-		ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+			ARLIM(infab.loVect()), ARLIM(infab.hiVect()),
+			&alpha, &beta, a[inmfi].dataPtr(), 
+			ARLIM(a[inmfi].loVect()), ARLIM(a[inmfi].hiVect()),
+			bxfab.dataPtr(), 
+			ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+			byfab.dataPtr(), 
+			ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+			xbx.loVect(), xbx.hiVect(), 
+			ybx.loVect(), ybx.hiVect(),
+			&num_comp,
+			h[level],
+			xfluxfab.dataPtr(dst_comp),
+			ARLIM(xfluxfab.loVect()), ARLIM(xfluxfab.hiVect()),
+			yfluxfab.dataPtr(dst_comp),
+			ARLIM(yfluxfab.loVect()), ARLIM(yfluxfab.hiVect())
+		);
+#endif
+
 #if (BL_SPACEDIM == 3)
-		bzfab.dataPtr(), 
-		ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-#endif
-#endif
-		xbx.loVect(), xbx.hiVect(), 
-#if (BL_SPACEDIM >= 2)
-		ybx.loVect(), ybx.hiVect(), 
-#if (BL_SPACEDIM == 3)
-		zbx.loVect(), zbx.hiVect(), 
-#endif
-#endif
-		&num_comp,
-		h[level],
-		xfluxfab.dataPtr(dst_comp),
-		ARLIM(xfluxfab.loVect()), ARLIM(xfluxfab.hiVect())
-#if (BL_SPACEDIM >= 2)
-			,yfluxfab.dataPtr(dst_comp),
-		ARLIM(yfluxfab.loVect()), ARLIM(yfluxfab.hiVect())
-#endif
-#if (BL_SPACEDIM == 3)
-			,zfluxfab.dataPtr(dst_comp),
-		ARLIM(zfluxfab.loVect()), ARLIM(zfluxfab.hiVect())
-#endif
-			);
+		if(use_C_kernels){
+			C_FLUX(
+				xbx,
+				ybx,
+				zbx,
+				num_comp,
+				infab,
+				xfluxfab,
+				yfluxfab,
+				zfluxfab,
+				alpha,
+				beta,
+				a[inmfi],
+				bxfab,
+				byfab,
+				bzfab,
+				h[level]);
+		}
+		else{
+			FORT_FLUX(infab.dataPtr(src_comp),
+				ARLIM(infab.loVect()), ARLIM(infab.hiVect()),
+				&alpha, &beta, a[inmfi].dataPtr(), 
+				ARLIM(a[inmfi].loVect()), ARLIM(a[inmfi].hiVect()),
+				bxfab.dataPtr(), 
+				ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+				byfab.dataPtr(), 
+				ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+				bzfab.dataPtr(), 
+				ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+				xbx.loVect(), xbx.hiVect(), 
+				ybx.loVect(), ybx.hiVect(), 
+				zbx.loVect(), zbx.hiVect(), 
+				&num_comp,
+				h[level],
+				xfluxfab.dataPtr(dst_comp),
+				ARLIM(xfluxfab.loVect()), ARLIM(xfluxfab.hiVect()),
+				yfluxfab.dataPtr(dst_comp),
+				ARLIM(yfluxfab.loVect()), ARLIM(yfluxfab.hiVect()),
+				zfluxfab.dataPtr(dst_comp),
+				ARLIM(zfluxfab.loVect()), ARLIM(zfluxfab.hiVect()));
+		}
+#endif 
 	}
 }
         
@@ -437,11 +481,11 @@ int             redBlackFlag)
 	//const int nc = solnL.nComp(); // FIXME: This LinOp only really supports single-component
 	const int nc = 1;
 
-	const bool tiling = false;
+	const bool tiling = true;
 
-	//#ifdef _OPENMP
-	//#pragma omp parallel
-	//#endif
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
 	for (MFIter solnLmfi(solnL,tiling); solnLmfi.isValid(); ++solnLmfi)
 	{
 		const int ng = solnL.nGrow();
@@ -696,11 +740,11 @@ int             level)
 	//set number of comps to 1 for the moment:
 	const int nc = 1;
 
-	const bool tiling = false;
+	const bool tiling = true;
 
-	//#ifdef _OPENMP
-	//#pragma omp parallel
-	//#endif
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
 	for (MFIter ymfi(y,tiling); ymfi.isValid(); ++ymfi)
 	{
 		const Box&       tbx  = ymfi.tilebox();

@@ -770,10 +770,10 @@ const MultiFab& f)
 	//
 	// Use Fortran function to average down (restrict) f to c.
 	//
-	const bool tiling = false;
-	//#ifdef _OPENMP
-	//#pragma omp parallel
-	//#endif
+const bool tiling = true;
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
 	for (MFIter cmfi(c,tiling); cmfi.isValid(); ++cmfi)
 	{
 		BL_ASSERT(c.boxArray().get(cmfi.index()) == cmfi.validbox());
@@ -813,10 +813,10 @@ const MultiFab& c)
 	// Use fortran function to interpolate up (prolong) c to f
 	// Note: returns f=f+P(c) , i.e. ADDS interp'd c to f.
 	//
-	const bool tiling = false;
-	//#ifdef _OPENMP
-	//#pragma omp parallel
-	//#endif
+	const bool tiling = true;
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
 	for (MFIter mfi(c,tiling); mfi.isValid(); ++mfi)
 	{
 		const Box&       bx = mfi.tilebox();
