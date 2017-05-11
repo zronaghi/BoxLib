@@ -7,6 +7,7 @@
 #include <BaseFab.H>
 #include <BArena.H>
 #include <CArena.H>
+#include <OMPArena.H>
 
 #if !(defined(BL_NO_FORT) || defined(WIN32))
 #include <BaseFab_f.H>
@@ -34,8 +35,10 @@ BoxLib::BF_init::BF_init ()
     {
         BL_ASSERT(the_arena == 0);
 
-#if defined(BL_COALESCE_FABS)
+#if defined(BL_COALESCE_FABS) & !defined(BL_OMP_FABS)
         the_arena = new CArena;
+#elif defined(BL_OMP_FABS)
+		the_arena = new OMPArena;
 #else
         the_arena = new BArena;
 #endif

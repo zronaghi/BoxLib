@@ -18,16 +18,14 @@ const FArrayBox& f){
 	const int *lo = bx.loVect();
 	const int *hi = bx.hiVect();
 
+#pragma omp target data map(from: c) map(to: f, hi, lo)
+#pragma omp target teams distribute parallel for collapse(4) 
 	for (int n = 0; n<nc; n++){
 		for (int k = lo[2]; k <= hi[2]; ++k) {
-			int k2 = 2*k;
 			for (int j = lo[1]; j <= hi[1]; ++j) {
-				int j2 = 2*j;
 				for (int i = lo[0]; i <= hi[0]; ++i) {
-					int i2 = 2*i;
-
-					c(IntVect(i,j,k),n) =  (f(IntVect(i2+1,j2+1,k2),n) + f(IntVect(i2,j2+1,k2),n) + f(IntVect(i2+1,j2,k2),n) + f(IntVect(i2,j2,k2),n))*0.125;
-					c(IntVect(i,j,k),n) += (f(IntVect(i2+1,j2+1,k2+1),n) + f(IntVect(i2,j2+1,k2+1),n) + f(IntVect(i2+1,j2,k2+1),n) + f(IntVect(i2,j2,k2+1),n))*0.125;
+					c(IntVect(i,j,k),n) =  (f(IntVect(2*i+1,2*j+1,2*k),n) + f(IntVect(2*i,2*j+1,2*k),n) + f(IntVect(2*i+1,2*j,2*k),n) + f(IntVect(2*i,2*j,2*k),n))*0.125;
+					c(IntVect(i,j,k),n) += (f(IntVect(2*i+1,2*j+1,2*k+1),n) + f(IntVect(2*i,2*j+1,2*k+1),n) + f(IntVect(2*i+1,2*j,2*k+1),n) + f(IntVect(2*i,2*j,2*k+1),n))*0.125;
 				}
 			}
 		}
@@ -44,22 +42,20 @@ const FArrayBox& c){
 	const int *lo = bx.loVect();
 	const int *hi = bx.hiVect();
 
+#pragma omp target data map(f) map(to: c, hi, lo)
+#pragma omp target teams distribute parallel for collapse(4) 
 	for (int n = 0; n<nc; n++){
 		for (int k = lo[2]; k <= hi[2]; ++k) {
-			int k2 = 2*k;
 			for (int j = lo[1]; j <= hi[1]; ++j) {
-				int j2 = 2*j;
 				for (int i = lo[0]; i <= hi[0]; ++i) {
-					int i2 = 2*i;
-					
-					f(IntVect(i2+1,j2+1,k2  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2  ,j2+1,k2  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2+1,j2  ,k2  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2  ,j2  ,k2  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2+1,j2+1,k2+1),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2  ,j2+1,k2+1),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2+1,j2  ,k2+1),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2  ,j2  ,k2+1),n)       += c(IntVect(i,j,k),n);
+					f(IntVect(2*i+1,2*j+1,2*k  ),n)       += c(IntVect(i,j,k),n);
+					f(IntVect(2*i  ,2*j+1,2*k  ),n)       += c(IntVect(i,j,k),n);
+					f(IntVect(2*i+1,2*j  ,2*k  ),n)       += c(IntVect(i,j,k),n);
+					f(IntVect(2*i  ,2*j  ,2*k  ),n)       += c(IntVect(i,j,k),n);
+					f(IntVect(2*i+1,2*j+1,2*k+1),n)       += c(IntVect(i,j,k),n);
+					f(IntVect(2*i  ,2*j+1,2*k+1),n)       += c(IntVect(i,j,k),n);
+					f(IntVect(2*i+1,2*j  ,2*k+1),n)       += c(IntVect(i,j,k),n);
+					f(IntVect(2*i  ,2*j  ,2*k+1),n)       += c(IntVect(i,j,k),n);
 				}
 			}
 		}
@@ -131,10 +127,14 @@ const Real* h)
 	Real dhy = beta/(h[1]*h[1]);
 	Real dhz = beta/(h[2]*h[2]);
 	
+#pragma omp target data map(tofrom:phi) map(to:rhs,m0,m1,m2,m3,m4,m5,f0,f1,f2,f3,f4,f5,a,bX,bY,bZ, blo,bhi,lo,hi)
+#pragma omp target update to(rhs,phi,bX,bY,bZ,a,m0,m1,m2,m3,m4,m5,f0,f1,f2,f3,f4,f5, blo,bhi,lo,hi)
+#pragma omp target teams distribute collapse(3)
 	for (int n = 0; n<nc; n++){
 		for (int k = lo[2]; k <= hi[2]; ++k) {
 			for (int j = lo[1]; j <= hi[1]; ++j) {
 				int ioff = (lo[0] + j + k + rb)%2;
+#pragma omp parallel for firstprivate(alpha,dhx,dhy,dhz,omega,ioff) default(shared)
 				for (int i = lo[0] + ioff; i <= hi[0]; i+=2) {
 					
 					//BC terms
@@ -166,6 +166,7 @@ const Real* h)
 			}
 		}
 	}
+#pragma omp target update from(phi)
 }
 
 //-----------------------------------------------------------------------
@@ -195,6 +196,9 @@ const Real* h)
 	Real dhy = beta/(h[1]*h[1]);
 	Real dhz = beta/(h[2]*h[2]);
 
+#pragma omp target data map(from: y) map(to: a, bX,bY,bZ, x, lo, hi)
+#pragma omp target update to(a,x)
+#pragma omp target teams distribute parallel for collapse(4)
 	for (int n = 0; n<nc; n++){
 		for (int k = lo[2]; k <= hi[2]; ++k) {
 			for (int j = lo[1]; j <= hi[1]; ++j) {
@@ -213,6 +217,7 @@ const Real* h)
 			}
 		}
 	}
+#pragma omp target update from(y)
 }
 
 //-----------------------------------------------------------------------
@@ -244,6 +249,10 @@ const Real* h)
 	//initialize to zero
     res = 0.0;
 
+#pragma omp target data map(to: a,bX,bY,bZ, lo, hi)
+#pragma omp target update to(a,bX,bY,bZ)
+#pragma omp target map(tofrom:res)
+#pragma omp teams distribute parallel for collapse(4) firstprivate(alpha,dhx,dhy,dhz) private(k,j,i) reduction(max:res)
 	for (int n = 0; n<nc; n++){
 		for (int k = lo[2]; k <= hi[2]; ++k) {
 			for (int j = lo[1]; j <= hi[1]; ++j) {
