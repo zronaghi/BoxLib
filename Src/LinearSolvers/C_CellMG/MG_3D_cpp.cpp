@@ -6,6 +6,10 @@
 #include <ArrayLim.H>
 #include <iostream>
 
+//forward declaration
+#pragma omp declare target
+IntVect IntVect::IntVect(int,int,int);
+
 //ask Brian CONSTANTS
 //MultiGrid.cpp
 
@@ -17,15 +21,27 @@ const FArrayBox& f){
 	
 	const int *lo = bx.loVect();
 	const int *hi = bx.hiVect();
-
-#pragma omp target data map(from: c) map(to: f, hi, lo)
+	
+	//pointer, needed for c++ mapping
+	//c:
+	const Real* cpt=c.dataPtr();
+	const int* c_lo=c.loVect();
+	const int* c_hi=c.hiVect();
+	//f
+	const Real* fpt=c.dataPtr();
+	const int* f_lo=c.loVect();
+	const int* f_hi=c.hiVect();
+	
+#pragma omp target data map(from: cpt) map(to: c_hi, c_lo, fpt, f_lo, f_hi, hi, lo)
+	{
 #pragma omp target teams distribute parallel for collapse(4) 
-	for (int n = 0; n<nc; n++){
-		for (int k = lo[2]; k <= hi[2]; ++k) {
-			for (int j = lo[1]; j <= hi[1]; ++j) {
-				for (int i = lo[0]; i <= hi[0]; ++i) {
-					c(IntVect(i,j,k),n) =  (f(IntVect(2*i+1,2*j+1,2*k),n) + f(IntVect(2*i,2*j+1,2*k),n) + f(IntVect(2*i+1,2*j,2*k),n) + f(IntVect(2*i,2*j,2*k),n))*0.125;
-					c(IntVect(i,j,k),n) += (f(IntVect(2*i+1,2*j+1,2*k+1),n) + f(IntVect(2*i,2*j+1,2*k+1),n) + f(IntVect(2*i+1,2*j,2*k+1),n) + f(IntVect(2*i,2*j,2*k+1),n))*0.125;
+		for (int n = 0; n<nc; n++){
+			for (int k = lo[2]; k <= hi[2]; ++k) {
+				for (int j = lo[1]; j <= hi[1]; ++j) {
+					for (int i = lo[0]; i <= hi[0]; ++i) {
+						c(IntVect(i,j,k),n) =  (f(IntVect(2*i+1,2*j+1,2*k),n) + f(IntVect(2*i,2*j+1,2*k),n) + f(IntVect(2*i+1,2*j,2*k),n) + f(IntVect(2*i,2*j,2*k),n))*0.125;
+						c(IntVect(i,j,k),n) += (f(IntVect(2*i+1,2*j+1,2*k+1),n) + f(IntVect(2*i,2*j+1,2*k+1),n) + f(IntVect(2*i+1,2*j,2*k+1),n) + f(IntVect(2*i,2*j,2*k+1),n))*0.125;
+					}
 				}
 			}
 		}
@@ -41,21 +57,33 @@ const FArrayBox& c){
 	
 	const int *lo = bx.loVect();
 	const int *hi = bx.hiVect();
-
-#pragma omp target data map(f) map(to: c, hi, lo)
+	
+	//pointer, needed for c++ mapping
+	//c:
+	const Real* cpt=c.dataPtr();
+	const int* c_lo=c.loVect();
+	const int* c_hi=c.hiVect();
+	//f
+	const Real* fpt=c.dataPtr();
+	const int* f_lo=c.loVect();
+	const int* f_hi=c.hiVect();
+	
+#pragma omp target data map(fpt) map(to: f_lo, f_hi, cpt, c_lo, c_hi, hi, lo)
+	{
 #pragma omp target teams distribute parallel for collapse(4) 
-	for (int n = 0; n<nc; n++){
-		for (int k = lo[2]; k <= hi[2]; ++k) {
-			for (int j = lo[1]; j <= hi[1]; ++j) {
-				for (int i = lo[0]; i <= hi[0]; ++i) {
-					f(IntVect(2*i+1,2*j+1,2*k  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(2*i  ,2*j+1,2*k  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(2*i+1,2*j  ,2*k  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(2*i  ,2*j  ,2*k  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(2*i+1,2*j+1,2*k+1),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(2*i  ,2*j+1,2*k+1),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(2*i+1,2*j  ,2*k+1),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(2*i  ,2*j  ,2*k+1),n)       += c(IntVect(i,j,k),n);
+		for (int n = 0; n<nc; n++){
+			for (int k = lo[2]; k <= hi[2]; ++k) {
+				for (int j = lo[1]; j <= hi[1]; ++j) {
+					for (int i = lo[0]; i <= hi[0]; ++i) {
+						f(IntVect(2*i+1,2*j+1,2*k  ),n)       += c(IntVect(i,j,k),n);
+						f(IntVect(2*i  ,2*j+1,2*k  ),n)       += c(IntVect(i,j,k),n);
+						f(IntVect(2*i+1,2*j  ,2*k  ),n)       += c(IntVect(i,j,k),n);
+						f(IntVect(2*i  ,2*j  ,2*k  ),n)       += c(IntVect(i,j,k),n);
+						f(IntVect(2*i+1,2*j+1,2*k+1),n)       += c(IntVect(i,j,k),n);
+						f(IntVect(2*i  ,2*j+1,2*k+1),n)       += c(IntVect(i,j,k),n);
+						f(IntVect(2*i+1,2*j  ,2*k+1),n)       += c(IntVect(i,j,k),n);
+						f(IntVect(2*i  ,2*j  ,2*k+1),n)       += c(IntVect(i,j,k),n);
+					}
 				}
 			}
 		}
@@ -129,39 +157,41 @@ const Real* h)
 	
 #pragma omp target data map(tofrom:phi) map(to:rhs,m0,m1,m2,m3,m4,m5,f0,f1,f2,f3,f4,f5,a,bX,bY,bZ, blo,bhi,lo,hi)
 #pragma omp target update to(rhs,phi,bX,bY,bZ,a,m0,m1,m2,m3,m4,m5,f0,f1,f2,f3,f4,f5, blo,bhi,lo,hi)
+	{
 #pragma omp target teams distribute collapse(3)
-	for (int n = 0; n<nc; n++){
-		for (int k = lo[2]; k <= hi[2]; ++k) {
-			for (int j = lo[1]; j <= hi[1]; ++j) {
-				int ioff = (lo[0] + j + k + rb)%2;
+		for (int n = 0; n<nc; n++){
+			for (int k = lo[2]; k <= hi[2]; ++k) {
+				for (int j = lo[1]; j <= hi[1]; ++j) {
+					int ioff = (lo[0] + j + k + rb)%2;
 #pragma omp parallel for firstprivate(alpha,dhx,dhy,dhz,omega,ioff) default(shared)
-				for (int i = lo[0] + ioff; i <= hi[0]; i+=2) {
+					for (int i = lo[0] + ioff; i <= hi[0]; i+=2) {
 					
-					//BC terms
-					Real cf0 = ( (i==blo[0]) && (m0(IntVect(blo[0]-1,j,k))>0) ? f0(IntVect(blo[0],j,k)) : 0. );
-					Real cf1 = ( (j==blo[1]) && (m1(IntVect(i,blo[1]-1,k))>0) ? f1(IntVect(i,blo[1],k)) : 0. );
-					Real cf2 = ( (k==blo[2]) && (m2(IntVect(i,j,blo[2]-1))>0) ? f2(IntVect(i,j,blo[2])) : 0. );
-					Real cf3 = ( (i==bhi[0]) && (m3(IntVect(bhi[0]+1,j,k))>0) ? f3(IntVect(bhi[0],j,k)) : 0. );
-					Real cf4 = ( (j==bhi[1]) && (m4(IntVect(i,bhi[1]+1,k))>0) ? f4(IntVect(i,bhi[1],k)) : 0. );
-					Real cf5 = ( (k==bhi[2]) && (m5(IntVect(i,j,bhi[2]+1))>0) ? f5(IntVect(i,j,bhi[2])) : 0. );
+						//BC terms
+						Real cf0 = ( (i==blo[0]) && (m0(IntVect(blo[0]-1,j,k))>0) ? f0(IntVect(blo[0],j,k)) : 0. );
+						Real cf1 = ( (j==blo[1]) && (m1(IntVect(i,blo[1]-1,k))>0) ? f1(IntVect(i,blo[1],k)) : 0. );
+						Real cf2 = ( (k==blo[2]) && (m2(IntVect(i,j,blo[2]-1))>0) ? f2(IntVect(i,j,blo[2])) : 0. );
+						Real cf3 = ( (i==bhi[0]) && (m3(IntVect(bhi[0]+1,j,k))>0) ? f3(IntVect(bhi[0],j,k)) : 0. );
+						Real cf4 = ( (j==bhi[1]) && (m4(IntVect(i,bhi[1]+1,k))>0) ? f4(IntVect(i,bhi[1],k)) : 0. );
+						Real cf5 = ( (k==bhi[2]) && (m5(IntVect(i,j,bhi[2]+1))>0) ? f5(IntVect(i,j,bhi[2])) : 0. );
 					
-					//assign ORA constants
-					double gamma = alpha * a(IntVect(i,j,k))
-									+ dhx * (bX(IntVect(i,j,k)) + bX(IntVect(i+1,j,k)))
-									+ dhy * (bY(IntVect(i,j,k)) + bY(IntVect(i,j+1,k)))
-									+ dhz * (bZ(IntVect(i,j,k)) + bZ(IntVect(i,j,k+1)));
+						//assign ORA constants
+						double gamma = alpha * a(IntVect(i,j,k))
+										+ dhx * (bX(IntVect(i,j,k)) + bX(IntVect(i+1,j,k)))
+										+ dhy * (bY(IntVect(i,j,k)) + bY(IntVect(i,j+1,k)))
+										+ dhz * (bZ(IntVect(i,j,k)) + bZ(IntVect(i,j,k+1)));
 					
-					double g_m_d = gamma
-									- dhx * (bX(IntVect(i,j,k))*cf0 + bX(IntVect(i+1,j,k))*cf3)
-									- dhy * (bY(IntVect(i,j,k))*cf1 + bY(IntVect(i,j+1,k))*cf4)
-									- dhz * (bZ(IntVect(i,j,k))*cf2 + bZ(IntVect(i,j,k+1))*cf5);
+						double g_m_d = gamma
+										- dhx * (bX(IntVect(i,j,k))*cf0 + bX(IntVect(i+1,j,k))*cf3)
+										- dhy * (bY(IntVect(i,j,k))*cf1 + bY(IntVect(i,j+1,k))*cf4)
+										- dhz * (bZ(IntVect(i,j,k))*cf2 + bZ(IntVect(i,j,k+1))*cf5);
 					
-					double rho =  dhx * (bX(IntVect(i,j,k))*phi(IntVect(i-1,j,k),n) + bX(IntVect(i+1,j,k))*phi(IntVect(i+1,j,k),n))
-								+ dhy * (bY(IntVect(i,j,k))*phi(IntVect(i,j-1,k),n) + bY(IntVect(i,j+1,k))*phi(IntVect(i,j+1,k),n))
-								+ dhz * (bZ(IntVect(i,j,k))*phi(IntVect(i,j,k-1),n) + bZ(IntVect(i,j,k+1))*phi(IntVect(i,j,k+1),n));
+						double rho =  dhx * (bX(IntVect(i,j,k))*phi(IntVect(i-1,j,k),n) + bX(IntVect(i+1,j,k))*phi(IntVect(i+1,j,k),n))
+									+ dhy * (bY(IntVect(i,j,k))*phi(IntVect(i,j-1,k),n) + bY(IntVect(i,j+1,k))*phi(IntVect(i,j+1,k),n))
+									+ dhz * (bZ(IntVect(i,j,k))*phi(IntVect(i,j,k-1),n) + bZ(IntVect(i,j,k+1))*phi(IntVect(i,j,k+1),n));
 					
-					double res = rhs(IntVect(i,j,k),n) - gamma * phi(IntVect(i,j,k),n) + rho;
-					phi(IntVect(i,j,k),n) += omega/g_m_d * res;
+						double res = rhs(IntVect(i,j,k),n) - gamma * phi(IntVect(i,j,k),n) + rho;
+						phi(IntVect(i,j,k),n) += omega/g_m_d * res;
+					}
 				}
 			}
 		}
@@ -198,21 +228,23 @@ const Real* h)
 
 #pragma omp target data map(from: y) map(to: a, bX,bY,bZ, x, lo, hi)
 #pragma omp target update to(a,x)
+	{
 #pragma omp target teams distribute parallel for collapse(4)
-	for (int n = 0; n<nc; n++){
-		for (int k = lo[2]; k <= hi[2]; ++k) {
-			for (int j = lo[1]; j <= hi[1]; ++j) {
-				for (int i = lo[0]; i <= hi[0]; ++i) {
-					y(IntVect(i,j,k),n) = alpha*a(IntVect(i,j,k))*x(IntVect(i,j,k),n)
-										- dhx * (   bX(IntVect(i+1,j,  k  )) * ( x(IntVect(i+1,j,  k),  n) - x(IntVect(i,  j,  k  ),n) )
-												  - bX(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i-1,j,  k  ),n) ) 
-												)
-										- dhy * (   bY(IntVect(i,  j+1,k  )) * ( x(IntVect(i,  j+1,k),  n) - x(IntVect(i,  j  ,k  ),n) )
-												  - bY(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j-1,k  ),n) )
-												)
-										- dhz * (   bZ(IntVect(i,  j,  k+1)) * ( x(IntVect(i,  j,  k+1),n) - x(IntVect(i,  j  ,k  ),n) )
-												  - bZ(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j,  k-1),n) )
-												);
+		for (int n = 0; n<nc; n++){
+			for (int k = lo[2]; k <= hi[2]; ++k) {
+				for (int j = lo[1]; j <= hi[1]; ++j) {
+					for (int i = lo[0]; i <= hi[0]; ++i) {
+						y(IntVect(i,j,k),n) = alpha*a(IntVect(i,j,k))*x(IntVect(i,j,k),n)
+											- dhx * (   bX(IntVect(i+1,j,  k  )) * ( x(IntVect(i+1,j,  k),  n) - x(IntVect(i,  j,  k  ),n) )
+													  - bX(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i-1,j,  k  ),n) ) 
+													)
+											- dhy * (   bY(IntVect(i,  j+1,k  )) * ( x(IntVect(i,  j+1,k),  n) - x(IntVect(i,  j  ,k  ),n) )
+													  - bY(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j-1,k  ),n) )
+													)
+											- dhz * (   bZ(IntVect(i,  j,  k+1)) * ( x(IntVect(i,  j,  k+1),n) - x(IntVect(i,  j  ,k  ),n) )
+													  - bZ(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j,  k-1),n) )
+													);
+					}
 				}
 			}
 		}
@@ -249,24 +281,25 @@ const Real* h)
 	//initialize to zero
     res = 0.0;
 
-#pragma omp target data map(to: a,bX,bY,bZ, lo, hi)
+#pragma omp target data map(to: a,bX,bY,bZ, lo, hi) map(tofrom:res)
 #pragma omp target update to(a,bX,bY,bZ)
-#pragma omp target map(tofrom:res)
+	{
 #pragma omp teams distribute parallel for collapse(4) firstprivate(alpha,dhx,dhy,dhz) private(k,j,i) reduction(max:res)
-	for (int n = 0; n<nc; n++){
-		for (int k = lo[2]; k <= hi[2]; ++k) {
-			for (int j = lo[1]; j <= hi[1]; ++j) {
-				for (int i = lo[0]; i <= hi[0]; ++i) {
-					Real tmpval= alpha*a(IntVect(i,j,k))
-								+ dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )
-								+ dhy * ( bY(IntVect(i,j+1,k)) + bY(IntVect(i,j,k)) )
-								+ dhz * ( bZ(IntVect(i,j,k+1)) + bZ(IntVect(i,j,k)) );
-					res = std::max(res,std::abs(tmpval));
+		for (int n = 0; n<nc; n++){
+			for (int k = lo[2]; k <= hi[2]; ++k) {
+				for (int j = lo[1]; j <= hi[1]; ++j) {
+					for (int i = lo[0]; i <= hi[0]; ++i) {
+						Real tmpval= alpha*a(IntVect(i,j,k))
+									+ dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )
+									+ dhy * ( bY(IntVect(i,j+1,k)) + bY(IntVect(i,j,k)) )
+									+ dhz * ( bZ(IntVect(i,j,k+1)) + bZ(IntVect(i,j,k)) );
+						res = std::max(res,std::abs(tmpval));
 					
-					//now add the rest
-					res +=    std::abs( dhx * bX(IntVect(i+1,j,k)) ) + std::abs( dhx * bX(IntVect(i,j,k)) )
-							+ std::abs( dhy * bY(IntVect(i,j+1,k)) ) + std::abs( dhy * bY(IntVect(i,j,k)) )
-							+ std::abs( dhz * bZ(IntVect(i,j,k+1)) ) + std::abs( dhz * bZ(IntVect(i,j,k)) );
+						//now add the rest
+						res +=    std::abs( dhx * bX(IntVect(i+1,j,k)) ) + std::abs( dhx * bX(IntVect(i,j,k)) )
+								+ std::abs( dhy * bY(IntVect(i,j+1,k)) ) + std::abs( dhy * bY(IntVect(i,j,k)) )
+								+ std::abs( dhz * bZ(IntVect(i,j,k+1)) ) + std::abs( dhz * bZ(IntVect(i,j,k)) );
+					}
 				}
 			}
 		}
