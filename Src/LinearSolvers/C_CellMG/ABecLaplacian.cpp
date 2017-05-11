@@ -64,11 +64,11 @@ Real
 	const int nc = 1;
 	Real res = 0.0;
 
-	const bool tiling = true;
+	const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:res)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(max:res)
+//#endif
 	{
 		for (MFIter amfi(a,tiling); amfi.isValid(); ++amfi)
 		{
@@ -353,11 +353,11 @@ int src_comp, int dst_comp, int num_comp, int bnd_comp)
 	const MultiFab& bY = bCoefficients(1,level);,
 	const MultiFab& bZ = bCoefficients(2,level););
 	
-	const bool tiling = true;
+	const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (MFIter inmfi(in,tiling); inmfi.isValid(); ++inmfi)
 	{
 		D_TERM(const Box& xbx   = inmfi.nodaltilebox(0);,
@@ -481,11 +481,11 @@ int             redBlackFlag)
 	//const int nc = solnL.nComp(); // FIXME: This LinOp only really supports single-component
 	const int nc = 1;
 
-	const bool tiling = true;
+	const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (MFIter solnLmfi(solnL,tiling); solnLmfi.isValid(); ++solnLmfi)
 	{
 		const int ng = solnL.nGrow();
@@ -740,11 +740,11 @@ int             level)
 	//set number of comps to 1 for the moment:
 	const int nc = 1;
 
-	const bool tiling = true;
+	const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (MFIter ymfi(y,tiling); ymfi.isValid(); ++ymfi)
 	{
 		const Box&       tbx  = ymfi.tilebox();
