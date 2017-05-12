@@ -2,7 +2,6 @@
 #define BL_OMPARENA_H
 
 #include <Arena.H>
-#include <BL_CXX11.H>
 #include <omp.h>
 
 //
@@ -22,11 +21,11 @@ public:
     // Allocates a dynamic memory arena of size sz.
     // Returns a pointer to this memory.
     //
-  virtual void* alloc (std::size_t sz) BL_OVERRIDE;
+  virtual void* alloc (std::size_t sz) override;
     //
     // Deletes the arena pointed to by pt.
     //
-  virtual void free (void* pt) BL_OVERRIDE;
+  virtual void free (void* pt) override;
 };
 
 #endif /*BL_OMPARENA_H*/

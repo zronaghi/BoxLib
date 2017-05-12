@@ -21,15 +21,17 @@ const FArrayBox& f){
 	//pointer, needed for c++ mapping
 	//c:
 	const Real* cpt=c.dataPtr();
+	const int c_size=c.size();
 	const int* c_lo=c.loVect();
 	const int* c_hi=c.hiVect();
 	//f
-	const Real* fpt=c.dataPtr();
-	const int* f_lo=c.loVect();
-	const int* f_hi=c.hiVect();
+	const Real* fpt=f.dataPtr();
+	const int f_size=f.size();
+	const int* f_lo=f.loVect();
+	const int* f_hi=f.hiVect();
 	
-#pragma omp target data map(to: hi, lo, f_lo, f_hi, cpt, c_lo, c_hi)
-#pragma omp target update to(fpt)
+#pragma omp target update to(fpt[0:f_size])
+#pragma omp target data map(to: hi[0:3], lo[0:3], f_lo[0:3], f_hi[0:3], c_lo[0:3], c_hi[0:3])
 	{
 #pragma omp target teams distribute parallel for collapse(4) 
 		for (int n = 0; n<nc; n++){
@@ -43,7 +45,7 @@ const FArrayBox& f){
 			}
 		}
 	}
-#pragma omp target update from(cpt)
+#pragma omp target update from(cpt[0:c_size])
 }
 
 
@@ -57,17 +59,19 @@ const FArrayBox& c){
 	const int *hi = bx.hiVect();
 	
 	//pointer, needed for c++ mapping
+	//f
+	Real* fpt=f.dataPtr();
+	const int f_size=f.size();
+	const int* f_lo=f.loVect();
+	const int* f_hi=f.hiVect();
 	//c:
 	const Real* cpt=c.dataPtr();
+	const int c_size=c.size();
 	const int* c_lo=c.loVect();
 	const int* c_hi=c.hiVect();
-	//f
-	const Real* fpt=c.dataPtr();
-	const int* f_lo=c.loVect();
-	const int* f_hi=c.hiVect();
 
-#pragma omp target data map(to: hi, lo, f_lo, f_hi, cpt, c_lo, c_hi)
-#pragma omp target update to(cpt)
+#pragma omp target update to(cpt[0:c_size],fpt[0:f_size])
+#pragma omp target data map(to: hi[0:3], lo[0:3], f_lo[0:3], f_hi[0:3], c_lo[0:3], c_hi[0:3])
 	{
 #pragma omp target teams distribute parallel for collapse(4) 
 		for (int n = 0; n<nc; n++){
@@ -87,7 +91,7 @@ const FArrayBox& c){
 			}
 		}
 	}
-#pragma omp target update from(fpt)
+#pragma omp target update from(fpt[0:f_size])
 }
 
 
@@ -229,12 +233,12 @@ const Real* h)
 	Real dhy = beta/(h[1]*h[1]);
 	Real dhz = beta/(h[2]*h[2]);
 	
-#pragma omp target data map(to: blo, bhi, lo, hi)
-#pragma omp target data map(to: phi_lo, phi_hi, rhs_lo, rhs_hi, a_lo, a_hi)
-#pragma omp target data map(to: bX_lo, bX_hi, bY_lo, bY_hi, bZ_lo, bZ_hi)
-#pragma omp target data map(to: m0_lo, m0_hi, m1_lo, m1_hi, m2_lo, m2_hi, m3_lo, m3_hi, m4_lo, m4_hi, m5_lo, m5_hi)
-#pragma omp target data map(to: f0_lo, f0_hi, f1_lo, f1_hi, f2_lo, f2_hi, f3_lo, f3_hi, f4_lo, f4_hi, f5_lo, f5_hi) 
-#pragma omp target update to(phipt,rhspt,apt,bXpt,bYpt,bZpt,m0pt,m1pt,m2pt,m3pt,m4pt,m5pt,f0pt,f1pt,f2pt,f3pt,f4pt,f5pt)
+//#pragma omp target update to(phipt,rhspt,apt,bXpt,bYpt,bZpt,m0pt,m1pt,m2pt,m3pt,m4pt,m5pt,f0pt,f1pt,f2pt,f3pt,f4pt,f5pt)
+//#pragma omp target data map(to: blo[0:3], bhi[0:3], lo[0:3], hi[0:3])
+//#pragma omp target data map(to: phi_lo[0:3], phi_hi[0:3], rhs_lo[0:3], rhs_hi[0:3], a_lo[0:3], a_hi[0:3])
+//#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
+//#pragma omp target data map(to: m0_lo[0:3], m0_hi[0:3], m1_lo[0:3], m1_hi[0:3], m2_lo[0:3], m2_hi[0:3], m3_lo[0:3], m3_hi[0:3], m4_lo[0:3], m4_hi[0:3], m5_lo[0:3], m5_hi[0:3])
+//#pragma omp target data map(to: f0_lo[0:3], f0_hi[0:3], f1_lo[0:3], f1_hi[0:3], f2_lo[0:3], f2_hi[0:3], f3_lo[0:3], f3_hi[0:3], f4_lo[0:3], f4_hi[0:3], f5_lo[0:3], f5_hi[0:3]) 
 	{
 #pragma omp target teams distribute collapse(3)
 		for (int n = 0; n<nc; n++){
@@ -274,7 +278,7 @@ const Real* h)
 			}
 		}
 	}
-#pragma omp target update from(phipt)
+	//#pragma omp target update from(phipt)
 }
 
 //-----------------------------------------------------------------------
@@ -330,10 +334,10 @@ const Real* h)
 	Real dhy = beta/(h[1]*h[1]);
 	Real dhz = beta/(h[2]*h[2]);
 
-#pragma omp target data map(to: lo, hi)
-#pragma omp target data map(to: y_lo, y_hi, x_lo, x_hi, a_lo, a_hi)
-#pragma omp target data map(to: bX_lo, bX_hi, bY_lo, bY_hi, bZ_lo, bZ_hi)
-#pragma omp target update to(apt,xpt,bXpt,bYpt,bZpt)
+//#pragma omp target update to(apt,xpt,bXpt,bYpt,bZpt)
+//#pragma omp target data map(to: lo[0:3], hi[0:3])
+//#pragma omp target data map(to: y_lo[0:3], y_hi[0:3], x_lo[0:3], x_hi[0:3], a_lo[0:3], a_hi[0:3])
+//#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
 	{
 #pragma omp target teams distribute parallel for collapse(4)
 		for (int n = 0; n<nc; n++){
@@ -355,7 +359,7 @@ const Real* h)
 			}
 		}
 	}
-#pragma omp target update from(ypt)
+	//#pragma omp target update from(ypt)
 }
 
 //-----------------------------------------------------------------------
@@ -405,12 +409,12 @@ const Real* h)
 	//initialize to zero
     res = 0.0;
 
-#pragma omp target data map(to: lo, hi)
-#pragma omp target data map(to: a_lo, a_hi)
-#pragma omp target data map(to: bX_lo, bX_hi, bY_lo, bY_hi, bZ_lo, bZ_hi)
-#pragma omp target update to(apt,bXpt,bYpt,bZpt)
+//#pragma omp target update to(apt,bXpt,bYpt,bZpt)
+//#pragma omp target data map(to: lo[0:3], hi[0:3])
+//#pragma omp target data map(to: a_lo[0:3], a_hi[0:3])
+//#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
 	{
-#pragma omp teams distribute parallel for collapse(4) firstprivate(alpha,dhx,dhy,dhz) reduction(max:res)
+#pragma omp target teams distribute parallel for collapse(4) firstprivate(alpha,dhx,dhy,dhz) reduction(max:res)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {

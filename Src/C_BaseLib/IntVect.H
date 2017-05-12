@@ -40,13 +40,17 @@ public:
     //
     // Construct an IntVect whose components are all zero.
     //
+#pragma omp declare target
     IntVect () { D_EXPR(vect[0] = 0, vect[1] = 0, vect[2] = 0); }
+#pragma omp end declare target
     //
     // Construct an IntVect given the specific values for its
     // coordinates.  D_DECL is a macro that sets the constructor
     // to take BL_SPACEDIM arguments.
     //
+#pragma omp declare target
     IntVect (D_DECL(int i, int j, int k)) { D_EXPR(vect[0] = i, vect[1] = j, vect[2] = k); }
+#pragma omp end declare target
     //
     // Construct an IntVect setting the coordinates to the
     // corresponding values in the integer array a.

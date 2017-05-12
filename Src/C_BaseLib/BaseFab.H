@@ -222,11 +222,15 @@ public:
     // inefficient if the C++ compiler is unable to optimize the
     // C++ code.
     //
+#pragma omp declare target
     T& operator() (const IntVect& p, int N);
+#pragma omp end declare target
     //
     // Same as above, except returns component 0.
     //
+#pragma omp declare target
     T& operator() (const IntVect& p);
+#pragma omp end declare target
     //
     // Same as above except works on const FABs.
     //
@@ -234,7 +238,9 @@ public:
     //
     // Same as above, except returns component 0.
     //
+#pragma omp declare target
     const T& operator() (const IntVect& p) const;
+#pragma omp end declare target
     //
     // This function puts numcomp component values, starting at
     // component N, from position pos in the domain into array data,
