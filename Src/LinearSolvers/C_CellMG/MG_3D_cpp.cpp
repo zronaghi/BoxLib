@@ -10,6 +10,7 @@
 //MultiGrid.cpp
 
 //Average Kernel
+#pragma omp declare target
 void C_AVERAGE(const Box& bx,
 const int nc,
 FArrayBox& c,
@@ -47,9 +48,11 @@ const FArrayBox& f){
 	}
 #pragma omp target update from(cpt[0:c_size])
 }
+#pragma omp end declare target
 
 
 //Interpolation Kernel
+#pragma omp declare target
 void C_INTERP(const Box& bx,
 const int nc,
 FArrayBox& f,
@@ -93,6 +96,7 @@ const FArrayBox& c){
 	}
 #pragma omp target update from(fpt[0:f_size])
 }
+#pragma omp end declare target
 
 
 //-----------------------------------------------------------------------
@@ -119,6 +123,7 @@ const FArrayBox& c){
 //     element.
 //     
 //-----------------------------------------------------------------------
+#pragma omp declare target
 void C_GSRB_3D(
 const Box& bx,
 const Box& bbx,
@@ -301,11 +306,14 @@ const Real* h)
 	}
 #pragma omp target update from(phipt[0:phi_size])
 }
+#pragma omp end declare target
+
 
 //-----------------------------------------------------------------------
 //
 //     Fill in a matrix x vector operator here
 //
+#pragma omp declare target
 void C_ADOTX(
 const Box& bx,
 const int nc,
@@ -388,11 +396,14 @@ const Real* h)
 	}
 #pragma omp target update from(ypt[0:y_size])
 }
+#pragma omp end declare target
+
 
 //-----------------------------------------------------------------------
 //
 //     Fill in a matrix x vector operator here
 //
+#pragma omp declare target
 void C_NORMA(
 const Box& bx,
 const int nc,
@@ -466,11 +477,14 @@ const Real* h)
 		}
 	}
 }
+#pragma omp end declare target
+
 
 //-----------------------------------------------------------------------
 //
 //     Fill in fluxes
 //
+#pragma omp declare target
 void C_FLUX(
 const Box& xbx,
 const Box& ybx,
@@ -530,3 +544,4 @@ const Real* h)
 		}
 	}
 }
+#pragma omp end declare target

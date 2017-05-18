@@ -774,8 +774,14 @@ const MultiFab& f)
 
 	//construct tiling
 	MFIter cmfi = MFIter(c,IntVect(128,32,32));
+
 #ifdef _OPENMP
-#pragma omp target teams distribute dist_schedule(static,16)
+	int nthreads=1;
+#pragma omp parallel
+	{
+		nthreads = omp_get_num_threads();
+	}
+#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID)
 #endif
 	for (int index=cmfi.getBeginIndex(); index<cmfi.getEndIndex(); ++index)
 	{
@@ -822,8 +828,14 @@ const MultiFab& c)
 	
 	//construct tiling
 	MFIter cmfi = MFIter(c,IntVect(128,32,32));
+	
 #ifdef _OPENMP
-#pragma omp target teams distribute dist_schedule(static,16)
+	int nthreads=1;
+#pragma omp parallel
+	{
+		nthreads = omp_get_num_threads();
+	}
+#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID)
 #endif
 	for (int index=cmfi.getBeginIndex(); index<cmfi.getEndIndex(); ++index)
 	{

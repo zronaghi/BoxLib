@@ -46,7 +46,7 @@ HPGMG_BOTTOM_SOLVER= BICGSTAB
 HPGMG_SMOOTHER = GSRB
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
-CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA -DBL_OMP_FABS -DDEVID=0 #-xmic-avx512 -qno-offload
+CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA -DBL_OMP_FABS -DDEVID=0 -DNUM_TEAMS=16 #-xmic-avx512 -qoffload-arch=mic-avx512 -qno-offload
 #CPPFLAGS += -DCG_USE_OLD_CONVERGENCE_CRITERIA -DBL_OMP_FABS
 
 # USE_MPI must be TRUE if USE_HYPRE

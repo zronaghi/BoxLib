@@ -5,6 +5,8 @@
 #include <ParallelDescriptor.H>
 #include <MG_F.H>
 
+#include <iostream>
+
 Real ABecLaplacian::a_def     = 0.0;
 Real ABecLaplacian::b_def     = 1.0;
 Real ABecLaplacian::alpha_def = 1.0;
@@ -69,7 +71,12 @@ Real
 	//construct tiling
 	MFIter amfi = MFIter(a,IntVect(128,32,32));
 #ifdef _OPENMP
-#pragma omp target teams distribute reduction(max:res) dist_schedule(static,16)
+	int nthreads=1;
+#pragma omp parallel
+	{
+		nthreads = omp_get_num_threads();
+	}
+#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) reduction(max:res) dist_schedule(static) device(DEVID)
 #endif
 	for (int index=amfi.getBeginIndex(); index<amfi.getEndIndex(); ++index)
 	{
@@ -486,9 +493,16 @@ int             redBlackFlag)
 	const bool tiling = true;
 
 	//construct tiling
-	MFIter solnLmfi = MFIter(solnL,IntVect(128,32,32));
+	MFIter solnLmfi = MFIter(solnL,IntVect(1024, 4, 4));
+	
 #ifdef _OPENMP
-#pragma omp target teams distribute dist_schedule(static,16)
+	int nthreads=1;
+#pragma omp parallel
+	{
+		nthreads = omp_get_num_threads();
+	}
+	//#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID)
+#pragma omp target teams distribute parallel for num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID) firstprivate(solnLmfi) 
 #endif
 	for (int index=solnLmfi.getBeginIndex(); index<solnLmfi.getEndIndex(); ++index)
 	{
@@ -751,7 +765,12 @@ int             level)
 	//create temporary class variable
 	MFIter ymfi = MFIter(y,IntVect(128,32,32));
 #ifdef _OPENMP
-#pragma omp target teams distribute dist_schedule(static,16)
+	int nthreads=1;
+#pragma omp parallel
+	{
+		nthreads = omp_get_num_threads();
+	}
+#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID)
 #endif
 	for (int index=ymfi.getBeginIndex(); index<ymfi.getEndIndex(); ++index)
 	{
