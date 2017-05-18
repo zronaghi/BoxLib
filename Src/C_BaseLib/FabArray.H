@@ -672,6 +672,10 @@ public:
     // Constant reference to FabArray over which we're iterating.
     //
     const FabArrayBase& theFabArrayBase () const { return fabArray; }
+	//return beginIndex and endIndex and able to externally influence the index
+	int getBeginIndex() const{return beginIndex;}
+	int getEndIndex() const{return endIndex;}
+	int setCurrentIndex(int index){currentIndex=index;}
 
 protected:
 

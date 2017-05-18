@@ -770,12 +770,17 @@ const MultiFab& f)
 	//
 	// Use Fortran function to average down (restrict) f to c.
 	//
-const bool tiling = false;
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
-	for (MFIter cmfi(c,tiling); cmfi.isValid(); ++cmfi)
+	const bool tiling = true;
+
+	//construct tiling
+	MFIter cmfi = MFIter(c,IntVect(128,32,32));
+#ifdef _OPENMP
+#pragma omp target teams distribute dist_schedule(static,16)
+#endif
+	for (int index=cmfi.getBeginIndex(); index<cmfi.getEndIndex(); ++index)
 	{
+		cmfi.setCurrentIndex(index);
+		
 		BL_ASSERT(c.boxArray().get(cmfi.index()) == cmfi.validbox());
 		const int 	 	 ng   = c.nGrow();
 		const int        nc   = c.nComp();
@@ -813,17 +818,22 @@ const MultiFab& c)
 	// Use fortran function to interpolate up (prolong) c to f
 	// Note: returns f=f+P(c) , i.e. ADDS interp'd c to f.
 	//
-	const bool tiling = false;
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
-	for (MFIter mfi(c,tiling); mfi.isValid(); ++mfi)
+	const bool tiling = true;
+	
+	//construct tiling
+	MFIter cmfi = MFIter(c,IntVect(128,32,32));
+#ifdef _OPENMP
+#pragma omp target teams distribute dist_schedule(static,16)
+#endif
+	for (int index=cmfi.getBeginIndex(); index<cmfi.getEndIndex(); ++index)
 	{
-		const Box&       bx = mfi.tilebox();
+		cmfi.setCurrentIndex(index);
+		
+		const Box&       bx = cmfi.tilebox();
 		const int 	 	 ng   = c.nGrow();
 		const int        nc = f.nComp();
-		const FArrayBox& cfab = c[mfi];
-		FArrayBox&       ffab = f[mfi];
+		const FArrayBox& cfab = c[cmfi];
+		FArrayBox&       ffab = f[cmfi];
 
 		if (use_C_kernels) {
 			C_INTERP(

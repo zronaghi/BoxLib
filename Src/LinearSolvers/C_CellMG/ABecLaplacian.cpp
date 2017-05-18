@@ -64,60 +64,62 @@ Real
 	const int nc = 1;
 	Real res = 0.0;
 
-	const bool tiling = false;
+	const bool tiling = true;
 
-//#ifdef _OPENMP
-//#pragma omp parallel reduction(max:res)
-//#endif
+	//construct tiling
+	MFIter amfi = MFIter(a,IntVect(128,32,32));
+#ifdef _OPENMP
+#pragma omp target teams distribute reduction(max:res) dist_schedule(static,16)
+#endif
+	for (int index=amfi.getBeginIndex(); index<amfi.getEndIndex(); ++index)
 	{
-		for (MFIter amfi(a,tiling); amfi.isValid(); ++amfi)
-		{
-			Real tres;
+		amfi.setCurrentIndex(index);
+		
+		Real tres;
 	    
-			const Box&       tbx  = amfi.tilebox();
-			const FArrayBox& afab = a[amfi];
+		const Box&       tbx  = amfi.tilebox();
+		const FArrayBox& afab = a[amfi];
 	    
-			D_TERM(const FArrayBox& bxfab = bX[amfi];,
-			const FArrayBox& byfab = bY[amfi];,
-			const FArrayBox& bzfab = bZ[amfi];);
+		D_TERM(const FArrayBox& bxfab = bX[amfi];,
+		const FArrayBox& byfab = bY[amfi];,
+		const FArrayBox& bzfab = bZ[amfi];);
 	    
 #if (BL_SPACEDIM==2)
+		FORT_NORMA(&tres,
+		&alpha, &beta,
+		afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+		bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+		byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+		tbx.loVect(), tbx.hiVect(), &nc,
+		h[level]);
+#elif (BL_SPACEDIM==3)
+			
+		if(use_C_kernels){
+			C_NORMA(
+				tbx,
+			nc,
+			tres,
+			alpha,
+			beta,
+			afab,
+			bxfab,
+			byfab,
+			bzfab,
+			h[level]);
+		}
+		else{
 			FORT_NORMA(&tres,
 			&alpha, &beta,
 			afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
 			bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
 			byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+			bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
 			tbx.loVect(), tbx.hiVect(), &nc,
 			h[level]);
-#elif (BL_SPACEDIM==3)
-			
-			if(use_C_kernels){
-				C_NORMA(
-					tbx,
-					nc,
-					tres,
-					alpha,
-					beta,
-					afab,
-					bxfab,
-					byfab,
-					bzfab,
-					h[level]);
-			}
-			else{
-				FORT_NORMA(&tres,
-					&alpha, &beta,
-					afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-					bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-					byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-					bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-					tbx.loVect(), tbx.hiVect(), &nc,
-					h[level]);
-			}
+		}
 #endif
 
-			res = std::max(res, tres);
-		}
+		res = std::max(res, tres);
 	}
 
 	if (!local)
@@ -353,11 +355,11 @@ int src_comp, int dst_comp, int num_comp, int bnd_comp)
 	const MultiFab& bY = bCoefficients(1,level);,
 	const MultiFab& bZ = bCoefficients(2,level););
 	
-	const bool tiling = false;
+	const bool tiling = true;
 
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
 	for (MFIter inmfi(in,tiling); inmfi.isValid(); ++inmfi)
 	{
 		D_TERM(const Box& xbx   = inmfi.nodaltilebox(0);,
@@ -481,13 +483,17 @@ int             redBlackFlag)
 	//const int nc = solnL.nComp(); // FIXME: This LinOp only really supports single-component
 	const int nc = 1;
 
-	const bool tiling = false;
+	const bool tiling = true;
 
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
-	for (MFIter solnLmfi(solnL,tiling); solnLmfi.isValid(); ++solnLmfi)
+	//construct tiling
+	MFIter solnLmfi = MFIter(solnL,IntVect(128,32,32));
+#ifdef _OPENMP
+#pragma omp target teams distribute dist_schedule(static,16)
+#endif
+	for (int index=solnLmfi.getBeginIndex(); index<solnLmfi.getEndIndex(); ++index)
 	{
+		solnLmfi.setCurrentIndex(index);
+
 		const int ng = solnL.nGrow();
 		const Mask& m0 = mm0[solnLmfi];
 		const Mask& m1 = mm1[solnLmfi];
@@ -740,13 +746,16 @@ int             level)
 	//set number of comps to 1 for the moment:
 	const int nc = 1;
 
-	const bool tiling = false;
-
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
-	for (MFIter ymfi(y,tiling); ymfi.isValid(); ++ymfi)
+	const bool tiling = true;
+	
+	//create temporary class variable
+	MFIter ymfi = MFIter(y,IntVect(128,32,32));
+#ifdef _OPENMP
+#pragma omp target teams distribute dist_schedule(static,16)
+#endif
+	for (int index=ymfi.getBeginIndex(); index<ymfi.getEndIndex(); ++index)
 	{
+		ymfi.setCurrentIndex(index);
 		const Box&       tbx  = ymfi.tilebox();
 		FArrayBox&       yfab = y[ymfi];
 		const FArrayBox& xfab = x[ymfi];
