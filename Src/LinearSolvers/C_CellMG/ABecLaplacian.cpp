@@ -4,8 +4,9 @@
 #include <ABec_F.H>
 #include <ParallelDescriptor.H>
 #include <MG_F.H>
+#include <math.h>
 
-#include <iostream>
+#include <ittnotify.h>
 
 Real ABecLaplacian::a_def     = 0.0;
 Real ABecLaplacian::b_def     = 1.0;
@@ -70,17 +71,36 @@ Real
 
 	//construct tiling
 	MFIter amfi = MFIter(a,IntVect(128,32,32));
+
+        int nthreads=1;
+        int nteams=1;
 #ifdef _OPENMP
-	int nthreads=1;
+	//determine number of threads and teams
 #pragma omp parallel
-	{
-		nthreads = omp_get_num_threads();
+        {
+	  nthreads = omp_get_num_threads();
 	}
-#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) reduction(max:res) dist_schedule(static) device(DEVID)
+#pragma omp target teams num_teams(NUM_TEAMS)
+        {
+	  nteams = omp_get_num_teams();
+        }
 #endif
-	for (int index=amfi.getBeginIndex(); index<amfi.getEndIndex(); ++index)
-	{
-		amfi.setCurrentIndex(index);
+
+        int index_block=static_cast<int>(ceil(static_cast<double>(amfi.getEndIndex()-amfi.getBeginIndex()+1)/static_cast<double>(nteams)));
+	int threads_per_team=static_cast<int>(ceil(static_cast<double>(nthreads)/static_cast<double>(nteams)));
+
+#ifdef _OPENMP
+#pragma omp target teams num_teams(nteams) thread_limit(threads_per_team) device(DEVID)
+#pragma omp distribute dist_schedule(static)
+#endif
+        for (int index0=amfi.getBeginIndex(); index0<amfi.getEndIndex(); index0+=index_block){
+#ifdef _OPENMP
+#pragma omp parallel for firstprivate(amfi) num_threads(threads_per_team/NUM_THREADS_PER_BOX) schedule(static)
+#endif
+	  for (int index=index0; index<std::min(index0+index_block,amfi.getEndIndex()); ++index){
+
+	    //set index
+	    amfi.setCurrentIndex(index);
 		
 		Real tres;
 	    
@@ -127,6 +147,7 @@ Real
 #endif
 
 		res = std::max(res, tres);
+	}
 	}
 
 	if (!local)
@@ -493,123 +514,149 @@ int             redBlackFlag)
 	const bool tiling = true;
 
 	//construct tiling
-	MFIter solnLmfi = MFIter(solnL,IntVect(1024, 4, 4));
-	
-#ifdef _OPENMP
+	MFIter solnLmfi = MFIter(solnL,IntVect(1024000,8,8));
+
+
+	//DEBUG
+	__itt_resume();
+	//DEBUG
+
 	int nthreads=1;
+	int nteams=1;
+#ifdef _OPENMP	
+	//determine number of threads and teams
 #pragma omp parallel
 	{
 		nthreads = omp_get_num_threads();
 	}
-	//#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID)
-#pragma omp target teams distribute parallel for num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID) firstprivate(solnLmfi) 
-#endif
-	for (int index=solnLmfi.getBeginIndex(); index<solnLmfi.getEndIndex(); ++index)
+#pragma omp target teams num_teams(NUM_TEAMS)
 	{
-		solnLmfi.setCurrentIndex(index);
+		nteams = omp_get_num_teams();
+	}
+#endif
+	
+	int index_block=static_cast<int>(ceil(static_cast<double>(solnLmfi.getEndIndex()-solnLmfi.getBeginIndex()+1)/static_cast<double>(nteams)));
+	int threads_per_team=static_cast<int>(ceil(static_cast<double>(nthreads)/static_cast<double>(nteams)));
 
-		const int ng = solnL.nGrow();
-		const Mask& m0 = mm0[solnLmfi];
-		const Mask& m1 = mm1[solnLmfi];
-		const Mask& m2 = mm2[solnLmfi];
-		const Mask& m3 = mm3[solnLmfi];
+#ifdef _OPENMP	
+#pragma omp target teams num_teams(nteams) thread_limit(threads_per_team) device(DEVID)
+#pragma omp distribute dist_schedule(static)
+#endif
+	for (int index0=solnLmfi.getBeginIndex(); index0<solnLmfi.getEndIndex(); index0+=index_block){
+#ifdef _OPENMP
+#pragma omp parallel for firstprivate(solnLmfi) num_threads(threads_per_team/NUM_THREADS_PER_BOX) schedule(static)
+#endif
+		for (int index=index0; index<std::min(index0+index_block,solnLmfi.getEndIndex()); ++index){
+		
+			solnLmfi.setCurrentIndex(index);
+
+			const int ng = solnL.nGrow();
+			const Mask& m0 = mm0[solnLmfi];
+			const Mask& m1 = mm1[solnLmfi];
+			const Mask& m2 = mm2[solnLmfi];
+			const Mask& m3 = mm3[solnLmfi];
 #if (BL_SPACEDIM > 2)
-		const Mask& m4 = mm4[solnLmfi];
-		const Mask& m5 = mm5[solnLmfi];
+			const Mask& m4 = mm4[solnLmfi];
+			const Mask& m5 = mm5[solnLmfi];
 #endif
 
-		const Box&       tbx     = solnLmfi.tilebox();
-		const Box&       vbx     = solnLmfi.validbox();
-		FArrayBox&       solnfab = solnL[solnLmfi];
-		const FArrayBox& rhsfab  = rhsL[solnLmfi];
-		const FArrayBox& afab    = a[solnLmfi];
+			const Box&       tbx     = solnLmfi.tilebox();
+			const Box&       vbx     = solnLmfi.validbox();
+			FArrayBox&       solnfab = solnL[solnLmfi];
+			const FArrayBox& rhsfab  = rhsL[solnLmfi];
+			const FArrayBox& afab    = a[solnLmfi];
 
-		D_TERM(const FArrayBox& bxfab = bX[solnLmfi];,
-		const FArrayBox& byfab = bY[solnLmfi];,
-		const FArrayBox& bzfab = bZ[solnLmfi];);
+			D_TERM(const FArrayBox& bxfab = bX[solnLmfi];,
+			const FArrayBox& byfab = bY[solnLmfi];,
+			const FArrayBox& bzfab = bZ[solnLmfi];);
 
-		const FArrayBox& f0fab = f0[solnLmfi];
-		const FArrayBox& f1fab = f1[solnLmfi];
-		const FArrayBox& f2fab = f2[solnLmfi];
-		const FArrayBox& f3fab = f3[solnLmfi];
+			const FArrayBox& f0fab = f0[solnLmfi];
+			const FArrayBox& f1fab = f1[solnLmfi];
+			const FArrayBox& f2fab = f2[solnLmfi];
+			const FArrayBox& f3fab = f3[solnLmfi];
 #if (BL_SPACEDIM > 2)
-		const FArrayBox& f4fab = f4[solnLmfi];
-		const FArrayBox& f5fab = f5[solnLmfi];
+			const FArrayBox& f4fab = f4[solnLmfi];
+			const FArrayBox& f5fab = f5[solnLmfi];
 #endif
 
 #if (BL_SPACEDIM == 2)
-		FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
-		rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
-		&alpha, &beta,
-		afab.dataPtr(), ARLIM(afab.loVect()),    ARLIM(afab.hiVect()),
-		bxfab.dataPtr(), ARLIM(bxfab.loVect()),   ARLIM(bxfab.hiVect()),
-		byfab.dataPtr(), ARLIM(byfab.loVect()),   ARLIM(byfab.hiVect()),
-		f0fab.dataPtr(), ARLIM(f0fab.loVect()),   ARLIM(f0fab.hiVect()),
-		m0.dataPtr(), ARLIM(m0.loVect()),   ARLIM(m0.hiVect()),
-		f1fab.dataPtr(), ARLIM(f1fab.loVect()),   ARLIM(f1fab.hiVect()),
-		m1.dataPtr(), ARLIM(m1.loVect()),   ARLIM(m1.hiVect()),
-		f2fab.dataPtr(), ARLIM(f2fab.loVect()),   ARLIM(f2fab.hiVect()),
-		m2.dataPtr(), ARLIM(m2.loVect()),   ARLIM(m2.hiVect()),
-		f3fab.dataPtr(), ARLIM(f3fab.loVect()),   ARLIM(f3fab.hiVect()),
-		m3.dataPtr(), ARLIM(m3.loVect()),   ARLIM(m3.hiVect()),
-		tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
-		&nc, h[level], &redBlackFlag);
+			FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
+			rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
+			&alpha, &beta,
+			afab.dataPtr(), ARLIM(afab.loVect()),    ARLIM(afab.hiVect()),
+			bxfab.dataPtr(), ARLIM(bxfab.loVect()),   ARLIM(bxfab.hiVect()),
+			byfab.dataPtr(), ARLIM(byfab.loVect()),   ARLIM(byfab.hiVect()),
+			f0fab.dataPtr(), ARLIM(f0fab.loVect()),   ARLIM(f0fab.hiVect()),
+			m0.dataPtr(), ARLIM(m0.loVect()),   ARLIM(m0.hiVect()),
+			f1fab.dataPtr(), ARLIM(f1fab.loVect()),   ARLIM(f1fab.hiVect()),
+			m1.dataPtr(), ARLIM(m1.loVect()),   ARLIM(m1.hiVect()),
+			f2fab.dataPtr(), ARLIM(f2fab.loVect()),   ARLIM(f2fab.hiVect()),
+			m2.dataPtr(), ARLIM(m2.loVect()),   ARLIM(m2.hiVect()),
+			f3fab.dataPtr(), ARLIM(f3fab.loVect()),   ARLIM(f3fab.hiVect()),
+			m3.dataPtr(), ARLIM(m3.loVect()),   ARLIM(m3.hiVect()),
+			tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
+			&nc, h[level], &redBlackFlag);
 #endif
 
 #if (BL_SPACEDIM == 3)
-		if(use_C_kernels){
-			C_GSRB_3D(
-				tbx,
-				vbx,
-				nc,
-				redBlackFlag,
-				alpha,
-				beta,
-				solnfab,
-				rhsfab,
-				afab,
-				bxfab,
-				byfab,
-				bzfab,
-				f0fab,
-				m0,
-				f1fab,
-				m1,
-				f2fab,
-				m2,
-				f3fab,
-				m3,
-				f4fab,
-				m4,
-				f5fab,
-				m5,
-				h[level]);
-		}
-		else{
-			FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
-					rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
-					&alpha, &beta,
-					afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-					bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-					byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-					bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-					f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
-					m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
-					f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
-					m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
-					f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
-					m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
-					f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
-					m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
-					f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
-					m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
-					f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
-					m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
-					tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
-					&nc, h[level], &redBlackFlag);
+			if(use_C_kernels){
+				C_GSRB_3D(
+					tbx,
+					vbx,
+					nc,
+					redBlackFlag,
+					alpha,
+					beta,
+					solnfab,
+					rhsfab,
+					afab,
+					bxfab,
+					byfab,
+					bzfab,
+					f0fab,
+					m0,
+					f1fab,
+					m1,
+					f2fab,
+					m2,
+					f3fab,
+					m3,
+					f4fab,
+					m4,
+					f5fab,
+					m5,
+					h[level]);
+			}
+			else{
+				FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
+						rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
+						&alpha, &beta,
+						afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+						bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+						byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+						bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+						f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
+						m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
+						f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
+						m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
+						f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
+						m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
+						f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
+						m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
+						f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
+						m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
+						f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
+						m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
+						tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
+						&nc, h[level], &redBlackFlag);
+			}
 		}
 #endif //(BL_SPACEDIM == 3)
 	}
+	
+	//DEBUG
+	__itt_pause();
+	//DEBUG
 }
 
 void

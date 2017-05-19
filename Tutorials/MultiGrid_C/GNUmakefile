@@ -46,7 +46,7 @@ HPGMG_BOTTOM_SOLVER= BICGSTAB
 HPGMG_SMOOTHER = GSRB
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
-CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA -DBL_OMP_FABS -DDEVID=0 -DNUM_TEAMS=16 #-xmic-avx512 -qoffload-arch=mic-avx512 -qno-offload
+CPPFLAGS += -g -dynamic -DCG_USE_OLD_CONVERGENCE_CRITERIA -DBL_OMP_FABS -DDEVID=0 -DNUM_TEAMS=1 -DNUM_THREADS_PER_BOX=1 #-qno-offload -xmic-avx512 -qoffload-arch=mic-avx512
 #CPPFLAGS += -DCG_USE_OLD_CONVERGENCE_CRITERIA -DBL_OMP_FABS
 
 # USE_MPI must be TRUE if USE_HYPRE
@@ -77,6 +77,11 @@ vpathdir += $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG
 
 INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG4
 vpathdir += $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG4
+
+#VTUNE:
+INCLUDE_LOCATIONS += $(VTUNE_AMPLIFIER_XE_2017_DIR)/include
+LIBRARY_LOCATIONS += $(VTUNE_AMPLIFIER_XE_2017_DIR)/lib64
+LIBRARIES += -littnotify -ldl
 
 ifeq ($(USE_F90_SOLVERS), TRUE)
   include $(BOXLIB_HOME)/Src/LinearSolvers/C_to_F_MG/Make.package

@@ -775,16 +775,34 @@ const MultiFab& f)
 	//construct tiling
 	MFIter cmfi = MFIter(c,IntVect(128,32,32));
 
+        int nthreads=1;
+        int nteams=1;
 #ifdef _OPENMP
-	int nthreads=1;
+        //determine number of threads and teams
 #pragma omp parallel
 	{
-		nthreads = omp_get_num_threads();
-	}
-#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID)
+          nthreads = omp_get_num_threads();
+        }
+#pragma omp target teams num_teams(NUM_TEAMS)
+        {
+          nteams = omp_get_num_teams();
+        }
 #endif
-	for (int index=cmfi.getBeginIndex(); index<cmfi.getEndIndex(); ++index)
-	{
+
+        int index_block=static_cast<int>(ceil(static_cast<double>(cmfi.getEndIndex()-cmfi.getBeginIndex()+1)/static_cast<double>(nteams)));
+        int threads_per_team=static_cast<int>(ceil(static_cast<double>(nthreads)/static_cast<double>(nteams)));
+
+#ifdef _OPENMP
+#pragma omp target teams num_teams(nteams) thread_limit(threads_per_team) device(DEVID)
+#pragma omp distribute dist_schedule(static)
+#endif
+        for (int index0=cmfi.getBeginIndex(); index0<cmfi.getEndIndex(); index0+=index_block){
+#ifdef _OPENMP
+#pragma omp parallel for firstprivate(cmfi) num_threads(threads_per_team/NUM_THREADS_PER_BOX) schedule(static)
+#endif
+          for (int index=index0; index<std::min(index0+index_block,cmfi.getEndIndex()); ++index){
+
+	    //set index
 		cmfi.setCurrentIndex(index);
 		
 		BL_ASSERT(c.boxArray().get(cmfi.index()) == cmfi.validbox());
@@ -813,11 +831,10 @@ const MultiFab& f)
 				&nc);
 		}
 	}
+	}
 }
 
-void
-	MultiGrid::interpolate (MultiFab&       f,
-const MultiFab& c)
+void MultiGrid::interpolate (MultiFab&       f, const MultiFab& c)
 {
 	BL_PROFILE("MultiGrid::interpolate()");
 	//
@@ -829,16 +846,34 @@ const MultiFab& c)
 	//construct tiling
 	MFIter cmfi = MFIter(c,IntVect(128,32,32));
 	
+        int nthreads=1;
+        int nteams=1;
 #ifdef _OPENMP
-	int nthreads=1;
+        //determine number of threads and teams
 #pragma omp parallel
 	{
-		nthreads = omp_get_num_threads();
-	}
-#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID)
+          nthreads = omp_get_num_threads();
+        }
+#pragma omp target teams num_teams(NUM_TEAMS)
+        {
+          nteams = omp_get_num_teams();
+        }
 #endif
-	for (int index=cmfi.getBeginIndex(); index<cmfi.getEndIndex(); ++index)
-	{
+
+        int index_block=static_cast<int>(ceil(static_cast<double>(cmfi.getEndIndex()-cmfi.getBeginIndex()+1)/static_cast<double>(nteams)));
+        int threads_per_team=static_cast<int>(ceil(static_cast<double>(nthreads)/static_cast<double>(nteams)));
+
+#ifdef _OPENMP
+#pragma omp target teams num_teams(nteams) thread_limit(threads_per_team) device(DEVID)
+#pragma omp distribute dist_schedule(static)
+#endif
+        for (int index0=cmfi.getBeginIndex(); index0<cmfi.getEndIndex(); index0+=index_block){
+#ifdef _OPENMP
+#pragma omp parallel for firstprivate(cmfi) num_threads(threads_per_team/NUM_THREADS_PER_BOX) schedule(static)
+#endif
+          for (int index=index0; index<std::min(index0+index_block,cmfi.getEndIndex()); ++index){
+	    
+	    //set index
 		cmfi.setCurrentIndex(index);
 		
 		const Box&       bx = cmfi.tilebox();
@@ -866,6 +901,7 @@ const MultiFab& c)
 				&nc);
 		}
 	}
+}
 }
 
 int
