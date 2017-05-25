@@ -6,7 +6,7 @@
 #include <MG_F.H>
 #include <math.h>
 
-#include <ittnotify.h>
+//#include <ittnotify.h>
 
 Real ABecLaplacian::a_def     = 0.0;
 Real ABecLaplacian::b_def     = 1.0;
@@ -72,82 +72,82 @@ Real
 	//construct tiling
 	MFIter amfi = MFIter(a,IntVect(128,32,32));
 
-        int nthreads=1;
-        int nteams=1;
+	int nthreads=1;
+	int nteams=1;
 #ifdef _OPENMP
 	//determine number of threads and teams
 #pragma omp parallel
-        {
-	  nthreads = omp_get_num_threads();
+	{
+		nthreads = omp_get_num_threads();
 	}
 #pragma omp target teams num_teams(NUM_TEAMS)
-        {
-	  nteams = omp_get_num_teams();
-        }
+	{
+		nteams = omp_get_num_teams();
+	}
 #endif
 
-        int index_block=static_cast<int>(ceil(static_cast<double>(amfi.getEndIndex()-amfi.getBeginIndex()+1)/static_cast<double>(nteams)));
+	int index_block=static_cast<int>(ceil(static_cast<double>(amfi.getEndIndex()-amfi.getBeginIndex()+1)/static_cast<double>(nteams)));
 	int threads_per_team=static_cast<int>(ceil(static_cast<double>(nthreads)/static_cast<double>(nteams)));
 
 #ifdef _OPENMP
-#pragma omp target teams num_teams(nteams) thread_limit(threads_per_team) device(DEVID)
-#pragma omp distribute dist_schedule(static)
+	//#pragma omp target teams num_teams(nteams) thread_limit(threads_per_team) device(DEVID)
+	//#pragma omp distribute dist_schedule(static)
 #endif
-        for (int index0=amfi.getBeginIndex(); index0<amfi.getEndIndex(); index0+=index_block){
+	for (int index0=amfi.getBeginIndex(); index0<amfi.getEndIndex(); index0+=index_block){
 #ifdef _OPENMP
 #pragma omp parallel for firstprivate(amfi) num_threads(threads_per_team/NUM_THREADS_PER_BOX) schedule(static)
 #endif
-	  for (int index=index0; index<std::min(index0+index_block,amfi.getEndIndex()); ++index){
+		for (int index=index0; index<std::min(index0+index_block,amfi.getEndIndex()); ++index){
 
-	    //set index
-	    amfi.setCurrentIndex(index);
+			//set index
+			amfi.setCurrentIndex(index);
 		
-		Real tres;
+			Real tres;
 	    
-		const Box&       tbx  = amfi.tilebox();
-		const FArrayBox& afab = a[amfi];
+			const Box&       tbx  = amfi.tilebox();
+			const FArrayBox& afab = a[amfi];
 	    
-		D_TERM(const FArrayBox& bxfab = bX[amfi];,
-		const FArrayBox& byfab = bY[amfi];,
-		const FArrayBox& bzfab = bZ[amfi];);
+			D_TERM(const FArrayBox& bxfab = bX[amfi];,
+			const FArrayBox& byfab = bY[amfi];,
+			const FArrayBox& bzfab = bZ[amfi];);
 	    
 #if (BL_SPACEDIM==2)
-		FORT_NORMA(&tres,
-		&alpha, &beta,
-		afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-		bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-		byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-		tbx.loVect(), tbx.hiVect(), &nc,
-		h[level]);
-#elif (BL_SPACEDIM==3)
-			
-		if(use_C_kernels){
-			C_NORMA(
-				tbx,
-			nc,
-			tres,
-			alpha,
-			beta,
-			afab,
-			bxfab,
-			byfab,
-			bzfab,
-			h[level]);
-		}
-		else{
 			FORT_NORMA(&tres,
 			&alpha, &beta,
 			afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
 			bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
 			byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-			bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
 			tbx.loVect(), tbx.hiVect(), &nc,
 			h[level]);
-		}
+#elif (BL_SPACEDIM==3)
+			
+			if(use_C_kernels){
+				C_NORMA(
+					tbx,
+				nc,
+				tres,
+				alpha,
+				beta,
+				afab,
+				bxfab,
+				byfab,
+				bzfab,
+				h[level]);
+			}
+			else{
+				FORT_NORMA(&tres,
+				&alpha, &beta,
+				afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+				bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+				byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+				bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+				tbx.loVect(), tbx.hiVect(), &nc,
+				h[level]);
+			}
 #endif
 
-		res = std::max(res, tres);
-	}
+			res = std::max(res, tres);
+		}
 	}
 
 	if (!local)
@@ -406,6 +406,45 @@ int src_comp, int dst_comp, int num_comp, int bnd_comp)
 
 #if (BL_SPACEDIM == 2)
 		FORT_FLUX(infab.dataPtr(src_comp),
+		ARLIM(infab.loVect()), ARLIM(infab.hiVect()),
+		&alpha, &beta, a[inmfi].dataPtr(), 
+		ARLIM(a[inmfi].loVect()), ARLIM(a[inmfi].hiVect()),
+		bxfab.dataPtr(), 
+		ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+		byfab.dataPtr(), 
+		ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+		xbx.loVect(), xbx.hiVect(), 
+		ybx.loVect(), ybx.hiVect(),
+		&num_comp,
+		h[level],
+		xfluxfab.dataPtr(dst_comp),
+		ARLIM(xfluxfab.loVect()), ARLIM(xfluxfab.hiVect()),
+		yfluxfab.dataPtr(dst_comp),
+		ARLIM(yfluxfab.loVect()), ARLIM(yfluxfab.hiVect())
+			);
+#endif
+
+#if (BL_SPACEDIM == 3)
+		if(use_C_kernels){
+			C_FLUX(
+				xbx,
+			ybx,
+			zbx,
+			num_comp,
+			infab,
+			xfluxfab,
+			yfluxfab,
+			zfluxfab,
+			alpha,
+			beta,
+			a[inmfi],
+			bxfab,
+			byfab,
+			bzfab,
+			h[level]);
+		}
+		else{
+			FORT_FLUX(infab.dataPtr(src_comp),
 			ARLIM(infab.loVect()), ARLIM(infab.hiVect()),
 			&alpha, &beta, a[inmfi].dataPtr(), 
 			ARLIM(a[inmfi].loVect()), ARLIM(a[inmfi].hiVect()),
@@ -413,58 +452,19 @@ int src_comp, int dst_comp, int num_comp, int bnd_comp)
 			ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
 			byfab.dataPtr(), 
 			ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+			bzfab.dataPtr(), 
+			ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
 			xbx.loVect(), xbx.hiVect(), 
-			ybx.loVect(), ybx.hiVect(),
+			ybx.loVect(), ybx.hiVect(), 
+			zbx.loVect(), zbx.hiVect(), 
 			&num_comp,
 			h[level],
 			xfluxfab.dataPtr(dst_comp),
 			ARLIM(xfluxfab.loVect()), ARLIM(xfluxfab.hiVect()),
 			yfluxfab.dataPtr(dst_comp),
-			ARLIM(yfluxfab.loVect()), ARLIM(yfluxfab.hiVect())
-		);
-#endif
-
-#if (BL_SPACEDIM == 3)
-		if(use_C_kernels){
-			C_FLUX(
-				xbx,
-				ybx,
-				zbx,
-				num_comp,
-				infab,
-				xfluxfab,
-				yfluxfab,
-				zfluxfab,
-				alpha,
-				beta,
-				a[inmfi],
-				bxfab,
-				byfab,
-				bzfab,
-				h[level]);
-		}
-		else{
-			FORT_FLUX(infab.dataPtr(src_comp),
-				ARLIM(infab.loVect()), ARLIM(infab.hiVect()),
-				&alpha, &beta, a[inmfi].dataPtr(), 
-				ARLIM(a[inmfi].loVect()), ARLIM(a[inmfi].hiVect()),
-				bxfab.dataPtr(), 
-				ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-				byfab.dataPtr(), 
-				ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-				bzfab.dataPtr(), 
-				ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-				xbx.loVect(), xbx.hiVect(), 
-				ybx.loVect(), ybx.hiVect(), 
-				zbx.loVect(), zbx.hiVect(), 
-				&num_comp,
-				h[level],
-				xfluxfab.dataPtr(dst_comp),
-				ARLIM(xfluxfab.loVect()), ARLIM(xfluxfab.hiVect()),
-				yfluxfab.dataPtr(dst_comp),
-				ARLIM(yfluxfab.loVect()), ARLIM(yfluxfab.hiVect()),
-				zfluxfab.dataPtr(dst_comp),
-				ARLIM(zfluxfab.loVect()), ARLIM(zfluxfab.hiVect()));
+			ARLIM(yfluxfab.loVect()), ARLIM(yfluxfab.hiVect()),
+			zfluxfab.dataPtr(dst_comp),
+			ARLIM(zfluxfab.loVect()), ARLIM(zfluxfab.hiVect()));
 		}
 #endif 
 	}
@@ -518,7 +518,7 @@ int             redBlackFlag)
 
 
 	//DEBUG
-	__itt_resume();
+	//__itt_resume();
 	//DEBUG
 
 	int nthreads=1;
@@ -538,16 +538,17 @@ int             redBlackFlag)
 	int index_block=static_cast<int>(ceil(static_cast<double>(solnLmfi.getEndIndex()-solnLmfi.getBeginIndex()+1)/static_cast<double>(nteams)));
 	int threads_per_team=static_cast<int>(ceil(static_cast<double>(nthreads)/static_cast<double>(nteams)));
 
-#ifdef _OPENMP	
-#pragma omp target teams num_teams(nteams) thread_limit(threads_per_team) device(DEVID)
-#pragma omp distribute dist_schedule(static)
+#ifdef _OPENMP
+	//#pragma omp target teams num_teams(nteams) thread_limit(threads_per_team) device(DEVID)
+	//#pragma omp distribute
 #endif
 	for (int index0=solnLmfi.getBeginIndex(); index0<solnLmfi.getEndIndex(); index0+=index_block){
 #ifdef _OPENMP
-#pragma omp parallel for firstprivate(solnLmfi) num_threads(threads_per_team/NUM_THREADS_PER_BOX) schedule(static)
+#pragma omp parallel for firstprivate(solnLmfi) num_threads(threads_per_team/NUM_THREADS_PER_BOX)
 #endif
 		for (int index=index0; index<std::min(index0+index_block,solnLmfi.getEndIndex()); ++index){
-		
+
+			//set index
 			solnLmfi.setCurrentIndex(index);
 
 			const int ng = solnL.nGrow();
@@ -602,60 +603,60 @@ int             redBlackFlag)
 			if(use_C_kernels){
 				C_GSRB_3D(
 					tbx,
-					vbx,
-					nc,
-					redBlackFlag,
-					alpha,
-					beta,
-					solnfab,
-					rhsfab,
-					afab,
-					bxfab,
-					byfab,
-					bzfab,
-					f0fab,
-					m0,
-					f1fab,
-					m1,
-					f2fab,
-					m2,
-					f3fab,
-					m3,
-					f4fab,
-					m4,
-					f5fab,
-					m5,
-					h[level]);
+				vbx,
+				nc,
+				redBlackFlag,
+				alpha,
+				beta,
+				solnfab,
+				rhsfab,
+				afab,
+				bxfab,
+				byfab,
+				bzfab,
+				f0fab,
+				m0,
+				f1fab,
+				m1,
+				f2fab,
+				m2,
+				f3fab,
+				m3,
+				f4fab,
+				m4,
+				f5fab,
+				m5,
+				h[level]);
 			}
 			else{
 				FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
-						rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
-						&alpha, &beta,
-						afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-						bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-						byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-						bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-						f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
-						m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
-						f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
-						m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
-						f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
-						m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
-						f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
-						m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
-						f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
-						m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
-						f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
-						m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
-						tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
-						&nc, h[level], &redBlackFlag);
+				rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
+				&alpha, &beta,
+				afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+				bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+				byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+				bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+				f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
+				m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
+				f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
+				m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
+				f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
+				m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
+				f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
+				m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
+				f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
+				m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
+				f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
+				m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
+				tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
+				&nc, h[level], &redBlackFlag);
 			}
-		}
 #endif //(BL_SPACEDIM == 3)
+		}
 	}
 	
 	//DEBUG
-	__itt_pause();
+	//__itt_pause();
 	//DEBUG
 }
 
@@ -811,43 +812,61 @@ int             level)
 	
 	//create temporary class variable
 	MFIter ymfi = MFIter(y,IntVect(128,32,32));
-#ifdef _OPENMP
 	int nthreads=1;
+	int nteams=1;
+#ifdef _OPENMP	
+	//determine number of threads and teams
 #pragma omp parallel
 	{
 		nthreads = omp_get_num_threads();
 	}
-#pragma omp target teams distribute num_teams(NUM_TEAMS) thread_limit(nthreads/NUM_TEAMS) dist_schedule(static) device(DEVID)
-#endif
-	for (int index=ymfi.getBeginIndex(); index<ymfi.getEndIndex(); ++index)
+#pragma omp target teams num_teams(NUM_TEAMS)
 	{
-		ymfi.setCurrentIndex(index);
-		const Box&       tbx  = ymfi.tilebox();
-		FArrayBox&       yfab = y[ymfi];
-		const FArrayBox& xfab = x[ymfi];
-		const FArrayBox& afab = a[ymfi];
+		nteams = omp_get_num_teams();
+	}
+#endif
+	
+	int index_block=static_cast<int>(ceil(static_cast<double>(ymfi.getEndIndex()-ymfi.getBeginIndex()+1)/static_cast<double>(nteams)));
+	int threads_per_team=static_cast<int>(ceil(static_cast<double>(nthreads)/static_cast<double>(nteams)));
 
-		D_TERM(const FArrayBox& bxfab = bX[ymfi];,
-		const FArrayBox& byfab = bY[ymfi];,
-		const FArrayBox& bzfab = bZ[ymfi];);
+#ifdef _OPENMP
+	//#pragma omp target teams num_teams(nteams) thread_limit(threads_per_team) device(DEVID)
+	//#pragma omp distribute
+#endif
+	for (int index0=ymfi.getBeginIndex(); index0<ymfi.getEndIndex(); index0+=index_block){
+#ifdef _OPENMP
+#pragma omp parallel for firstprivate(ymfi) num_threads(threads_per_team/NUM_THREADS_PER_BOX)
+#endif
+		for (int index=index0; index<std::min(index0+index_block,ymfi.getEndIndex()); ++index){
+
+			//set index
+			ymfi.setCurrentIndex(index);
+			const Box&       tbx  = ymfi.tilebox();
+			FArrayBox&       yfab = y[ymfi];
+			const FArrayBox& xfab = x[ymfi];
+			const FArrayBox& afab = a[ymfi];
+
+			D_TERM(const FArrayBox& bxfab = bX[ymfi];,
+			const FArrayBox& byfab = bY[ymfi];,
+			const FArrayBox& bzfab = bZ[ymfi];);
 
 #if (BL_SPACEDIM == 2)
-		FORT_ADOTX(yfab.dataPtr(dst_comp),
-		ARLIM(yfab.loVect()),ARLIM(yfab.hiVect()),
-		xfab.dataPtr(src_comp),
-		ARLIM(xfab.loVect()), ARLIM(xfab.hiVect()),
-		&alpha, &beta, afab.dataPtr(), 
-		ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-		bxfab.dataPtr(), 
-		ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-		byfab.dataPtr(), 
-		ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-		tbx.loVect(), tbx.hiVect(), &num_comp,
-		h[level]);
+			FORT_ADOTX(yfab.dataPtr(dst_comp),
+			ARLIM(yfab.loVect()),ARLIM(yfab.hiVect()),
+			xfab.dataPtr(src_comp),
+			ARLIM(xfab.loVect()), ARLIM(xfab.hiVect()),
+			&alpha, &beta, afab.dataPtr(), 
+			ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+			bxfab.dataPtr(), 
+			ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+			byfab.dataPtr(), 
+			ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+			tbx.loVect(), tbx.hiVect(), &num_comp,
+			h[level]);
 #endif
 #if (BL_SPACEDIM ==3)
-		if(use_C_kernels){
-			C_ADOTX(tbx,
+			if(use_C_kernels){
+				C_ADOTX(tbx,
 				nc,
 				yfab,
 				xfab,
@@ -858,9 +877,9 @@ int             level)
 				byfab,
 				bzfab,
 				h[level]);
-		}
-		else{
-			FORT_ADOTX(yfab.dataPtr(dst_comp),
+			}
+			else{
+				FORT_ADOTX(yfab.dataPtr(dst_comp),
 				ARLIM(yfab.loVect()), ARLIM(yfab.hiVect()),
 				xfab.dataPtr(src_comp),
 				ARLIM(xfab.loVect()), ARLIM(xfab.hiVect()),
@@ -874,7 +893,8 @@ int             level)
 				ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
 				tbx.loVect(), tbx.hiVect(), &num_comp,
 				h[level]);
-		}
+			}
 #endif
+		}
 	}
 }

@@ -10,7 +10,7 @@
 //MultiGrid.cpp
 
 //Average Kernel
-#pragma omp declare target
+//#pragma omp declare target
 void C_AVERAGE(const Box& bx,
 const int nc,
 FArrayBox& c,
@@ -31,10 +31,10 @@ const FArrayBox& f){
 	const int* f_lo=f.loVect();
 	const int* f_hi=f.hiVect();
 
-#pragma omp target update to(fpt[0:f_size])
-#pragma omp target data map(to: hi[0:3], lo[0:3], f_lo[0:3], f_hi[0:3], c_lo[0:3], c_hi[0:3])
+	//#pragma omp target update to(fpt[0:f_size])
+	//#pragma omp target data map(to: hi[0:3], lo[0:3], f_lo[0:3], f_hi[0:3], c_lo[0:3], c_hi[0:3])
 	{
-#pragma omp parallel for collapse(4) 
+		//#pragma omp parallel for collapse(4) 
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
@@ -46,13 +46,13 @@ const FArrayBox& f){
 			}
 		}
 	}
-#pragma omp target update from(cpt[0:c_size])
+	//#pragma omp target update from(cpt[0:c_size])
 }
-#pragma omp end declare target
+//#pragma omp end declare target
 
 
 //Interpolation Kernel
-#pragma omp declare target
+//#pragma omp declare target
 void C_INTERP(const Box& bx,
 const int nc,
 FArrayBox& f,
@@ -73,10 +73,10 @@ const FArrayBox& c){
 	const int* c_lo=c.loVect();
 	const int* c_hi=c.hiVect();
 
-#pragma omp target update to(cpt[0:c_size],fpt[0:f_size])
-#pragma omp target data map(to: hi[0:3], lo[0:3], f_lo[0:3], f_hi[0:3], c_lo[0:3], c_hi[0:3])
+	//#pragma omp target update to(cpt[0:c_size],fpt[0:f_size])
+	//#pragma omp target data map(to: hi[0:3], lo[0:3], f_lo[0:3], f_hi[0:3], c_lo[0:3], c_hi[0:3])
 	{
-#pragma omp parallel for collapse(4)
+		//#pragma omp parallel for collapse(4)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
@@ -94,9 +94,9 @@ const FArrayBox& c){
 			}
 		}
 	}
-#pragma omp target update from(fpt[0:f_size])
+	//#pragma omp target update from(fpt[0:f_size])
 }
-#pragma omp end declare target
+//#pragma omp end declare target
 
 
 //-----------------------------------------------------------------------
@@ -123,7 +123,7 @@ const FArrayBox& c){
 //     element.
 //     
 //-----------------------------------------------------------------------
-#pragma omp declare target
+//#pragma omp declare target
 void C_GSRB_3D(
 const Box& bx,
 const Box& bbx,
@@ -256,22 +256,22 @@ const Real* h)
 	Real dhy = beta/(h[1]*h[1]);
 	Real dhz = beta/(h[2]*h[2]);
 	
-#pragma omp target update to(phipt[0:phi_size],rhspt[0:rhs_size],apt[0:a_size])
-#pragma omp target update to(bXpt[0:bX_size],bYpt[0:bY_size],bZpt[0:bZ_size])
-#pragma omp target update to(m0pt[0:m0_size],m1pt[0:m1_size],m2pt[0:m2_size],m3pt[0:m3_size],m4pt[0:m4_size],m5pt[0:m5_size])
-#pragma omp target update to(f0pt[0:f0_size],f1pt[0:f1_size],f2pt[0:f2_size],f3pt[0:f3_size],f4pt[0:f4_size],f5pt[0:f5_size])
-#pragma omp target data map(to: blo[0:3], bhi[0:3], lo[0:3], hi[0:3])
-#pragma omp target data map(to: phi_lo[0:3], phi_hi[0:3], rhs_lo[0:3], rhs_hi[0:3], a_lo[0:3], a_hi[0:3])
-#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
-#pragma omp target data map(to: m0_lo[0:3], m0_hi[0:3], m1_lo[0:3], m1_hi[0:3], m2_lo[0:3], m2_hi[0:3], m3_lo[0:3], m3_hi[0:3], m4_lo[0:3], m4_hi[0:3], m5_lo[0:3], m5_hi[0:3])
-#pragma omp target data map(to: f0_lo[0:3], f0_hi[0:3], f1_lo[0:3], f1_hi[0:3], f2_lo[0:3], f2_hi[0:3], f3_lo[0:3], f3_hi[0:3], f4_lo[0:3], f4_hi[0:3], f5_lo[0:3], f5_hi[0:3]) 
+//#pragma omp target update to(phipt[0:phi_size],rhspt[0:rhs_size],apt[0:a_size])
+//#pragma omp target update to(bXpt[0:bX_size],bYpt[0:bY_size],bZpt[0:bZ_size])
+//#pragma omp target update to(m0pt[0:m0_size],m1pt[0:m1_size],m2pt[0:m2_size],m3pt[0:m3_size],m4pt[0:m4_size],m5pt[0:m5_size])
+//#pragma omp target update to(f0pt[0:f0_size],f1pt[0:f1_size],f2pt[0:f2_size],f3pt[0:f3_size],f4pt[0:f4_size],f5pt[0:f5_size])
+//#pragma omp target data map(to: blo[0:3], bhi[0:3], lo[0:3], hi[0:3])
+//#pragma omp target data map(to: phi_lo[0:3], phi_hi[0:3], rhs_lo[0:3], rhs_hi[0:3], a_lo[0:3], a_hi[0:3])
+//#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
+//#pragma omp target data map(to: m0_lo[0:3], m0_hi[0:3], m1_lo[0:3], m1_hi[0:3], m2_lo[0:3], m2_hi[0:3], m3_lo[0:3], m3_hi[0:3], m4_lo[0:3], m4_hi[0:3], m5_lo[0:3], m5_hi[0:3])
+//#pragma omp target data map(to: f0_lo[0:3], f0_hi[0:3], f1_lo[0:3], f1_hi[0:3], f2_lo[0:3], f2_hi[0:3], f3_lo[0:3], f3_hi[0:3], f4_lo[0:3], f4_hi[0:3], f5_lo[0:3], f5_hi[0:3]) 
 	{
-#pragma omp parallel for collapse(3) firstprivate(alpha,dhx,dhy,dhz,omega) default(shared)
+		//#pragma omp parallel for collapse(3) firstprivate(alpha,dhx,dhy,dhz,omega) default(shared)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
 					int ioff = (lo[0] + j + k + rb)%2;
-#pragma omp simd
+					//#pragma omp simd
 					for (int i = lo[0] + ioff; i <= hi[0]; i+=2) {
 					
 						//BC terms
@@ -304,16 +304,16 @@ const Real* h)
 			}
 		}
 	}
-#pragma omp target update from(phipt[0:phi_size])
+	//#pragma omp target update from(phipt[0:phi_size])
 }
-#pragma omp end declare target
+//#pragma omp end declare target
 
 
 //-----------------------------------------------------------------------
 //
 //     Fill in a matrix x vector operator here
 //
-#pragma omp declare target
+//#pragma omp declare target
 void C_ADOTX(
 const Box& bx,
 const int nc,
@@ -369,12 +369,12 @@ const Real* h)
 	Real dhy = beta/(h[1]*h[1]);
 	Real dhz = beta/(h[2]*h[2]);
 
-#pragma omp target update to(apt[0:a_size],xpt[0:x_size],bXpt[0:bX_size],bYpt[0:bY_size],bZpt[0:bZ_size])
-#pragma omp target data map(to: lo[0:3], hi[0:3])
-#pragma omp target data map(to: y_lo[0:3], y_hi[0:3], x_lo[0:3], x_hi[0:3], a_lo[0:3], a_hi[0:3])
-#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
+//#pragma omp target update to(apt[0:a_size],xpt[0:x_size],bXpt[0:bX_size],bYpt[0:bY_size],bZpt[0:bZ_size])
+//#pragma omp target data map(to: lo[0:3], hi[0:3])
+//#pragma omp target data map(to: y_lo[0:3], y_hi[0:3], x_lo[0:3], x_hi[0:3], a_lo[0:3], a_hi[0:3])
+//#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
 	{
-#pragma omp parallel for simd collapse(4)
+		//#pragma omp parallel for collapse(4)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
@@ -394,16 +394,16 @@ const Real* h)
 			}
 		}
 	}
-#pragma omp target update from(ypt[0:y_size])
+	//#pragma omp target update from(ypt[0:y_size])
 }
-#pragma omp end declare target
+//#pragma omp end declare target
 
 
 //-----------------------------------------------------------------------
 //
 //     Fill in a matrix x vector operator here
 //
-#pragma omp declare target
+//#pragma omp declare target
 void C_NORMA(
 const Box& bx,
 const int nc,
@@ -451,12 +451,12 @@ const Real* h)
 	//initialize to zero
     res = 0.0;
 
-#pragma omp target update to(apt[0:a_size],bXpt[0:bX_size],bYpt[0:bY_size],bZpt[0:bZ_size])
-#pragma omp target data map(to: lo[0:3], hi[0:3])
-#pragma omp target data map(to: a_lo[0:3], a_hi[0:3])
-#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
+//#pragma omp target update to(apt[0:a_size],bXpt[0:bX_size],bYpt[0:bY_size],bZpt[0:bZ_size])
+//#pragma omp target data map(to: lo[0:3], hi[0:3])
+//#pragma omp target data map(to: a_lo[0:3], a_hi[0:3])
+//#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
 	{
-#pragma omp parallel for simd collapse(4) firstprivate(alpha,dhx,dhy,dhz) reduction(max:res)
+		//#pragma omp parallel for collapse(4) firstprivate(alpha,dhx,dhy,dhz) reduction(max:res)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
@@ -477,14 +477,14 @@ const Real* h)
 		}
 	}
 }
-#pragma omp end declare target
+//#pragma omp end declare target
 
 
 //-----------------------------------------------------------------------
 //
 //     Fill in fluxes
 //
-#pragma omp declare target
+//#pragma omp declare target
 void C_FLUX(
 const Box& xbx,
 const Box& ybx,
@@ -544,4 +544,4 @@ const Real* h)
 		}
 	}
 }
-#pragma omp end declare target
+//#pragma omp end declare target
