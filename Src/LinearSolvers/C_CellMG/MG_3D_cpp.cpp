@@ -84,7 +84,7 @@ const Real* f){
 }
 
 
-void C_INTERP(const Box* bx,
+/*void C_INTERP(const Box* bx,
 const int ng,
 const int nc,
 Real* f,
@@ -154,4 +154,4 @@ const Real* c){
 			}
 		}
 	}
-}
+}*/

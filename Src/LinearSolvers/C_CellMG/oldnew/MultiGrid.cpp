@@ -133,10 +133,11 @@ static
 	}
 }
 
-MultiGrid::MultiGrid (LinOp &_lp)
-	
+MultiGrid::MultiGrid (LinOp &_lp, const bool _use_C_kernels)
+	:
 initialsolution(0),
-Lp(_lp)
+Lp(_lp),
+use_C_kernels(_use_C_kernels)
 {
 	Initialize();
 
@@ -156,6 +157,12 @@ Lp(_lp)
 	numlevels    = numLevels();
 
 	do_fixed_number_of_iters = 0;
+
+    if (use_C_kernels) {
+        if (ParallelDescriptor::IOProcessor()) {
+            std::cout << "WARNING: using C++ MG solver with C kernels" << std::endl;
+        }
+    }
 
 	if ( ParallelDescriptor::IOProcessor() && (verbose > 2) )
 	{
@@ -764,9 +771,9 @@ const MultiFab& f)
 	// Use Fortran function to average down (restrict) f to c.
 	//
 	const bool tiling = false;
-	#ifdef _OPENMP
-	#pragma omp parallel
-	#endif
+	//#ifdef _OPENMP
+	//#pragma omp parallel
+	//#endif
 	for (MFIter cmfi(c,tiling); cmfi.isValid(); ++cmfi)
 	{
 		BL_ASSERT(c.boxArray().get(cmfi.index()) == cmfi.validbox());
@@ -776,34 +783,14 @@ const MultiFab& f)
 		FArrayBox&       cfab = c[cmfi];
 		const FArrayBox& ffab = f[cmfi];
 
-#ifdef USE_CPP_KERNELS
-//#warn Using CPP kernels
-	C_AVERAGE(&bx,
-		  ng,    //ask brian
-		  nc,
-		  cfab.dataPtr(),
-		  ffab.dataPtr());
-#else
-        FORT_AVERAGE(cfab.dataPtr(),
-                     ARLIM(cfab.loVect()), ARLIM(cfab.hiVect()),
-                     ffab.dataPtr(),
-                     ARLIM(ffab.loVect()), ARLIM(ffab.hiVect()),
-                     bx.loVect(), bx.hiVect(), &nc);
-#endif
-    }
-}
-
-
-
-/*#ifdef USE_CPP_KERNELS
-//#warning USING CPP AVERAGING
+    if (use_C_kernels) {
 		C_AVERAGE(
 			&bx,
 			ng,
 			nc,
 			cfab.dataPtr(),
 			ffab.dataPtr());
-#else
+    } else {
 		FORT_AVERAGE(
 			cfab.dataPtr(),
 			ARLIM(cfab.loVect()), 
@@ -814,15 +801,15 @@ const MultiFab& f)
 			bx.loVect(), 
 			bx.hiVect(), 
 			&nc);
-#endif*/
-		
+    }
+
 //		if (ParallelDescriptor::IOProcessor()){
 //		            std::cout << "ffab-after = " << ffab << std::endl;
 //		            std::cout << "cfab-after = " << cfab << std::endl;
 //		            exit(0);
 //		}
-//	}
-//}
+	}
+}
 
 void
 	MultiGrid::interpolate (MultiFab&       f,
@@ -834,9 +821,9 @@ const MultiFab& c)
 	// Note: returns f=f+P(c) , i.e. ADDS interp'd c to f.
 	//
 	const bool tiling = false;
-	#ifdef _OPENMP
-	#pragma omp parallel
-	#endif
+	//#ifdef _OPENMP
+	//#pragma omp parallel
+	//#endif
 	for (MFIter mfi(c,tiling); mfi.isValid(); ++mfi)
 	{
 		const Box&       bx = mfi.tilebox();
@@ -845,15 +832,14 @@ const MultiFab& c)
 		const FArrayBox& cfab = c[mfi];
 		FArrayBox&       ffab = f[mfi];
 
-/*#ifdef USE_CPP_KERNELS
-#warning USING CPP INTERPOLAION
+    if (use_C_kernels) {
 		C_INTERP(
 			&bx,
 			ng,
 			nc,
 			ffab.dataPtr(),
 			cfab.dataPtr());
-#else*/
+    } else {
 		FORT_INTERP(
 			ffab.dataPtr(),
 			ARLIM(ffab.loVect()), 
@@ -864,7 +850,7 @@ const MultiFab& c)
 			bx.loVect(), 
 			bx.hiVect(), 
 			&nc);
-//#endif
+    }
 	}
 }
 
