@@ -32,6 +32,8 @@
 #include <RHS_F.H>
 #include <writePlotFile.H>
 
+#include <Kokkos_Core.hpp>
+
 int  verbose       = 2;     
 bool use_C_kernels = false;
 Real tolerance_rel = 1.e-8;
@@ -96,7 +98,7 @@ void solve_with_HPGMG(MultiFab& soln, MultiFab& gphi, Real a, Real b, MultiFab& 
 int main(int argc, char* argv[])
 {
   BoxLib::Initialize(argc,argv);
-
+  Kokkos::initialize(argc,argv);
   BL_PROFILE_VAR("main()", pmain);
 
   {
@@ -350,7 +352,7 @@ int main(int argc, char* argv[])
   }
  
   BL_PROFILE_VAR_STOP(pmain);
-
+  Kokkos::finalize();
   BoxLib::Finalize();
 }
 

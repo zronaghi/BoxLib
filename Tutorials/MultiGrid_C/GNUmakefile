@@ -1,7 +1,7 @@
 # BOXLIB_HOME defines the directory in which we will find all the BoxLib code -- if this is already defined
 #    then the line below will be ignored
 BOXLIB_HOME ?= ../..
-
+KOKKOS_PATH ?= $(HOME)/kokkos
 # HYPRE_DIR defines the directory in which you can find hypre -- if this is already defined 
 #    then the line below will be ignored
 HYPRE_DIR ?= $(HOME)/lib/hypre
@@ -45,14 +45,17 @@ HPGMG_USE_SUBCOMM = TRUE
 HPGMG_BOTTOM_SOLVER= BICGSTAB
 HPGMG_SMOOTHER = GSRB
 
+KOKKOS_DEVICES = OpenMP
+#KOKKOS_OPTIONS = aggressive_vectorization
+
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
 CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA
 #CPPFLAGS += -DCG_USE_OLD_CONVERGENCE_CRITERIA
 
 # USE_MPI must be TRUE if USE_HYPRE
-USE_MPI=TRUE
+USE_MPI=FALSE
 #USE_OMP=TRUE
-USE_OMP=TRUE
+USE_OMP=FALSE
 
 EBASE = main
 
@@ -60,11 +63,14 @@ include $(BOXLIB_HOME)/Tools/C_mk/Make.defs
 
 CEXE_sources += $(EBASE).cpp
 
+include $(HOME)/kokkos/Makefile.kokkos
+CPPFLAGS += $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS)
 include Make.package
 include $(BOXLIB_HOME)/Src/C_BoundaryLib/Make.package
 include $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG/Make.package
 include $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG4/Make.package
 include $(BOXLIB_HOME)/Src/C_BaseLib/Make.package
+LIBRARIES += $(KOKKOS_LDFLAGS) $(KOKKOS_LIBS)
 
 INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/C_BoundaryLib
 vpathdir += $(BOXLIB_HOME)/Src/C_BoundaryLib
@@ -128,7 +134,7 @@ vpath %.F   : . $(VPATH_LOCATIONS)
 vpath %.f   : . $(VPATH_LOCATIONS)
 vpath %.f90 : . $(VPATH_LOCATIONS)
 
-all: $(executable)
+all: $(executable) 
 	@echo SUCCESS
 
 include $(BOXLIB_HOME)/Tools/C_mk/Make.rules

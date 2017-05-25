@@ -21,9 +21,9 @@ endif
 #
 # Rules for building executable.
 #
-$(executable):	$(objForExecs)
+$(executable):	$(objForExecs) $(KOKKOS_LINK_DEPENDS)
 	@echo Linking $@ ...
-	$(SILENT) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(includes) $(LDFLAGS) -o $@ $^ $(libraries)
+	$(SILENT) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(includes) $(LDFLAGS) $(KOKKOS_LDFLAGS) -o $@ $^ $(libraries)
 #	@echo SUCCESS
 
 clean::
