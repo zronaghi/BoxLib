@@ -779,13 +779,14 @@ const MultiFab& f)
 	int nteams=1;
 #ifdef _OPENMP
 	//determine number of threads and teams
-#pragma omp parallel
+	//#pragma omp target teams map(tofrom:nthreads,nteams)
 	{
-		nthreads = omp_get_num_threads();
-	}
-#pragma omp target teams num_teams(NUM_TEAMS)
-	{
-		nteams = omp_get_num_teams();
+#pragma omp parallel shared(nteams,nthreads)
+		{
+#pragma omp master
+			nteams = omp_get_num_teams();
+			nthreads = omp_get_num_threads();
+		}
 	}
 #endif
 
@@ -850,13 +851,14 @@ void MultiGrid::interpolate (MultiFab&       f, const MultiFab& c)
 	int nteams=1;
 #ifdef _OPENMP
 	//determine number of threads and teams
-#pragma omp parallel
+	//#pragma omp target teams map(tofrom:nthreads,nteams)
 	{
-		nthreads = omp_get_num_threads();
-	}
-#pragma omp target teams num_teams(NUM_TEAMS)
-	{
-		nteams = omp_get_num_teams();
+#pragma omp parallel shared(nteams,nthreads)
+		{
+#pragma omp master
+			nteams = omp_get_num_teams();
+			nthreads = omp_get_num_threads();
+		}
 	}
 #endif
 

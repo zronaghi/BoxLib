@@ -34,7 +34,7 @@ const FArrayBox& f){
 	//#pragma omp target update to(fpt[0:f_size])
 	//#pragma omp target data map(to: hi[0:3], lo[0:3], f_lo[0:3], f_hi[0:3], c_lo[0:3], c_hi[0:3])
 	{
-		//#pragma omp parallel for collapse(4) 
+#pragma omp parallel for simd collapse(4)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
@@ -76,7 +76,7 @@ const FArrayBox& c){
 	//#pragma omp target update to(cpt[0:c_size],fpt[0:f_size])
 	//#pragma omp target data map(to: hi[0:3], lo[0:3], f_lo[0:3], f_hi[0:3], c_lo[0:3], c_hi[0:3])
 	{
-		//#pragma omp parallel for collapse(4)
+#pragma omp parallel for simd collapse(4)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
@@ -271,7 +271,7 @@ const Real* h)
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
 					int ioff = (lo[0] + j + k + rb)%2;
-					//#pragma omp simd
+#pragma omp simd
 					for (int i = lo[0] + ioff; i <= hi[0]; i+=2) {
 					
 						//BC terms
@@ -378,6 +378,7 @@ const Real* h)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
+#pragma omp simd
 					for (int i = lo[0]; i <= hi[0]; ++i) {
 						y(IntVect(i,j,k),n) = alpha*a(IntVect(i,j,k))*x(IntVect(i,j,k),n)
 											- dhx * (   bX(IntVect(i+1,j,  k  )) * ( x(IntVect(i+1,j,  k),  n) - x(IntVect(i,  j,  k  ),n) )
@@ -460,6 +461,7 @@ const Real* h)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
+#pragma omp simd
 					for (int i = lo[0]; i <= hi[0]; ++i) {
 						Real tmpval= alpha*a(IntVect(i,j,k))
 									+ dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )

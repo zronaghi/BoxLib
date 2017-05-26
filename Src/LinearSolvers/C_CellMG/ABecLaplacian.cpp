@@ -76,13 +76,14 @@ Real
 	int nteams=1;
 #ifdef _OPENMP
 	//determine number of threads and teams
-#pragma omp parallel
+	//#pragma omp target teams map(tofrom:nthreads,nteams)
 	{
-		nthreads = omp_get_num_threads();
-	}
-#pragma omp target teams num_teams(NUM_TEAMS)
-	{
-		nteams = omp_get_num_teams();
+#pragma omp parallel shared(nteams,nthreads)
+		{
+#pragma omp master
+			nteams = omp_get_num_teams();
+			nthreads = omp_get_num_threads();
+		}
 	}
 #endif
 
@@ -523,15 +524,16 @@ int             redBlackFlag)
 
 	int nthreads=1;
 	int nteams=1;
-#ifdef _OPENMP	
+#ifdef _OPENMP
 	//determine number of threads and teams
-#pragma omp parallel
+	//#pragma omp target teams map(tofrom:nthreads,nteams)
 	{
-		nthreads = omp_get_num_threads();
-	}
-#pragma omp target teams num_teams(NUM_TEAMS)
-	{
-		nteams = omp_get_num_teams();
+#pragma omp parallel shared(nteams,nthreads)
+		{
+#pragma omp master
+			nteams = omp_get_num_teams();
+			nthreads = omp_get_num_threads();
+		}
 	}
 #endif
 	
@@ -814,15 +816,16 @@ int             level)
 	MFIter ymfi = MFIter(y,IntVect(128,32,32));
 	int nthreads=1;
 	int nteams=1;
-#ifdef _OPENMP	
+#ifdef _OPENMP
 	//determine number of threads and teams
-#pragma omp parallel
+	//#pragma omp target teams map(tofrom:nthreads,nteams)
 	{
-		nthreads = omp_get_num_threads();
-	}
-#pragma omp target teams num_teams(NUM_TEAMS)
-	{
-		nteams = omp_get_num_teams();
+#pragma omp parallel shared(nteams,nthreads)
+		{
+#pragma omp master
+			nteams = omp_get_num_teams();
+			nthreads = omp_get_num_threads();
+		}
 	}
 #endif
 	
