@@ -27,10 +27,10 @@ DEBUG	= FALSE
 DIM	= 3
 #DIM	= 2
 
-COMP = intel
-FCOMP = ifort
-#COMP = gnu
-#FCOMP = gfortran
+#COMP = intel
+#FCOMP = ifort
+COMP = gnu
+FCOMP = gfortran
 
 USE_HYPRE = FALSE
 USE_F90_SOLVERS = TRUE
@@ -63,7 +63,7 @@ include $(BOXLIB_HOME)/Tools/C_mk/Make.defs
 
 CEXE_sources += $(EBASE).cpp
 
-include $(HOME)/kokkos/Makefile.kokkos
+include $(KOKKOS_MAKEFILE)
 CPPFLAGS += $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS)
 include Make.package
 include $(BOXLIB_HOME)/Src/C_BoundaryLib/Make.package

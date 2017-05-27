@@ -9,36 +9,70 @@
 //ask Brian CONSTANTS
 //MultiGrid.cpp
 
+//Average Functor:
+struct C_AVERAGE_Functor {
+	// Data used by the loop body
+	FArrayBox* c;
+	FArrayBox* f;
+  
+	// Constructor to initialize the data
+	C_AVERAGE_Functor(FArrayBox* c_, const FArrayBox* f_){
+		c=c_;
+		f=const_cast<FArrayBox*>(f_);
+	}
+
+	// Loop body as an operator
+	KOKKOS_INLINE_FUNCTION
+	void operator() (const int& n, const int& k, const int& j, const int& i) const {
+		(*c)(IntVect(i,j,k),n) =  ((*f)(IntVect(2*i+1,2*j+1,2*k),n) + (*f)(IntVect(2*i,2*j+1,2*k),n) + (*f)(IntVect(2*i+1,2*j,2*k),n) + (*f)(IntVect(2*i,2*j,2*k),n))*0.125;
+		(*c)(IntVect(i,j,k),n) += ((*f)(IntVect(2*i+1,2*j+1,2*k+1),n) + (*f)(IntVect(2*i,2*j+1,2*k+1),n) + (*f)(IntVect(2*i+1,2*j,2*k+1),n) + (*f)(IntVect(2*i,2*j,2*k+1),n))*0.125;
+	}
+};
+
 //Average Kernel
-void C_AVERAGE(const Box& bx,
-const int nc,
-FArrayBox& c,
-const FArrayBox& f){
+void C_AVERAGE(
+	const Box& bx,
+	const int nc,
+	FArrayBox& c,
+	const FArrayBox& f){
 	
 	const int *lo = bx.loVect();
 	const int *hi = bx.hiVect();
-	typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3,Kokkos::Experimental::Iterate::Right,Kokkos::Experimental::Iterate::Right>> t_policy;
-        Kokkos::OpenMP::print_configuration(std::cout);
-        //Kokkos::View<double***> c("c", n1,n2,n3);
-        //Kokkos::View<double***> f("f", n2,n2,n3);
-        for (int n = 0; n<nc; n++){
-                Kokkos::Experimental::md_parallel_for(t_policy({lo[2],lo[1],lo[0]},{hi[2],hi[1],hi[0]},{4,4,32}),
-                                                                KOKKOS_LAMBDA(const int &k, const int &j, const int &i){
-		//for (int k = lo[2]; k <= hi[2]; ++k) {
-			int k2 = 2*k;
-		//	for (int j = lo[1]; j <= hi[1]; ++j) {
-				int j2 = 2*j;
-		//		for (int i = lo[0]; i <= hi[0]; ++i) {
-					int i2 = 2*i;
-
-					c(IntVect(i,j,k),n) =  (f(IntVect(i2+1,j2+1,k2),n) + f(IntVect(i2,j2+1,k2),n) + f(IntVect(i2+1,j2,k2),n) + f(IntVect(i2,j2,k2),n))*0.125;
-					c(IntVect(i,j,k),n) += (f(IntVect(i2+1,j2+1,k2+1),n) + f(IntVect(i2,j2+1,k2+1),n) + f(IntVect(i2+1,j2,k2+1),n) + f(IntVect(i2,j2,k2+1),n))*0.125;
-//				}
-//			}
-		});
-	}
+	
+	typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4,Kokkos::Experimental::Iterate::Right,Kokkos::Experimental::Iterate::Right>> t_policy;
+	// Create a functor
+	C_AVERAGE_Functor ave_functor(&c,&f);
+	// Execute functor
+	Kokkos::Experimental::md_parallel_for(t_policy({0,lo[2],lo[1],lo[0]},{nc,hi[2]+1,hi[1]+1,hi[0]+1},{1,4,4,1024000}),ave_functor);
 }
 
+
+
+//Interpolation Functor:
+struct C_INTERP_Functor {
+	// Data used by the loop body
+	FArrayBox* f;
+	FArrayBox* c;
+  
+	// Constructor to initialize the data
+	C_INTERP_Functor(FArrayBox* f_, const FArrayBox* c_){
+		f=f_;
+		c=const_cast<FArrayBox*>(c_);
+	}
+
+	// Loop body as an operator
+	KOKKOS_INLINE_FUNCTION
+	void operator() (const int& n, const int& k, const int& j, const int& i) const {
+		(*f)(IntVect(2*i+1,2*j+1,2*k  ),n)       += (*c)(IntVect(i,j,k),n);
+		(*f)(IntVect(2*i  ,2*j+1,2*k  ),n)       += (*c)(IntVect(i,j,k),n);
+		(*f)(IntVect(2*i+1,2*j  ,2*k  ),n)       += (*c)(IntVect(i,j,k),n);
+		(*f)(IntVect(2*i  ,2*j  ,2*k  ),n)       += (*c)(IntVect(i,j,k),n);
+		(*f)(IntVect(2*i+1,2*j+1,2*k+1),n)       += (*c)(IntVect(i,j,k),n);
+		(*f)(IntVect(2*i  ,2*j+1,2*k+1),n)       += (*c)(IntVect(i,j,k),n);
+		(*f)(IntVect(2*i+1,2*j  ,2*k+1),n)       += (*c)(IntVect(i,j,k),n);
+		(*f)(IntVect(2*i  ,2*j  ,2*k+1),n)       += (*c)(IntVect(i,j,k),n);
+	}
+};
 
 //Interpolation Kernel
 void C_INTERP(const Box& bx,
@@ -48,27 +82,12 @@ const FArrayBox& c){
 	
 	const int *lo = bx.loVect();
 	const int *hi = bx.hiVect();
-
-	for (int n = 0; n<nc; n++){
-		for (int k = lo[2]; k <= hi[2]; ++k) {
-			int k2 = 2*k;
-			for (int j = lo[1]; j <= hi[1]; ++j) {
-				int j2 = 2*j;
-				for (int i = lo[0]; i <= hi[0]; ++i) {
-					int i2 = 2*i;
-					
-					f(IntVect(i2+1,j2+1,k2  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2  ,j2+1,k2  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2+1,j2  ,k2  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2  ,j2  ,k2  ),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2+1,j2+1,k2+1),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2  ,j2+1,k2+1),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2+1,j2  ,k2+1),n)       += c(IntVect(i,j,k),n);
-					f(IntVect(i2  ,j2  ,k2+1),n)       += c(IntVect(i,j,k),n);
-				}
-			}
-		}
-	}
+	
+	typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4,Kokkos::Experimental::Iterate::Right,Kokkos::Experimental::Iterate::Right>> t_policy;
+	// Create a functor
+	C_INTERP_Functor int_functor(&f,&c);
+	// Execute functor
+	Kokkos::Experimental::md_parallel_for(t_policy({0,lo[2],lo[1],lo[0]},{nc,hi[2]+1,hi[1]+1,hi[0]+1},{1,4,4,1024000}),int_functor);
 }
 
 
@@ -97,7 +116,7 @@ const FArrayBox& c){
 //     
 //-----------------------------------------------------------------------
 void C_GSRB_3D(
-const Box& bx,
+	const Box& bx,
 const Box& bbx,
 const int nc,
 const int rb,
@@ -152,18 +171,18 @@ const Real* h)
 					
 					//assign ORA constants
 					double gamma = alpha * a(IntVect(i,j,k))
-									+ dhx * (bX(IntVect(i,j,k)) + bX(IntVect(i+1,j,k)))
-									+ dhy * (bY(IntVect(i,j,k)) + bY(IntVect(i,j+1,k)))
-									+ dhz * (bZ(IntVect(i,j,k)) + bZ(IntVect(i,j,k+1)));
+						+ dhx * (bX(IntVect(i,j,k)) + bX(IntVect(i+1,j,k)))
+							+ dhy * (bY(IntVect(i,j,k)) + bY(IntVect(i,j+1,k)))
+								+ dhz * (bZ(IntVect(i,j,k)) + bZ(IntVect(i,j,k+1)));
 					
 					double g_m_d = gamma
-									- dhx * (bX(IntVect(i,j,k))*cf0 + bX(IntVect(i+1,j,k))*cf3)
-									- dhy * (bY(IntVect(i,j,k))*cf1 + bY(IntVect(i,j+1,k))*cf4)
-									- dhz * (bZ(IntVect(i,j,k))*cf2 + bZ(IntVect(i,j,k+1))*cf5);
+						- dhx * (bX(IntVect(i,j,k))*cf0 + bX(IntVect(i+1,j,k))*cf3)
+							- dhy * (bY(IntVect(i,j,k))*cf1 + bY(IntVect(i,j+1,k))*cf4)
+								- dhz * (bZ(IntVect(i,j,k))*cf2 + bZ(IntVect(i,j,k+1))*cf5);
 					
 					double rho =  dhx * (bX(IntVect(i,j,k))*phi(IntVect(i-1,j,k),n) + bX(IntVect(i+1,j,k))*phi(IntVect(i+1,j,k),n))
-								+ dhy * (bY(IntVect(i,j,k))*phi(IntVect(i,j-1,k),n) + bY(IntVect(i,j+1,k))*phi(IntVect(i,j+1,k),n))
-								+ dhz * (bZ(IntVect(i,j,k))*phi(IntVect(i,j,k-1),n) + bZ(IntVect(i,j,k+1))*phi(IntVect(i,j,k+1),n));
+						+ dhy * (bY(IntVect(i,j,k))*phi(IntVect(i,j-1,k),n) + bY(IntVect(i,j+1,k))*phi(IntVect(i,j+1,k),n))
+							+ dhz * (bZ(IntVect(i,j,k))*phi(IntVect(i,j,k-1),n) + bZ(IntVect(i,j,k+1))*phi(IntVect(i,j,k+1),n));
 					
 					double res = rhs(IntVect(i,j,k),n) - gamma * phi(IntVect(i,j,k),n) + rho;
 					phi(IntVect(i,j,k),n) += omega/g_m_d * res;
@@ -178,7 +197,7 @@ const Real* h)
 //     Fill in a matrix x vector operator here
 //
 void C_ADOTX(
-const Box& bx,
+	const Box& bx,
 const int nc,
 FArrayBox& y,
 const FArrayBox& x,
@@ -205,15 +224,15 @@ const Real* h)
 			for (int j = lo[1]; j <= hi[1]; ++j) {
 				for (int i = lo[0]; i <= hi[0]; ++i) {
 					y(IntVect(i,j,k),n) = alpha*a(IntVect(i,j,k))*x(IntVect(i,j,k),n)
-										- dhx * (   bX(IntVect(i+1,j,  k  )) * ( x(IntVect(i+1,j,  k),  n) - x(IntVect(i,  j,  k  ),n) )
-												  - bX(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i-1,j,  k  ),n) ) 
-												)
-										- dhy * (   bY(IntVect(i,  j+1,k  )) * ( x(IntVect(i,  j+1,k),  n) - x(IntVect(i,  j  ,k  ),n) )
-												  - bY(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j-1,k  ),n) )
-												)
-										- dhz * (   bZ(IntVect(i,  j,  k+1)) * ( x(IntVect(i,  j,  k+1),n) - x(IntVect(i,  j  ,k  ),n) )
-												  - bZ(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j,  k-1),n) )
-												);
+						- dhx * (   bX(IntVect(i+1,j,  k  )) * ( x(IntVect(i+1,j,  k),  n) - x(IntVect(i,  j,  k  ),n) )
+							- bX(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i-1,j,  k  ),n) ) 
+								)
+									- dhy * (   bY(IntVect(i,  j+1,k  )) * ( x(IntVect(i,  j+1,k),  n) - x(IntVect(i,  j  ,k  ),n) )
+										- bY(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j-1,k  ),n) )
+											)
+												- dhz * (   bZ(IntVect(i,  j,  k+1)) * ( x(IntVect(i,  j,  k+1),n) - x(IntVect(i,  j  ,k  ),n) )
+													- bZ(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j,  k-1),n) )
+														);
 				}
 			}
 		}
@@ -225,7 +244,7 @@ const Real* h)
 //     Fill in a matrix x vector operator here
 //
 void C_NORMA(
-const Box& bx,
+	const Box& bx,
 const int nc,
 Real& res,
 const Real alpha,
@@ -247,21 +266,21 @@ const Real* h)
 	Real dhz = beta/(h[2]*h[2]);
 	
 	//initialize to zero
-    res = 0.0;
+	res = 0.0;
 
 	for (int n = 0; n<nc; n++){
 		for (int k = lo[2]; k <= hi[2]; ++k) {
 			for (int j = lo[1]; j <= hi[1]; ++j) {
 				for (int i = lo[0]; i <= hi[0]; ++i) {
 					Real tmpval= alpha*a(IntVect(i,j,k))
-								+ dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )
-								+ dhy * ( bY(IntVect(i,j+1,k)) + bY(IntVect(i,j,k)) )
+						+ dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )
+							+ dhy * ( bY(IntVect(i,j+1,k)) + bY(IntVect(i,j,k)) )
 								+ dhz * ( bZ(IntVect(i,j,k+1)) + bZ(IntVect(i,j,k)) );
 					res = std::max(res,std::abs(tmpval));
 					
 					//now add the rest
 					res +=    std::abs( dhx * bX(IntVect(i+1,j,k)) ) + std::abs( dhx * bX(IntVect(i,j,k)) )
-							+ std::abs( dhy * bY(IntVect(i,j+1,k)) ) + std::abs( dhy * bY(IntVect(i,j,k)) )
+						+ std::abs( dhy * bY(IntVect(i,j+1,k)) ) + std::abs( dhy * bY(IntVect(i,j,k)) )
 							+ std::abs( dhz * bZ(IntVect(i,j,k+1)) ) + std::abs( dhz * bZ(IntVect(i,j,k)) );
 				}
 			}
@@ -274,7 +293,7 @@ const Real* h)
 //     Fill in fluxes
 //
 void C_FLUX(
-const Box& xbx,
+	const Box& xbx,
 const Box& ybx,
 const Box& zbx,
 const int nc,
