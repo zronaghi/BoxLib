@@ -266,6 +266,45 @@ const Real* h)
 //
 //     Fill in a matrix x vector operator here
 //
+//adotx functor
+struct C_ADOTX_Functor {
+    // Data used by the loop body
+    FArrayBox *y, *x, *a, *bX, *bY, *bZ;
+    Real* h;
+    Real alpha, beta, dhx, dhy, dhz;
+  
+    // Constructor to initialize the data
+    C_ADOTX_Functor(Real alpha_, Real beta_, FArrayBox* y_, const FArrayBox* x_, const FArrayBox* a_, const FArrayBox* bX_, const FArrayBox* bY_, const FArrayBox* bZ_, const Real* h_) : alpha(alpha_), beta(beta_){
+        y=y_;
+        x=const_cast<FArrayBox*>(x_);
+        a=const_cast<FArrayBox*>(a_);
+        bX=const_cast<FArrayBox*>(bX_);
+        bY=const_cast<FArrayBox*>(bY_);
+        bZ=const_cast<FArrayBox*>(bZ_);
+        h=const_cast<Real*>(h_);
+        
+        //some parameters
+        dhx = beta/(h[0]*h[0]);
+        dhy = beta/(h[1]*h[1]);
+        dhz = beta/(h[2]*h[2]);
+    }
+
+    // Loop body as an operator
+    KOKKOS_INLINE_FUNCTION
+    void operator() (const int& n, const int& k, const int& j, const int& i) const {
+        (*y)(IntVect(i,j,k),n) = alpha*(*a)(IntVect(i,j,k))*(*x)(IntVect(i,j,k),n)
+                            - dhx * (   (*bX)(IntVect(i+1,j,  k  )) * ( (*x)(IntVect(i+1,j,  k),  n) - (*x)(IntVect(i,  j,  k  ),n) )
+                                      - (*bX)(IntVect(i,  j,  k  )) * ( (*x)(IntVect(i,  j,  k),  n) - (*x)(IntVect(i-1,j,  k  ),n) ) 
+                                    )
+                            - dhy * (   (*bY)(IntVect(i,  j+1,k  )) * ( (*x)(IntVect(i,  j+1,k),  n) - (*x)(IntVect(i,  j  ,k  ),n) )
+                                      - (*bY)(IntVect(i,  j,  k  )) * ( (*x)(IntVect(i,  j,  k),  n) - (*x)(IntVect(i,  j-1,k  ),n) )
+                                    )
+                            - dhz * (   (*bZ)(IntVect(i,  j,  k+1)) * ( (*x)(IntVect(i,  j,  k+1),n) - (*x)(IntVect(i,  j  ,k  ),n) )
+                                      - (*bZ)(IntVect(i,  j,  k  )) * ( (*x)(IntVect(i,  j,  k),  n) - (*x)(IntVect(i,  j,  k-1),n) )
+                                    );
+    }
+};
+
 void C_ADOTX(
     const Box& bx,
 const int nc,
@@ -284,29 +323,11 @@ const Real* h)
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
 	
-    //some parameters
-    Real dhx = beta/(h[0]*h[0]);
-    Real dhy = beta/(h[1]*h[1]);
-    Real dhz = beta/(h[2]*h[2]);
-
-    for (int n = 0; n<nc; n++){
-        for (int k = lo[2]; k <= hi[2]; ++k) {
-            for (int j = lo[1]; j <= hi[1]; ++j) {
-                for (int i = lo[0]; i <= hi[0]; ++i) {
-                    y(IntVect(i,j,k),n) = alpha*a(IntVect(i,j,k))*x(IntVect(i,j,k),n)
-                                        - dhx * (   bX(IntVect(i+1,j,  k  )) * ( x(IntVect(i+1,j,  k),  n) - x(IntVect(i,  j,  k  ),n) )
-                                                  - bX(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i-1,j,  k  ),n) ) 
-                                                )
-                                        - dhy * (   bY(IntVect(i,  j+1,k  )) * ( x(IntVect(i,  j+1,k),  n) - x(IntVect(i,  j  ,k  ),n) )
-                                                  - bY(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j-1,k  ),n) )
-                                                )
-                                        - dhz * (   bZ(IntVect(i,  j,  k+1)) * ( x(IntVect(i,  j,  k+1),n) - x(IntVect(i,  j  ,k  ),n) )
-                                                  - bZ(IntVect(i,  j,  k  )) * ( x(IntVect(i,  j,  k),  n) - x(IntVect(i,  j,  k-1),n) )
-                                                );
-                }
-            }
-        }
-    }
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4,Kokkos::Experimental::Iterate::Right,Kokkos::Experimental::Iterate::Right>> t_policy;
+    // Create a functor
+    C_ADOTX_Functor adotx_functor(alpha,beta,&y,&x,&a,&bX,&bY,&bZ,h);
+    // Execute functor
+    Kokkos::Experimental::md_parallel_for(t_policy({0,lo[2],lo[1],lo[0]},{nc,hi[2]+1,hi[1]+1,hi[0]+1},{1,4,4,1024000}),adotx_functor);
 }
 
 //-----------------------------------------------------------------------
