@@ -5,6 +5,8 @@
 #include <ParallelDescriptor.H>
 #include <MG_F.H>
 
+//#include <ittnotify.h>
+
 Real ABecLaplacian::a_def     = 0.0;
 Real ABecLaplacian::b_def     = 1.0;
 Real ABecLaplacian::alpha_def = 1.0;
@@ -483,6 +485,10 @@ int             redBlackFlag)
 
 	const bool tiling = true;
 
+	//DEBUG
+	//__itt_resume();
+	//DEBUG
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -590,6 +596,10 @@ int             redBlackFlag)
 		}
 #endif //(BL_SPACEDIM == 3)
 	}
+	
+	//DEBUG
+	//__itt_pause();
+	//DEBUG
 }
 
 void

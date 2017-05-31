@@ -27,10 +27,10 @@ DEBUG	= FALSE
 DIM	= 3
 #DIM	= 2
 
-COMP = intel
-FCOMP = ifort
-#COMP = gnu
-#FCOMP = gfortran
+#COMP = intel
+#FCOMP = ifort
+COMP = gnu
+FCOMP = gfortran
 
 USE_HYPRE = FALSE
 USE_F90_SOLVERS = TRUE
@@ -46,7 +46,7 @@ HPGMG_BOTTOM_SOLVER= BICGSTAB
 HPGMG_SMOOTHER = GSRB
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
-CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA
+CPPFLAGS += -g -dynamic -DCG_USE_OLD_CONVERGENCE_CRITERIA
 #CPPFLAGS += -DCG_USE_OLD_CONVERGENCE_CRITERIA
 
 # USE_MPI must be TRUE if USE_HYPRE
@@ -77,6 +77,11 @@ vpathdir += $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG
 
 INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG4
 vpathdir += $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG4
+
+#VTUNE:
+#INCLUDE_LOCATIONS += $(VTUNE_AMPLIFIER_XE_2017_DIR)/include
+#LIBRARY_LOCATIONS += $(VTUNE_AMPLIFIER_XE_2017_DIR)/lib64
+#LIBRARIES += -littnotify -ldl
 
 ifeq ($(USE_F90_SOLVERS), TRUE)
   include $(BOXLIB_HOME)/Src/LinearSolvers/C_to_F_MG/Make.package
