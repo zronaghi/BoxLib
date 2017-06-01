@@ -79,9 +79,9 @@ INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG4
 vpathdir += $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG4
 
 #VTUNE:
-INCLUDE_LOCATIONS += $(VTUNE_AMPLIFIER_XE_2017_DIR)/include
-LIBRARY_LOCATIONS += $(VTUNE_AMPLIFIER_XE_2017_DIR)/lib64
-LIBRARIES += -littnotify -ldl
+#INCLUDE_LOCATIONS += $(VTUNE_AMPLIFIER_XE_2017_DIR)/include
+#LIBRARY_LOCATIONS += $(VTUNE_AMPLIFIER_XE_2017_DIR)/lib64
+#LIBRARIES += -littnotify -ldl
 
 ifeq ($(USE_F90_SOLVERS), TRUE)
   include $(BOXLIB_HOME)/Src/LinearSolvers/C_to_F_MG/Make.package
