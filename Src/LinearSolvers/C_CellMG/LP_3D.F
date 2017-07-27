@@ -86,48 +86,42 @@ c-----------------------------------------------------------------------
 
       parameter(gamma = 6.0D0)
 
-!$omp target data map(phi) map(to:rhs)
+!$omp target update to(phi)
+
+!$omp target data map(to: hi, lo)
+!$omp target if(.TRUE.)
       do n = 1, nc
-!$omp target map(phi)
-!$omp teams distribute private(ioff)          
+!$omp teams distribute collapse(2) private(ioff)
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                ioff = MOD(lo(1) + j + k + redblack,2)
-!$omp parallel do private(cf0,cf1,cf2,cf3,cf4,cf5, delta, rho) 
-!$omp&          firstprivate(gamma,h) default(shared)
+!$omp parallel do private(cf0,cf1,cf2,cf3,cf4,cf5, delta, rho)
+!&omp firstprivate(h) default(shared)
                do i = lo(1) + ioff,hi(1),2
 
-                  cf0 = merge(f0(blo(1),j,k), 0.0D0,
-     $                 (i .eq. blo(1)) .and. (m0(blo(1)-1,j,k).gt.0))
-                  cf1 = merge(f1(i,blo(2),k), 0.0D0,
-     $                 (j .eq. blo(2)) .and. (m1(i,blo(2)-1,k).gt.0))
-                  cf2 = merge(f2(i,j,blo(3)), 0.0D0,
-     $                 (k .eq. blo(3)) .and. (m2(i,j,blo(3)-1).gt.0))
-                  cf3 = merge(f3(bhi(1),j,k), 0.0D0,
-     $                 (i .eq. bhi(1)) .and. (m3(bhi(1)+1,j,k).gt.0))
-                  cf4 = merge(f4(i,bhi(2),k), 0.0D0,
-     $                 (j .eq. bhi(2)) .and. (m4(i,bhi(2)+1,k).gt.0))
-                  cf5 = merge(f5(i,j,bhi(3)), 0.0D0,
-     $                 (k .eq. bhi(3)) .and. (m5(i,j,bhi(3)+1).gt.0))
+                  cf0 = merge(f0(blo(1),j,k), 0.0D0, (i .eq. blo(1)) .and. (m0(blo(1)-1,j,k).gt.0))
+                  cf1 = merge(f1(i,blo(2),k), 0.0D0, (j .eq. blo(2)) .and. (m1(i,blo(2)-1,k).gt.0))
+                  cf2 = merge(f2(i,j,blo(3)), 0.0D0, (k .eq. blo(3)) .and. (m2(i,j,blo(3)-1).gt.0))
+                  cf3 = merge(f3(bhi(1),j,k), 0.0D0, (i .eq. bhi(1)) .and. (m3(bhi(1)+1,j,k).gt.0))
+                  cf4 = merge(f4(i,bhi(2),k), 0.0D0, (j .eq. bhi(2)) .and. (m4(i,bhi(2)+1,k).gt.0))
+                  cf5 = merge(f5(i,j,bhi(3)), 0.0D0, (k .eq. bhi(3)) .and. (m5(i,j,bhi(3)+1).gt.0))
 
                   delta = cf0 + cf1 + cf2 + cf3 + cf4 + cf5
 
-                  rho =  phi(i-1,j,k,n) + phi(i+1,j,k,n)
-     $                 + phi(i,j-1,k,n) + phi(i,j+1,k,n)
-     $                 + phi(i,j,k-1,n) + phi(i,j,k+1,n)
+                  rho =  phi(i-1,j,k,n) + phi(i+1,j,k,n) + phi(i,j-1,k,n) + phi(i,j+1,k,n) + phi(i,j,k-1,n) + phi(i,j,k+1,n)
 
-                  phi(i,j,k,n) 
-     $                 = (rhs(i,j,k,n)*h*h - rho + phi(i,j,k,n)*delta)
-     $                 /             (delta - gamma)
+                  phi(i,j,k,n) = (rhs(i,j,k,n)*h*h - rho + phi(i,j,k,n)*delta) / (delta - gamma)
                   
                end do
 !$omp end parallel do
             end do
          end do
 !$omp end teams distribute
-!$omp end target
       end do
+!$omp end target
 !$omp end target data
+
+!$omp target update from(phi)
       end
 c-----------------------------------------------------------------------
 c

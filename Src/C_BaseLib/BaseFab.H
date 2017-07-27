@@ -16,6 +16,7 @@
 #include <Box.H>
 #include <BoxList.H>
 #include <CArena.H>
+#include <OMPArena.H>
 #include <Looping.H>
 #include <REAL.H>
 #include <BLProfiler.H>

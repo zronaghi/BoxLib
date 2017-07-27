@@ -113,16 +113,16 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
       dhy = beta/h(2)**2
       dhz = beta/h(3)**2
       
-!$omp target data map(tofrom:phi) map(to:rhs,m0,m1,m2,m3,m4,m5,f0,f1,f2,f3,f4,f5, a, bX,bY,bZ, blo,bhi,lo,hi) if(.TRUE.)
-!$omp target update to(rhs,phi,bX,bY,bZ,a,m0,m1,m2,m3,m4,m5,f0,f1,f2,f3,f4,f5, blo,bhi,lo,hi) if(.TRUE.)
-      do n = 1, nc
+!$omp target update to(phi)  if(.TRUE.)
+
+!$omp target data map(to:lo,hi) if(.TRUE.)
 !$omp target if(.TRUE.)
+      do n = 1, nc
 !$omp teams distribute collapse(2) private(ioff,k,j)
           do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                ioff = MOD(lo(1) + j + k + redblack,2)
-!$omp parallel do private(rho, gamma, g_m_d,res,cf0,cf1,cf2,cf3,cf4,cf5) 
-!$omp&          firstprivate(alpha,dhx,dhy,dhz,omega, ioff) default(shared)
+!$omp parallel do private(rho, gamma, g_m_d,res,cf0,cf1,cf2,cf3,cf4,cf5) firstprivate(alpha,dhx,dhy,dhz,omega, ioff) default(shared)
                do i = lo(1) + ioff,hi(1),2
 
                   cf0 = merge(f0(blo(1),j,k), 0.0D0,
@@ -162,11 +162,12 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
 !$omp end parallel do
             end do
           end do
-!$omp end teams distribute
-!$omp end target 
+!$omp end teams distribute 
       end do
+!$omp end target      
 !$omp end target data
-!$omp target update from(phi) if(.TRUE.)   
+
+!$omp target update from (phi)
       end
 c-----------------------------------------------------------------------
 c      
@@ -358,8 +359,9 @@ c
       dhy = beta/h(2)**2
       dhz = beta/h(3)**2
 
-!$omp target data map(from: y) map(to: a, bX,bY,bZ, x, lo, hi) if(.TRUE.)
-!$omp target update to(a,x) if(.TRUE.)
+!$omp target update to(y,a)
+
+!$omp target data map(to:lo, hi)
 !$omp target if(.TRUE.)
 !$omp teams distribute parallel do collapse(4) private(n,k,j,i)
       do n = 1, nc
@@ -383,6 +385,7 @@ c
 !$omp end teams distribute parallel do
 !$omp end target
 !$omp end target data
+
 !$omp target update from(y)
       end
 
@@ -422,11 +425,11 @@ c
 
       res = 0.0D0
 
-!$omp target data map(to: a,bX,bY,bZ, lo, hi) if(.TRUE.)
-!$omp target update to(a,bX,bY,bZ) if(.TRUE.)
+!$omp target data map(to: alpha, dhx, dhy, dhz, lo, hi) map(tofrom: res)
+!$omp target if(.TRUE.)
       do n = 1, nc
-!$omp target map(tofrom:res) if(.TRUE.)
-!$omp teams distribute parallel do collapse(3) firstprivate(alpha,dhx,dhy,dhz) private(k,j,i) reduction(max:res)          
+!$omp teams distribute parallel do collapse(3)
+!&omp firstprivate(alpha,dhx,dhy,dhz) private(k,j,i) reduction(max:res)
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)
@@ -441,8 +444,8 @@ c
             end do
          end do
 !$omp end teams distribute parallel do
-!$omp end target
       end do
+!$omp end target
 !$omp end target data
       end
 c-----------------------------------------------------------------------
