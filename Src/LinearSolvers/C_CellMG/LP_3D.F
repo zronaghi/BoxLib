@@ -86,10 +86,15 @@ c-----------------------------------------------------------------------
 
       parameter(gamma = 6.0D0)
 
+!$omp target data map(phi) map(to:rhs)
       do n = 1, nc
+!$omp target map(phi)
+!$omp teams distribute private(ioff)          
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                ioff = MOD(lo(1) + j + k + redblack,2)
+!$omp parallel do private(cf0,cf1,cf2,cf3,cf4,cf5, delta, rho) 
+!$omp&          firstprivate(gamma,h) default(shared)
                do i = lo(1) + ioff,hi(1),2
 
                   cf0 = merge(f0(blo(1),j,k), 0.0D0,
@@ -116,10 +121,13 @@ c-----------------------------------------------------------------------
      $                 /             (delta - gamma)
                   
                end do
+!$omp end parallel do
             end do
          end do
+!$omp end teams distribute
+!$omp end target
       end do
-
+!$omp end target data
       end
 c-----------------------------------------------------------------------
 c

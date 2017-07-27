@@ -9,88 +9,98 @@
 #include "MG_F.H"
 #include "ArrayLim.H"
 
-      subroutine FORT_AVERAGE (
-     $     c, DIMS(c),
-     $     f, DIMS(f),
-     $     lo, hi, nc)
-      implicit none
-      integer nc
-      integer DIMDEC(c)
-      integer DIMDEC(f)
-      integer lo(BL_SPACEDIM)
-      integer hi(BL_SPACEDIM)
-      REAL_T f(DIMV(f),nc)
-      REAL_T c(DIMV(c),nc)
+subroutine FORT_AVERAGE (
+    $     c, DIMS(c),
+    $     f, DIMS(f),
+    $     lo, hi, nc)
+    implicit none
+    integer nc
+    integer DIMDEC(c)
+    integer DIMDEC(f)
+    integer lo(BL_SPACEDIM)
+    integer hi(BL_SPACEDIM)
+    REAL_T f(DIMV(f),nc)
+    REAL_T c(DIMV(c),nc)
 
-      integer i, i2, i2p1, j, j2, j2p1, k, k2, k2p1, n
-
-      do n = 1, nc
-         do k = lo(3), hi(3)
+    integer i, i2, i2p1, j, j2, j2p1, k, k2, k2p1, n
+!$omp target data map(from: c) map(to: f, hi, lo)
+!$omp target if(.TRUE.)
+!$omp teams distribute parallel do collapse(4) 
+!$omp& private(n,k,j,i, k2,j2,i2, k2p1, j2p1,i2p1)
+    do n = 1, nc
+        do k = lo(3), hi(3)
             k2 = 2*k
             k2p1 = k2 + 1
-	    do j = lo(2), hi(2)
-               j2 = 2*j
-               j2p1 = j2 + 1
-               do i = lo(1), hi(1)
-                  i2 = 2*i
-                  i2p1 = i2 + 1
-                  c(i,j,k,n) =  (
-     $                 + f(i2p1,j2p1,k2  ,n) + f(i2,j2p1,k2  ,n)
-     $                 + f(i2p1,j2  ,k2  ,n) + f(i2,j2  ,k2  ,n)
-     $                 + f(i2p1,j2p1,k2p1,n) + f(i2,j2p1,k2p1,n)
-     $                 + f(i2p1,j2  ,k2p1,n) + f(i2,j2  ,k2p1,n)
-     $                 )*eighth
-               end do
+            do j = lo(2), hi(2)
+                j2 = 2*j
+                j2p1 = j2 + 1
+                do i = lo(1), hi(1)
+                    i2 = 2*i
+                    i2p1 = i2 + 1
+                    c(i,j,k,n) =  (
+                    $                 + f(i2p1,j2p1,k2  ,n) + f(i2,j2p1,k2  ,n)
+                    $                 + f(i2p1,j2  ,k2  ,n) + f(i2,j2  ,k2  ,n)
+                    $                 + f(i2p1,j2p1,k2p1,n) + f(i2,j2p1,k2p1,n)
+                    $                 + f(i2p1,j2  ,k2p1,n) + f(i2,j2  ,k2p1,n)
+                    $                 )*eighth
+                end do
             end do
-         end do
-      end do
+        end do
+    end do
+!$omp end teams distribute parallel do
+!$omp end target
+!$omp end target data
+end
 
-      end
 
+subroutine FORT_INTERP (
+    $     f, DIMS(f),
+    $     c, DIMS(c),
+    $     lo, hi, nc)
+    implicit none
+    integer nc
+    integer DIMDEC(f)
+    integer DIMDEC(c)
+    integer lo(BL_SPACEDIM)
+    integer hi(BL_SPACEDIM)
+    REAL_T f(DIMV(f),nc)
+    REAL_T c(DIMV(c),nc)
 
-      subroutine FORT_INTERP (
-     $     f, DIMS(f),
-     $     c, DIMS(c),
-     $     lo, hi, nc)
-      implicit none
-      integer nc
-      integer DIMDEC(f)
-      integer DIMDEC(c)
-      integer lo(BL_SPACEDIM)
-      integer hi(BL_SPACEDIM)
-      REAL_T f(DIMV(f),nc)
-      REAL_T c(DIMV(c),nc)
-
-      integer i, i2, i2p1, j, j2, j2p1, k, k2, k2p1, n
+    integer i, i2, i2p1, j, j2, j2p1, k, k2, k2p1, n
        
-!     MultiGrid::relax(...) does only V-cycles (not F-cycles), and for V-cycles, 
-!     piecewise-constant interpolation performs better than linear interpolation,
-!     as measured both by run-time and number of V-cycles for convergence.
+    !     MultiGrid::relax(...) does only V-cycles (not F-cycles), and for V-cycles, 
+    !     piecewise-constant interpolation performs better than linear interpolation,
+    !     as measured both by run-time and number of V-cycles for convergence.
 
-      do n = 1, nc
-         do k = lo(3), hi(3)
-            k2 = 2*k
-            k2p1 = k2 + 1
-	    do j = lo(2), hi(2)
-               j2 = 2*j
-               j2p1 = j2 + 1
+!$omp target data map(f) map(to: c, hi, lo)
+!$omp target if(.TRUE.)
+!$omp teams distribute parallel do collapse(4) 
+!$omp& private(n,k,j,i, k2,j2,i2, k2p1, j2p1,i2p1)
+    do n = 1, nc
+        do k = lo(3), hi(3)
+            do j = lo(2), hi(2)
+                do i = lo(1), hi(1)
+                    k2 = 2*k
+                    k2p1 = k2 + 1
+                    j2 = 2*j
+                    j2p1 = j2 + 1
+                    i2 = 2*i
+                    i2p1 = i2 + 1
 
-               do i = lo(1), hi(1)
-                  i2 = 2*i
-                  i2p1 = i2 + 1
+                    f(i2p1,j2p1,k2  ,n) = c(i,j,k,n) + f(i2p1,j2p1,k2  ,n)
+                    f(i2  ,j2p1,k2  ,n) = c(i,j,k,n) + f(i2  ,j2p1,k2  ,n)
+                    f(i2p1,j2  ,k2  ,n) = c(i,j,k,n) + f(i2p1,j2  ,k2  ,n)
+                    f(i2  ,j2  ,k2  ,n) = c(i,j,k,n) + f(i2  ,j2  ,k2  ,n)
+                    f(i2p1,j2p1,k2p1,n) = c(i,j,k,n) + f(i2p1,j2p1,k2p1,n)
+                    f(i2  ,j2p1,k2p1,n) = c(i,j,k,n) + f(i2  ,j2p1,k2p1,n)
+                    f(i2p1,j2  ,k2p1,n) = c(i,j,k,n) + f(i2p1,j2  ,k2p1,n)
+                    f(i2  ,j2  ,k2p1,n) = c(i,j,k,n) + f(i2  ,j2  ,k2p1,n)
 
-                  f(i2p1,j2p1,k2  ,n) = c(i,j,k,n) + f(i2p1,j2p1,k2  ,n)
-                  f(i2  ,j2p1,k2  ,n) = c(i,j,k,n) + f(i2  ,j2p1,k2  ,n)
-                  f(i2p1,j2  ,k2  ,n) = c(i,j,k,n) + f(i2p1,j2  ,k2  ,n)
-                  f(i2  ,j2  ,k2  ,n) = c(i,j,k,n) + f(i2  ,j2  ,k2  ,n)
-                  f(i2p1,j2p1,k2p1,n) = c(i,j,k,n) + f(i2p1,j2p1,k2p1,n)
-                  f(i2  ,j2p1,k2p1,n) = c(i,j,k,n) + f(i2  ,j2p1,k2p1,n)
-                  f(i2p1,j2  ,k2p1,n) = c(i,j,k,n) + f(i2p1,j2  ,k2p1,n)
-                  f(i2  ,j2  ,k2p1,n) = c(i,j,k,n) + f(i2  ,j2  ,k2p1,n)
-
-               end do
+                end do
             end do
-         end do
-      end do
-
-      end
+        end do
+    end do
+!$omp end teams distribute parallel do
+!$omp end target
+!$omp end target data
+end

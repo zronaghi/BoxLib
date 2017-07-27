@@ -60,11 +60,11 @@ ABecLaplacian::norm (int nm, int level, const bool local)
     const int nc = 1;
     Real res = 0.0;
 
-    const bool tiling = true;
+    const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:res)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(max:res)
+//#endif
     {
 	for (MFIter amfi(a,tiling); amfi.isValid(); ++amfi)
 	{
@@ -334,11 +334,11 @@ ABecLaplacian::compFlux (D_DECL(MultiFab &xflux, MultiFab &yflux, MultiFab &zflu
            const MultiFab& bY = bCoefficients(1,level);,
            const MultiFab& bZ = bCoefficients(2,level););
 
-    const bool tiling = true;
+    const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter inmfi(in,tiling); inmfi.isValid(); ++inmfi)
     {
         D_TERM(const Box& xbx   = inmfi.nodaltilebox(0);,
@@ -433,11 +433,11 @@ ABecLaplacian::Fsmooth (MultiFab&       solnL,
     //const int nc = solnL.nComp(); // FIXME: This LinOp only really supports single-component
     const int nc = 1;
 
-    const bool tiling = true;
+    const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter solnLmfi(solnL,tiling); solnLmfi.isValid(); ++solnLmfi)
     {
 	const Mask& m0 = mm0[solnLmfi];
@@ -549,10 +549,10 @@ ABecLaplacian::Fsmooth_jacobi (MultiFab&       solnL,
     //const int nc = solnL.nComp(); // FIXME: This LinOp only really supports single-component
     const int nc = 1;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter solnLmfi(solnL); solnLmfi.isValid(); ++solnLmfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter solnLmfi(solnL,false); solnLmfi.isValid(); ++solnLmfi)
     {
 	const Mask& m0 = mm0[solnLmfi];
         const Mask& m1 = mm1[solnLmfi];
@@ -658,11 +658,11 @@ ABecLaplacian::Fapply (MultiFab&       y,
            const MultiFab& bY  = bCoefficients(1,level);,
            const MultiFab& bZ  = bCoefficients(2,level););
 
-    const bool tiling = true;
+    const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter ymfi(y,tiling); ymfi.isValid(); ++ymfi)
     {
         const Box&       tbx  = ymfi.tilebox();

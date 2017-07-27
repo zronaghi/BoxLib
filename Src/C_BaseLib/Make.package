@@ -21,8 +21,8 @@ C$(BOXLIB_BASE)_headers += UseCount.H
 C$(BOXLIB_BASE)_sources += DistributionMapping.cpp ParallelDescriptor.cpp
 C$(BOXLIB_BASE)_headers += DistributionMapping.H ParallelDescriptor.H
 
-C$(BOXLIB_BASE)_sources += VisMF.cpp Arena.cpp BArena.cpp CArena.cpp
-C$(BOXLIB_BASE)_headers += VisMF.H Arena.H BArena.H CArena.H
+C$(BOXLIB_BASE)_sources += VisMF.cpp Arena.cpp BArena.cpp CArena.cpp OMPArena.cpp
+C$(BOXLIB_BASE)_headers += VisMF.H Arena.H BArena.H CArena.H OMPArena.H
 
 C$(BOXLIB_BASE)_headers += BLProfiler.H
 
