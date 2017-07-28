@@ -376,10 +376,10 @@ void setup_coeffs(BoxArray& bs, MultiFab& alpha, PArray<MultiFab>& beta,
   pp.get("sigma", sigma);
   pp.get("w", w);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for ( MFIter mfi(alpha,true); mfi.isValid(); ++mfi ) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+  for ( MFIter mfi(alpha,false); mfi.isValid(); ++mfi ) {
     const Box& bx = mfi.tilebox();
 
     const int* alo = alpha[mfi].loVect();
@@ -445,10 +445,10 @@ void setup_rhs(MultiFab& rhs, const Geometry& geom)
   // We test the sum of the RHS to check solvability
   Real sum_rhs = 0.;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for ( MFIter mfi(rhs,true); mfi.isValid(); ++mfi ) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+  for ( MFIter mfi(rhs,false); mfi.isValid(); ++mfi ) {
     const Box& tbx = mfi.tilebox();
     const Box&  bx = mfi.validbox();
 

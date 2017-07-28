@@ -32,10 +32,10 @@ Laplacian::compFlux (D_DECL(MultiFab &xflux, MultiFab &yflux, MultiFab &zflux),
     const int level    = 0;
     applyBC(in,src_comp,num_comp,level,bc_mode,bnd_comp);
 
-    const bool tiling = true;
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+    const bool tiling = false;
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter inmfi(in,tiling); inmfi.isValid(); ++inmfi)
     {
         D_TERM(const Box& xbx   = inmfi.nodaltilebox(0);,
@@ -104,11 +104,11 @@ Laplacian::Fsmooth (MultiFab&       solnL,
 
     const int nc = rhsL.nComp();
 
-    const bool tiling = true;
+    const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter solnLmfi(solnL,tiling); solnLmfi.isValid(); ++solnLmfi)
     {
 	const Mask& m0 = mm0[solnLmfi];
@@ -223,10 +223,10 @@ Laplacian::Fapply (MultiFab&       y,
 {
     BL_PROFILE("Laplacian::Fapply()");
 
-    const bool tiling = true;
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+    const bool tiling = false;
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter ymfi(y,tiling); ymfi.isValid(); ++ymfi)
     {
         const Box&       tbx  = ymfi.tilebox();

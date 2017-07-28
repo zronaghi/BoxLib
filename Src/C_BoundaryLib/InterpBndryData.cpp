@@ -123,10 +123,10 @@ InterpBndryData::setBndryValues (const MultiFab& mf,
     for (int n = bnd_start; n < bnd_start+num_comp; ++n)
 	setBndryConds(bc, ref_ratio, n);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(mf); mfi.isValid(); ++mfi)
+    //#ifdef _OPENMP
+    //#pragma omp parallel
+    //#endif
+    for (MFIter mfi(mf,false); mfi.isValid(); ++mfi)
     {
         BL_ASSERT(grids[mfi.index()] == mfi.validbox());
 
@@ -188,10 +188,10 @@ InterpBndryData::setBndryValues (::BndryRegister& crse,
     //
     if (max_order==3 || max_order==1)
     {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-        for (MFIter fine_mfi(fine); fine_mfi.isValid(); ++fine_mfi)
+        //#ifdef _OPENMP
+        //#pragma omp parallel
+        //#endif
+        for (MFIter fine_mfi(fine,false); fine_mfi.isValid(); ++fine_mfi)
         {
             BL_ASSERT(grids[fine_mfi.index()] == fine_mfi.validbox());
 

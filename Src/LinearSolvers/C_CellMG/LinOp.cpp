@@ -208,10 +208,10 @@ LinOp::applyBC (MultiFab&      inout,
     // Fill boundary cells.
     //
     // OMP over boxes
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(inout); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(inout,false); mfi.isValid(); ++mfi)
     {
         const int gn = mfi.index();
 
@@ -415,14 +415,14 @@ LinOp::makeCoefficients (MultiFab&       cs,
     const int nGrow=0;
     cs.define(d, nComp, nGrow, fn.DistributionMap(), Fab_allocate);
 
-    const bool tiling = true;
+    const bool tiling = false;
 
     switch (cdir)
     {
     case -1:
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
         for (MFIter csmfi(cs,tiling); csmfi.isValid(); ++csmfi)
         {
             const Box& tbx = csmfi.tilebox();
@@ -440,9 +440,9 @@ LinOp::makeCoefficients (MultiFab&       cs,
     case 2:
         if (harmavg)
         {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
   	    for (MFIter csmfi(cs,tiling); csmfi.isValid(); ++csmfi)
             {
 	        const Box& tbx = csmfi.tilebox();
@@ -461,9 +461,9 @@ LinOp::makeCoefficients (MultiFab&       cs,
         }
         else
         {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
             for (MFIter csmfi(cs,tiling); csmfi.isValid(); ++csmfi)
             {
                 const Box& tbx = csmfi.tilebox();
