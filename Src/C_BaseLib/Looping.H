@@ -1069,19 +1069,20 @@
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
-                int nR = _n; nR += 0;                                   \
-                const int kR = _k + _b_lo[2];                           \
-                const int jR = _j + _b_lo[1];                           \
-                T *_th_pp = _th_p                                       \
-                    + ((_b_lo[0] - _th_plo[0])                          \
-                       + _th_plen[0]*(                                  \
-                           (jR - _th_plo[1])                            \
-                           + _th_plen[1]*(                              \
-                               (kR - _th_plo[2])                        \
-                               + _n * _th_plen[2])));                   \
-                for(int _i = 0; _i < _b_len[0]; ++_i, ++_th_pp) {       \
+                _Pragma("omp simd")                                     \
+                for(int _i = 0; _i < _b_len[0]; ++_i) {                 \
+                    int nR = _n; nR += 0;                               \
+                    const int kR = _k + _b_lo[2];                       \
+                    const int jR = _j + _b_lo[1];                       \
                     int iR = _i + _b_lo[0]; iR += 0;                    \
-                    T &thisR = * _th_pp;
+                    T *_th_pp = _th_p                                   \
+                        + ((iR - _th_plo[0])                            \
+                            + _th_plen[0]*(                             \
+                                (jR - _th_plo[1])                       \
+                                    + _th_plen[1]*(                     \
+                                        (kR - _th_plo[2])               \
+                                            + _n * _th_plen[2])));      \
+                    T &thisR = (*_th_pp);
 
 #define ForAllThisCBNN(T,b,ns,nc)                                       \
 {                                                                       \
@@ -1099,22 +1100,23 @@
     _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     _Pragma("omp target if(1)")                                         \
     {                                                                   \
-    _Pragma("omp teams distribute parallel for collapse(3)")            \
+    _Pragma("omp teams distribute parallel for collapse(2)")            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
-                const int kR = _k + _b_lo[2];                           \
-                const int jR = _j + _b_lo[1];                           \
-                const T *_th_pp = _th_p                                 \
-                    + ((_b_lo[0] - _th_plo[0])                          \
-                       + _th_plen[0]*(                                  \
-                           (jR - _th_plo[1])                            \
-                           + _th_plen[1]*(                              \
-                               (kR - _th_plo[2])                        \
-                               + _n * _th_plen[2])));                   \
+                _Pragma("omp simd")                                     \
                 for(int _i = 0; _i < _b_len[0]; ++_i) {                 \
+                    const int kR = _k + _b_lo[2];                       \
+                    const int jR = _j + _b_lo[1];                       \
                     const int iR = _i + _b_lo[0];                       \
-                    const T &thisR = _th_pp[_i];
+                    const T *_th_pp = _th_p                             \
+                            + ((iR - _th_plo[0])                        \
+                                + _th_plen[0]*(                         \
+                                    (jR - _th_plo[1])                   \
+                                        + _th_plen[1]*(                 \
+                                            (kR - _th_plo[2])           \
+                                                + _n * _th_plen[2])));  \
+                    const T &thisR = (*_th_pp);
 
 #define ForAllThisCBNNAdd(T,b,ns,nc,red)                                \
 {                                                                       \
@@ -1405,6 +1407,7 @@
                     const T & y##R = _y_pp[_i];
 
 #define EndFor }}}}}}
+#define EndForCancel } _Pragma("omp cancellation point for") }}}}}
 #define EndForRed(red) }}}}} (red)=redR; }
 #define EndForTX }}}}}}}
 #define EndForPencil(red) }}}}} (red)=redR; }
