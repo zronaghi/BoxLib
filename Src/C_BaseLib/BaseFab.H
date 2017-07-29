@@ -1784,62 +1784,25 @@ BaseFab<T>::norm (const Box& subbox,
     BL_ASSERT(p >= 0);
 
     Real  nrm    = 0;
-    Real* tmp    = 0;
-    int   tmplen = 0;
 
     if (p == 0)
     {
-        ForAllThisCPencil(T,subbox,comp,numcomp)
+        ForAllThisCPencilMax(T,subbox,comp,numcomp,nrm)
         {
-            const T* row = &thisR;
-            if (tmp == 0)
-            {
-                tmp    = new Real[thisLen];
-                tmplen = thisLen;
-                for (int i = 0; i < thisLen; i++)
-                    tmp[i] = std::abs(row[i]);
-            }
-            else
-            {
-                for (int i = 0; i < thisLen; i++) {
-		    // MLW: explicit cast to Real for SX6
-		    Real rw = std::abs(row[i]);
-                    tmp[i] = std::max(tmp[i],rw);
-		}
-            }
-        } EndForPencil
-        nrm = tmp[0];
-        for (int i = 1; i < tmplen; i++)
-            nrm = std::max(nrm, tmp[i]);
+            redR = std::max(redR,std::abs(thisR));
+        } EndForPencil(nrm)
     }
     else if (p == 1)
     {
-        ForAllThisCPencil(T,subbox,comp,numcomp)
+        ForAllThisCPencilAdd(T,subbox,comp,numcomp,nrm)
         {
-            const T* row = &thisR;
-            if (tmp == 0)
-            {
-                tmp    = new Real[thisLen];
-                tmplen = thisLen;
-                for (int i = 0; i < thisLen; i++)
-                    tmp[i] = std::abs(row[i]);
-            }
-            else
-            {
-                for (int i = 0; i < thisLen; i++)
-                    tmp[i] += std::abs(row[i]);
-            }
-        } EndForPencil
-        nrm = tmp[0];
-        for (int i = 1; i < tmplen; i++)
-            nrm += tmp[i];
+            redR += std::abs(thisR);
+        } EndForPencil(nrm)
     }
     else
     {
       BoxLib::Error("BaseFab::norm(): only p == 0 or p == 1 are supported");
     }
-
-    delete [] tmp;
 
     return nrm;
 }
@@ -1856,30 +1819,11 @@ T
 BaseFab<T>::min (const Box& subbox,
                  int        comp) const
 {
-    T *_min_row = 0;
-    int _x_len = 0;
-    ForAllThisCPencil(T,subbox,comp,1)
+    T _min = (*this).operator()(smallEnd(),comp);
+    ForAllThisCPencilMin(T,subbox,comp,1,_min)
     {
-        const T* _row = &thisR;
-        if (_min_row == 0)
-        {
-            _min_row = new T[thisLen];
-            _x_len = thisLen;
-            for (int i = 0; i < thisLen; i++)
-                _min_row[i] = _row[i];
-        }
-        else
-        {
-            for (int i = 0; i < thisLen; i++)
-                _min_row[i] = std::min(_row[i],_min_row[i]);
-        }
-    } EndForPencil;
-
-    T _min = _min_row[0];
-    for (int i = 1; i < _x_len; i++)
-        _min = std::min(_min,_min_row[i]);
-
-    delete [] _min_row;
+        redR = std::min(redR,thisR);
+    } EndForPencil(_min);
 
     return _min;
 }
@@ -1896,30 +1840,11 @@ T
 BaseFab<T>::max (const Box& subbox,
                  int        comp) const
 {
-    T*  _max_row = 0;
-    int _x_len   = 0;
-    ForAllThisCPencil(T,subbox,comp,1)
+    T _max = (*this).operator()(smallEnd(),comp);
+    ForAllThisCPencilMax(T,subbox,comp,1,_max)
     {
-        const T* _row = &thisR;
-        if (_max_row == 0)
-        {
-            _max_row = new T[thisLen];
-            _x_len = thisLen;
-            for (int i = 0; i < thisLen; i++)
-                _max_row[i] = _row[i];
-        }
-        else
-        {
-            for (int i = 0; i < thisLen; i++)
-                _max_row[i] = std::max(_row[i],_max_row[i]);
-        }
-    } EndForPencil;
-
-    T _max = _max_row[0];
-    for (int i = 1; i < _x_len; i++)
-        _max = std::max(_max,_max_row[i]);
-
-    delete [] _max_row;
+        redR = std::max(redR,thisR);
+    } EndForPencil(_max);
 
     return _max;
 }
@@ -1936,20 +1861,25 @@ IntVect
 BaseFab<T>::minIndex (const Box& subbox,
                       int        comp) const
 {
-    IntVect _min_loc(subbox.smallEnd());
-    T _min_val = (*this).operator()(_min_loc,comp);
+    T _min_val = (*this).min(comp);
+    int _min_loc[3];
+#pragma omp target data map(tofrom: _min_loc[0:3]) 
     ForAllThisCBNN(T,subbox,comp,1)
     {
-        if (thisR < _min_val)
+        if ( std::abs(thisR - _min_val) < 1.e-16 )
         {
-            _min_val = thisR;
-            D_EXPR(_min_loc[0] = iR,
-                   _min_loc[1] = jR,
-                   _min_loc[2] = kR);
+#pragma omp critical
+            {
+                D_EXPR(_min_loc[0] = iR,
+                       _min_loc[1] = jR,
+                       _min_loc[2] = kR);
+            }
+#pragma omp cancel parallel
         }
+#pragma omp cancellation point parallel
     } EndFor;
 
-    return _min_loc;
+    return IntVect(_min_loc[0],_min_loc[1],_min_loc[2]);
 }
 
 template <class T>
@@ -1964,20 +1894,26 @@ IntVect
 BaseFab<T>::maxIndex (const Box& subbox,
                       int        comp) const
 {
-    IntVect _max_loc(subbox.smallEnd());
-    T _max_val = (*this).operator()(_max_loc,comp);
+
+    T _max_val = (*this).max(comp);
+    int _max_loc[3];
+#pragma omp target data map(tofrom: _max_loc[0:3]) 
     ForAllThisCBNN(T,subbox,comp,1)
     {
-        if (thisR > _max_val)
+        if ( std::abs(thisR - _max_val) < 1.e-16 )
         {
-            _max_val = thisR;
-            D_EXPR(_max_loc[0] = iR,
-                   _max_loc[1] = jR,
-                   _max_loc[2] = kR);
+#pragma omp critical
+            {
+                D_EXPR(_max_loc[0] = iR,
+                       _max_loc[1] = jR,
+                       _max_loc[2] = kR);
+            }
+#pragma omp cancel parallel
         }
+#pragma omp cancellation point parallel
     } EndFor;
 
-    return _max_loc;
+    return IntVect(_max_loc[0],_max_loc[1],_max_loc[2]);
 }
 
 template <class T>
@@ -1990,17 +1926,19 @@ BaseFab<T>::maskLT (BaseFab<int>& mask,
     mask.setVal(0);
 
     int* mptr = mask.dataPtr();
-    int  cnt  = 0;
+    int mpts = mask.nPts();
+    int cnt  = 0;
 
-    ForAllThisCBNN(T,domain,comp,1)
+#pragma omp target data map(tofrom: mptr[comp*mpts:(comp+1)*mpts])
+    ForAllThisCBNNAdd(T,domain,comp,1,cnt)
     {
         int ix = D_TERM(_i, +_j*_b_len[0], +_k*_b_len[0]*_b_len[1]);
         if (thisR < val)
         {
             mptr[ix] = 1;
-            cnt++;
+            redR += 1;
         }
-    } EndFor;
+    } EndForRed(cnt);
 
     return cnt;
 }
@@ -2015,17 +1953,19 @@ BaseFab<T>::maskLE (BaseFab<int>& mask,
     mask.setVal(0);
 
     int* mptr = mask.dataPtr();
+    int mpts = mask.nPts();
     int  cnt  = 0;
 
-    ForAllThisCBNN(T,domain,comp,1)
+#pragma omp target data map(tofrom: mptr[comp*mpts:(comp+1)*mpts])
+    ForAllThisCBNNAdd(T,domain,comp,1,cnt)
     {
         int ix = D_TERM(_i, +_j*_b_len[0], +_k*_b_len[0]*_b_len[1]);
         if (thisR <= val)
         {
             mptr[ix] = 1;
-            cnt++;
+            redR += 1;
         }
-    } EndFor;
+    } EndForRed(cnt);
 
     return cnt;
 }
@@ -2040,17 +1980,19 @@ BaseFab<T>::maskEQ (BaseFab<int>& mask,
     mask.setVal(0);
 
     int* mptr = mask.dataPtr();
+    int mpts = mask.nPts();
     int  cnt  = 0;
 
-    ForAllThisCBNN(T,domain,comp,1)
+#pragma omp target data map(tofrom: mptr[comp*mpts:(comp+1)*mpts])
+    ForAllThisCBNNAdd(T,domain,comp,1,cnt)
     {
         int ix = D_TERM(_i, +_j*_b_len[0], +_k*_b_len[0]*_b_len[1]);
         if (thisR == val)
         {
             mptr[ix] = 1;
-            cnt++;
+            redR += 1;
         }
-    } EndFor;
+    } EndForRed(cnt);
 
     return cnt;
 }
@@ -2065,17 +2007,19 @@ BaseFab<T>::maskGT (BaseFab<int>& mask,
     mask.setVal(0);
 
     int* mptr = mask.dataPtr();
+    int mpts = mask.nPts();
     int  cnt  = 0;
 
-    ForAllThisCBNN(T,domain,comp,1)
+#pragma omp target data map(tofrom: mptr[comp*mpts:(comp+1)*mpts])
+    ForAllThisCBNNAdd(T,domain,comp,1,cnt)
     {
         int ix = D_TERM(_i, +_j*_b_len[0], +_k*_b_len[0]*_b_len[1]);
         if (thisR > val)
         {
             mptr[ix] = 1;
-            cnt++;
+            redR += 1;
         }
-    } EndFor;
+    } EndForRed(cnt);
 
     return cnt;
 }
@@ -2090,17 +2034,19 @@ BaseFab<T>::maskGE(BaseFab<int>& mask,
     mask.setVal(0);
 
     int* mptr = mask.dataPtr();
+    int mpts = mask.nPts();
     int  cnt  = 0;
 
-    ForAllThisCBNN(T,domain,comp,1)
+#pragma omp target data map(tofrom: mptr[comp*mpts:(comp+1)*mpts])
+    ForAllThisCBNNAdd(T,domain,comp,1,cnt)
     {
         int ix = D_TERM(_i, +_j*_b_len[0], +_k*_b_len[0]*_b_len[1]);
         if (thisR >= val)
         {
             mptr[ix] = 1;
-            cnt++;
+            redR += 1;
         }
-    } EndFor;
+    } EndForRed(cnt);
 
     return cnt;
 }
@@ -2210,32 +2156,11 @@ BaseFab<T>::sum (const Box& subbox,
                  int        comp,
                  int        numcomp) const
 {
-    T*  _sum_row = 0;
-    int _sum_len = 0;
-    ForAllThisCPencil(T,subbox,comp,numcomp)
+    T _sum = 0;
+    ForAllThisCPencilAdd(T,subbox,comp,numcomp,_sum)
     {
-        const T* _row = &thisR;
-        if (_sum_row == 0)
-        {
-            _sum_row = new T[thisLen];
-            _sum_len = thisLen;
-            for (int i = 0; i < thisLen; i++)
-                _sum_row[i] = _row[i];
-        }
-        else
-        {
-            for (int i = 0; i < thisLen; i++)
-            {
-                _sum_row[i] += _row[i];
-            }
-        }
-    } EndForPencil;
-
-    T _sum = _sum_row[0];
-    for (int i = 1; i < _sum_len; i++)
-        _sum += _sum_row[i];
-
-    delete [] _sum_row;
+        redR += thisR;
+    } EndForPencil(_sum);
 
     return _sum;
 }

@@ -804,7 +804,7 @@
 
 #elif (BL_SPACEDIM == 3)
 
-#define ForAllThisCPencil(T,b,ns,nc)                                    \
+#define ForAllThisCPencilAdd(T,b,ns,nc,red)                             \
 {                                                                       \
     BL_ASSERT(contains(b));                                             \
     BL_ASSERT((ns) >= 0 && (ns) + (nc) <= nComp());                     \
@@ -816,11 +816,12 @@
     const T* _th_p = dptr;                                              \
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
+    T redR = (red);                                                     \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
+    _Pragma("omp target data map(tofrom: redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     _Pragma("omp target if(1)")                                         \
     {                                                                   \
-    _Pragma("omp teams distribute parallel for collapse(3)")            \
+    _Pragma("omp teams distribute parallel for collapse(3) reduction(+:redR)") \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
@@ -834,10 +835,81 @@
                            + _th_plen[1]*(                              \
                                (kR - _th_plo[2])                        \
                                + _n * _th_plen[2])));                   \
-                const T &thisR = * _th_pp;                              \
-                const int thisLen = _b_len[0];
+                for(int _i = 0; _i < _b_len[0]; ++_i){                  \
+                    const int iR = _i + _b_lo[0];                       \
+                    const T &thisR = _th_pp[_i];
+                
+#define ForAllThisCPencilMax(T,b,ns,nc,red)                             \
+{                                                                       \
+    BL_ASSERT(contains(b));                                             \
+    BL_ASSERT((ns) >= 0 && (ns) + (nc) <= nComp());                     \
+    const int *_th_plo = loVect();                                      \
+    const int *_th_plen = length();                                     \
+    const int *_b_lo = (b).loVect();                                    \
+    IntVect b_length = (b).size();                                      \
+    const int *_b_len = b_length.getVect();                             \
+    const T* _th_p = dptr;                                              \
+    const int _ns = (ns);                                               \
+    const int _nc = (nc);                                               \
+    T redR = (red);                                                     \
+    _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
+    _Pragma("omp target data map(tofrom:redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
+    _Pragma("omp target if(1)")                                         \
+    {                                                                   \
+    _Pragma("omp teams distribute parallel for collapse(3) reduction(max:redR)") \
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
+        for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
+            for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+                int nR = _n; nR += 0;                                   \
+                const int jR = _j + _b_lo[1];                           \
+                const int kR = _k + _b_lo[2];                           \
+                const T *_th_pp = _th_p                                 \
+                    + ((_b_lo[0] - _th_plo[0])                          \
+                       + _th_plen[0]*(                                  \
+                           (jR - _th_plo[1])                            \
+                           + _th_plen[1]*(                              \
+                               (kR - _th_plo[2])                        \
+                               + _n * _th_plen[2])));                   \
+                for(int _i = 0; _i < _b_len[0]; ++_i){                  \
+                    const int iR = _i + _b_lo[0];                       \
+                    const T &thisR = _th_pp[_i];
 
-#define ForAllThisPencil(T,b,ns,nc)                                     \
+#define ForAllThisCPencilMin(T,b,ns,nc,red)                             \
+{                                                                       \
+    BL_ASSERT(contains(b));                                             \
+    BL_ASSERT((ns) >= 0 && (ns) + (nc) <= nComp());                     \
+    const int *_th_plo = loVect();                                      \
+    const int *_th_plen = length();                                     \
+    const int *_b_lo = (b).loVect();                                    \
+    IntVect b_length = (b).size();                                      \
+    const int *_b_len = b_length.getVect();                             \
+    const T* _th_p = dptr;                                              \
+    const int _ns = (ns);                                               \
+    const int _nc = (nc);                                               \
+    T redR = (red);                                                     \
+    _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
+    _Pragma("omp target data map(tofrom:redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
+    _Pragma("omp target if(1)")                                         \
+    {                                                                   \
+    _Pragma("omp teams distribute parallel for collapse(3) reduction(min:redR)") \
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
+        for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
+            for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+                int nR = _n; nR += 0;                                   \
+                const int jR = _j + _b_lo[1];                           \
+                const int kR = _k + _b_lo[2];                           \
+                const T *_th_pp = _th_p                                 \
+                    + ((_b_lo[0] - _th_plo[0])                          \
+                       + _th_plen[0]*(                                  \
+                           (jR - _th_plo[1])                            \
+                           + _th_plen[1]*(                              \
+                               (kR - _th_plo[2])                        \
+                               + _n * _th_plen[2])));                   \
+                for(int _i = 0; _i < _b_len[0]; ++_i){                  \
+                    const int iR = _i + _b_lo[0];                       \
+                    const T &thisR = _th_pp[_i];
+
+#define ForAllThisPencilAdd(T,b,ns,nc,red)                              \
 {                                                                       \
     BL_ASSERT(contains(b));                                             \
     BL_ASSERT((ns) >= 0 && (ns) + (nc) <= nComp());                     \
@@ -849,11 +921,12 @@
     T* _th_p = dptr;                                                    \
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
+    T redR = (red);                                                     \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
+    _Pragma("omp target data map(tofrom: redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     _Pragma("omp target if(1)")                                         \
     {                                                                   \
-    _Pragma("omp teams distribute parallel for collapse(3)")            \
+    _Pragma("omp teams distribute parallel for collapse(3) reduction(+:redR)")\
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
@@ -867,8 +940,44 @@
                            + _th_plen[1]*(                              \
                                (kR - _th_plo[2])                        \
                                + _n * _th_plen[2])));                   \
-                T &thisR = * _th_pp;                                    \
-                const int thisLen = _b_len[0];                          \
+                for(int _i = 0; _i < _b_len[0]; ++_i){                  \
+                    const int iR = _i + _b_lo[0];                       \
+                    T &thisR = _th_pp[_i];
+
+#define ForAllThisPencilMax(T,b,ns,nc,red)                              \
+{                                                                       \
+    BL_ASSERT(contains(b));                                             \
+    BL_ASSERT((ns) >= 0 && (ns) + (nc) <= nComp());                     \
+    const int *_th_plo = loVect();                                      \
+    const int *_th_plen = length();                                     \
+    const int *_b_lo = (b).loVect();                                    \
+    IntVect b_length = (b).size();                                      \
+    const int *_b_len = b_length.getVect();                             \
+    T* _th_p = dptr;                                                    \
+    const int _ns = (ns);                                               \
+    const int _nc = (nc);                                               \
+    T redR = (red);                                                     \
+    _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
+    _Pragma("omp target data map(tofrom: redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
+    _Pragma("omp target if(1)")                                         \
+    {                                                                   \
+    _Pragma("omp teams distribute parallel for collapse(3) reduction(max:redR)")\
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
+        for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
+            for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+                const int nR = _n;                                      \
+                const int kR = _k + _b_lo[2];                           \
+                const int jR = _j + _b_lo[1];                           \
+                T *_th_pp = _th_p                                       \
+                    + ((_b_lo[0] - _th_plo[0])                          \
+                       + _th_plen[0]*(                                  \
+                           (jR - _th_plo[1])                            \
+                           + _th_plen[1]*(                              \
+                               (kR - _th_plo[2])                        \
+                               + _n * _th_plen[2])));                   \
+                for(int _i = 0; _i < _b_len[0]; ++_i){                  \
+                    const int iR = _i + _b_lo[0];                       \
+                    T &thisR = _th_pp[_i];
 
 
 #define ForAllXBNN(T,x,b,ns,nc)                                         \
@@ -991,6 +1100,40 @@
     _Pragma("omp target if(1)")                                         \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3)")            \
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
+        for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
+            for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+                const int kR = _k + _b_lo[2];                           \
+                const int jR = _j + _b_lo[1];                           \
+                const T *_th_pp = _th_p                                 \
+                    + ((_b_lo[0] - _th_plo[0])                          \
+                       + _th_plen[0]*(                                  \
+                           (jR - _th_plo[1])                            \
+                           + _th_plen[1]*(                              \
+                               (kR - _th_plo[2])                        \
+                               + _n * _th_plen[2])));                   \
+                for(int _i = 0; _i < _b_len[0]; ++_i) {                 \
+                    const int iR = _i + _b_lo[0];                       \
+                    const T &thisR = _th_pp[_i];
+
+#define ForAllThisCBNNAdd(T,b,ns,nc,red)                                \
+{                                                                       \
+    BL_ASSERT(contains(b));                                             \
+    BL_ASSERT((ns) >= 0 && (ns) + (nc) <= nComp());                     \
+    const int *_th_plo = loVect();                                      \
+    const int *_th_plen = length();                                     \
+    const int *_b_lo = (b).loVect();                                    \
+    IntVect b_length = (b).size();                                      \
+    const int *_b_len = b_length.getVect();                             \
+    const T* _th_p = dptr;                                              \
+    const int _ns = (ns);                                               \
+    const int _nc = (nc);                                               \
+    T redR =(red);                                                      \
+    _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
+    _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
+    _Pragma("omp target if(1)")                                         \
+    {                                                                   \
+    _Pragma("omp teams distribute parallel for collapse(3) reduction(+:redR)")\
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
@@ -1262,8 +1405,9 @@
                     const T & y##R = _y_pp[_i];
 
 #define EndFor }}}}}}
+#define EndForRed(red) }}}}} (red)=redR; }
 #define EndForTX }}}}}}}
-#define EndForPencil }}}}}
+#define EndForPencil(red) }}}}} (red)=redR; }
 
 #endif
 
