@@ -1874,7 +1874,9 @@ BaseFab<T>::minIndex (const Box& subbox,
                        _min_loc[1] = jR,
                        _min_loc[2] = kR);
             }
+#pragma omp cancel for
         }
+#pragma omp cancellation point for
     } EndFor;
 
     return IntVect(_min_loc[0],_min_loc[1],_min_loc[2]);
@@ -1906,7 +1908,9 @@ BaseFab<T>::maxIndex (const Box& subbox,
                        _max_loc[1] = jR,
                        _max_loc[2] = kR);
             }
+#pragma omp cancel for
         }
+#pragma omp cancellation point for
     } EndFor;
 
     return IntVect(_max_loc[0],_max_loc[1],_max_loc[2]);

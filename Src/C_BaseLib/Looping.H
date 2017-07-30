@@ -1010,9 +1010,10 @@
                            + _x_plen[1]*(                               \
                                (kR - _x_plo[2])                         \
                                + _n * _x_plen[2])));                    \
-                for(int _i = 0; _i < _b_len[0]; ++_i, ++_x_pp) {        \
+                _Pragma("omp simd")                                     \
+                for(int _i = 0; _i < _b_len[0]; ++_i) {                 \
                     const int iR = _i + _b_lo[0];                       \
-                    T &x##R = * _x_pp;
+                    T &x##R = _x_pp[_i];
 
 #define ForAllXCBNN(T,x,b,ns,nc)                                        \
 {                                                                       \
@@ -1044,6 +1045,7 @@
                            + _x_plen[1]*(                               \
                                (kR - _x_plo[2])                         \
                                + _n * _x_plen[2])));                    \
+                _Pragma("omp simd")                                     \
                 for(int _i = 0; _i < _b_len[0]; ++_i) {                 \
                     const int iR = _i + _b_lo[0];                       \
                     const T & x##R = _x_pp[_i];
@@ -1065,11 +1067,10 @@
     _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     _Pragma("omp target if(1)")                                         \
     {                                                                   \
-    _Pragma("omp teams distribute parallel for collapse(3)")            \
+    _Pragma("omp teams distribute parallel for collapse(4)")            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
-                _Pragma("omp simd")                                     \
                 for(int _i = 0; _i < _b_len[0]; ++_i) {                 \
                     int nR = _n; nR += 0;                               \
                     const int kR = _k + _b_lo[2];                       \
@@ -1100,11 +1101,10 @@
     _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     _Pragma("omp target if(1)")                                         \
     {                                                                   \
-    _Pragma("omp teams distribute parallel for collapse(2)")            \
+    _Pragma("omp teams distribute parallel for collapse(4)")            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
-                _Pragma("omp simd")                                     \
                 for(int _i = 0; _i < _b_len[0]; ++_i) {                 \
                     const int kR = _k + _b_lo[2];                       \
                     const int jR = _j + _b_lo[1];                       \
@@ -1197,9 +1197,10 @@
                                + _x_plen[1]*(                           \
                                    (kR - _x_plo[2])                     \
                                    + _n * _x_plen[2])));                \
-                    for(int _i = 0; _i < _subbox_len[0]; ++_i, ++_th_pp) { \
+                    _Pragma("omp simd")                                 \
+                    for(int _i = 0; _i < _subbox_len[0]; ++_i) { \
                         int iR = _i + _subbox_lo[0]; iR += 0;           \
-                        T &thisR = * _th_pp; const T & x##R = _x_pp[_i];
+                        T &thisR = _th_pp[_i]; const T & x##R = _x_pp[_i];
 
 #define ForAllThisBNNXCBN(T,b,ns,nc,x,bx,nss)                           \
 {                                                                       \
@@ -1250,10 +1251,11 @@
                                + _x_plen[1]*(                           \
                                    (k##x##R - _x_plo[2])                \
                                    + _n * _x_plen[2])));                \
-                    for(int _i = 0; _i < _subbox_len[0]; ++_i, ++_th_pp) { \
+                    _Pragma("omp simd")                                 \
+                    for(int _i = 0; _i < _subbox_len[0]; ++_i) {        \
                         int iR = _i + _subbox_lo[0]; iR += 0;           \
                         int i##x##R = _i + _bx_lo[0]; i##x##R += 0;     \
-                        T &thisR = * _th_pp; const T & x##R = _x_pp[_i];
+                        T &thisR = _th_pp[_i]; const T & x##R = _x_pp[_i];
 
 #define ForAllThisBNNXCBNYCBN(T,b,ns,nc,x,bx,nsx,y,by,nsy)              \
 {                                                                       \
@@ -1321,11 +1323,12 @@
                                + _y_plen[1]*(                           \
                                    (k##y##R - _y_plo[2])                \
                                    + _n * _y_plen[2])));                \
-                    for(int _i = 0; _i < _subbox_len[0]; ++_i, ++_th_pp) { \
+                    _Pragma("omp simd")                                 \
+                    for(int _i = 0; _i < _subbox_len[0]; ++_i) {        \
                         int iR = _i + _subbox_lo[0];  iR += 0;          \
                         int i##x##R = _i + _bx_lo[0]; i##x##R += 0;     \
                         int i##y##R = _i + _by_lo[0]; i##y##R += 0;     \
-                        T &thisR = * _th_pp;                            \
+                        T &thisR = _th_pp[_i];                          \
                         const T & x##R = _x_pp[_i];                     \
                         const T & y##R = _y_pp[_i];
 
@@ -1407,7 +1410,6 @@
                     const T & y##R = _y_pp[_i];
 
 #define EndFor }}}}}}
-#define EndForCancel } _Pragma("omp cancellation point for") }}}}}
 #define EndForRed(red) }}}}} (red)=redR; }
 #define EndForTX }}}}}}}
 #define EndForPencil(red) }}}}} (red)=redR; }
