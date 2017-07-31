@@ -104,8 +104,11 @@ else ifeq ($(lowercase_comp),cray)
 else ifeq ($(lowercase_comp),pgi)
   $(info Loading $(BOXLIB_HOME)/Tools/C_mk/comps/pgi.mak...)
   include        $(BOXLIB_HOME)/Tools/C_mk/comps/pgi.mak
+else ifeq ($(lowercase_comp),ibm)
+  $(info Loading $(BOXLIB_HOME)/Tools/C_mk/comps/ibm.mak...)
+  include        $(BOXLIB_HOME)/Tools/C_mk/comps/ibm.mak
 else
-  $(error Unknown compiler $(COMP). Supported compilers are gnu, intel, cray, and pgi)
+  $(error Unknown compiler $(COMP). Supported compilers are gnu, intel, cray, ibm and pgi)
 endif
 
 ifeq ($(DEBUG),TRUE)

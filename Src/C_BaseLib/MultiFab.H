@@ -541,7 +541,7 @@ public:
     static void Finalize ();
 
     virtual void AddProcsToComp (int ioProcNumSCS, int ioProcNumAll,
-                                 int scsMyId, MPI_Comm scsComm);
+                                 int scsMyId, MPI_Comm scsComm) override;
 
 private:
     //
