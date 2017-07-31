@@ -27,10 +27,10 @@ ifeq ($(DEBUG),TRUE)
 
 else
 
-  CXXFLAGS += -O3
-  CFLAGS   += -O3
-  FFLAGS   += -O3
-  F90FLAGS += -O3
+  CXXFLAGS += -O2
+  CFLAGS   += -O2
+  FFLAGS   += -O2
+  F90FLAGS += -O2
 
 endif
 
@@ -50,7 +50,7 @@ ifeq ($(USE_OMP),TRUE)
 endif
 
 CXXFLAGS += $(GENERIC_COMP_FLAGS) -std=c++11
-CFLAGS   += $(GENERIC_COMP_FLAGS) -std=c99
+CFLAGS   += $(GENERIC_COMP_FLAGS)
 FFLAGS   += $(GENERIC_COMP_FLAGS)
 F90FLAGS += $(GENERIC_COMP_FLAGS)
 
