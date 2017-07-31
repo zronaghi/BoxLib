@@ -90,14 +90,13 @@ c-----------------------------------------------------------------------
 
       !$omp target data map(to: hi, lo)
       !$omp target if(.TRUE.)
+      !$omp teams distribute parallel do collapse(3) private(ioff)
+      !&omp firstprivate(h) default(shared)
       do n = 1, nc
-         !$omp teams distribute parallel do collapse(2) private(ioff)
-         !&omp private(cf0,cf1,cf2,cf3,cf4,cf5, delta, rho)
-         !&omp firstprivate(h) default(shared)
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                ioff = MOD(lo(1) + j + k + redblack,2)
-               !$omp simd
+               !$omp simd private(cf0,cf1,cf2,cf3,cf4,cf5,delta,rho)
                do i = lo(1) + ioff,hi(1),2
                   cf0 = merge(f0(blo(1),j,k), 0.0D0, (i .eq. blo(1)) .and. (m0(blo(1)-1,j,k).gt.0))
                   cf1 = merge(f1(i,blo(2),k), 0.0D0, (j .eq. blo(2)) .and. (m1(i,blo(2)-1,k).gt.0))
@@ -115,8 +114,8 @@ c-----------------------------------------------------------------------
                !$omp end simd
             end do
          end do
-         !$omp end teams distribute parallel do
       end do
+      !$omp end teams distribute parallel do
       !$omp end target
       !$omp end target data
 
