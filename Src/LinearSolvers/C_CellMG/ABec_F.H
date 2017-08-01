@@ -245,8 +245,8 @@ extern "C"
         const int* m4   , ARLIM_P(m4_lo),   ARLIM_P(m4_hi),
         const Real* den5, ARLIM_P(den5_lo), ARLIM_P(den5_hi),
         const int* m5   , ARLIM_P(m5_lo),   ARLIM_P(m5_hi),
-        const int* lo, const int* hi, const int* blo, const int* bhi, 
-	const int *nc, const Real *h, const  int* redblack
+        const int* lo, const int* hi, const int* blo, const int* bhi,
+        const int *cb, const int *nc, const Real *h, const  int* redblack
         );
 
     void FORT_JACOBI (
@@ -281,7 +281,7 @@ extern "C"
         const Real* bX, ARLIM_P(bX_lo), ARLIM_P(bX_hi),
         const Real* bY, ARLIM_P(bY_lo), ARLIM_P(bY_hi),
         const Real* bZ, ARLIM_P(bZ_lo), ARLIM_P(bZ_hi),
-        const int *lo, const int *hi, const int *nc,
+        const int *lo, const int *hi, const int * cb, const int *nc,
         const Real *h
         );
     
@@ -292,7 +292,7 @@ extern "C"
         const Real* bX, ARLIM_P(bX_lo), ARLIM_P(bX_hi),
         const Real* bY, ARLIM_P(bY_lo), ARLIM_P(bY_hi),
         const Real* bZ, ARLIM_P(bZ_lo), ARLIM_P(bZ_hi),
-        const int *lo, const int *hi, const int *nc,
+        const int *lo, const int *hi, const int* cb, const int *nc,
         const Real *h
         );
     

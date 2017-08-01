@@ -54,7 +54,7 @@ c-----------------------------------------------------------------------
      $     f5, DIMS(f5),
      $     m5, DIMS(m5),
      $     lo,hi,blo,bhi,
-     $     nc, h,redblack
+     $     cb, nc, h,redblack
      $     )
       implicit none
       REAL_T alpha, beta
@@ -66,7 +66,7 @@ c-----------------------------------------------------------------------
       integer DIMDEC(bZ)
       integer lo(BL_SPACEDIM), hi(BL_SPACEDIM)
       integer blo(BL_SPACEDIM), bhi(BL_SPACEDIM)
-      integer nc
+      integer cb(BL_SPACEDIM), nc
       integer redblack
       integer DIMDEC(f0)
       REAL_T f0(DIMV(f0))
@@ -100,7 +100,9 @@ c-----------------------------------------------------------------------
       REAL_T    bY(DIMV(bY))
       REAL_T    bZ(DIMV(bZ))
 
-      integer  i, j, k, ioff, n
+      logical offload
+      integer  i, j, k, ib, jb, kb, ibe, jbe, kbe, ioff, n
+      integer kblock, jblock, iblock
 
       REAL_T dhx, dhy, dhz, cf0, cf1, cf2, cf3, cf4, cf5
       REAL_T g_m_d, gamma, rho, res
@@ -113,58 +115,76 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
       dhy = beta/h(2)**2
       dhz = beta/h(3)**2
       
-      !$omp target update to(phi)  if(.TRUE.)
-
-      !$omp target data map(to:lo,hi) if(.TRUE.)
-      !$omp target if(.TRUE.)
-      !$omp teams distribute parallel do collapse(3) private(ioff,k,j,n)
+c     offloading or not?
+      offload = .true.
+      
+      !$omp target update to(phi) if(offload)
+      
+      !$omp target data map(to:lo,hi,cb,dhx,dhy,dhz) if(offload)
+      !&omp target data map(to: omega,redblack) if(offload)
+      !$omp target if(offload)
+      !$omp teams distribute collapse(4) private(kb,jb,ib,kbe,jbe,ibe,n) 
+      !&omp if(offload)
       do n = 1, nc
-          do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               ioff = MOD(lo(1) + j + k + redblack,2)
-      !$omp simd private(rho, gamma, g_m_d,res,cf0,cf1,cf2,cf3,cf4,cf5)
-      !&omp firstprivate(alpha,dhx,dhy,dhz,omega, ioff) default(shared)
-               do i = lo(1) + ioff,hi(1),2
+          do kb = lo(3), hi(3), cb(3)
+            do jb = lo(2), hi(2), cb(2)
+                do ib = lo(1), hi(1), cb(1)
+                    kbe = MIN(kb+cb(3)-1,hi(3))
+                    jbe = MIN(jb+cb(2)-1,hi(2))
+                    ibe = MIN(ib+cb(1)-1,hi(1))
+                    !$omp parallel do collapse(2) private(k,j,i,ioff)
+                    do k = kb, kbe
+                        do j = jb, jbe
+                            ioff = MOD(lo(1) + j + k + redblack,2)
+                            !$omp simd private(i,rho, gamma, g_m_d,res)
+                            !&omp private(cf0,cf1,cf2,cf3,cf4,cf5)
+                            !&omp firstprivate(ioff) 
+                            !&omp default(shared)
+                            do i = ib + ioff, ibe, 2
 
-                  cf0 = merge(f0(blo(1),j,k), 0.0D0,
-     $                 (i .eq. blo(1)) .and. (m0(blo(1)-1,j,k).gt.0))
-                  cf1 = merge(f1(i,blo(2),k), 0.D00,
-     $                 (j .eq. blo(2)) .and. (m1(i,blo(2)-1,k).gt.0))
-                  cf2 = merge(f2(i,j,blo(3)), 0.0D0,
-     $                 (k .eq. blo(3)) .and. (m2(i,j,blo(3)-1).gt.0))
-                  cf3 = merge(f3(bhi(1),j,k), 0.0D0,
-     $                 (i .eq. bhi(1)) .and. (m3(bhi(1)+1,j,k).gt.0))
-                  cf4 = merge(f4(i,bhi(2),k), 0.0D0,
-     $                 (j .eq. bhi(2)) .and. (m4(i,bhi(2)+1,k).gt.0))
-                  cf5 = merge(f5(i,j,bhi(3)), 0.0D0,
-     $                 (k .eq. bhi(3)) .and. (m5(i,j,bhi(3)+1).gt.0))
+                                cf0 = merge(f0(blo(1),j,k), 0.0D0,
+     $                               (i .eq. blo(1)) .and. (m0(blo(1)-1,j,k).gt.0))
+                                cf1 = merge(f1(i,blo(2),k), 0.D00,
+     $                               (j .eq. blo(2)) .and. (m1(i,blo(2)-1,k).gt.0))
+                                cf2 = merge(f2(i,j,blo(3)), 0.0D0,
+     $                               (k .eq. blo(3)) .and. (m2(i,j,blo(3)-1).gt.0))
+                                cf3 = merge(f3(bhi(1),j,k), 0.0D0,
+     $                               (i .eq. bhi(1)) .and. (m3(bhi(1)+1,j,k).gt.0))
+                                cf4 = merge(f4(i,bhi(2),k), 0.0D0,
+     $                               (j .eq. bhi(2)) .and. (m4(i,bhi(2)+1,k).gt.0))
+                                cf5 = merge(f5(i,j,bhi(3)), 0.0D0,
+     $                               (k .eq. bhi(3)) .and. (m5(i,j,bhi(3)+1).gt.0))
 
-                  gamma = alpha*a(i,j,k)
-     $                 +   dhx*(bX(i,j,k)+bX(i+1,j,k))
-     $                 +   dhy*(bY(i,j,k)+bY(i,j+1,k))
-     $                 +   dhz*(bZ(i,j,k)+bZ(i,j,k+1))
+                                gamma = alpha*a(i,j,k)
+     $                                +   dhx*(bX(i,j,k)+bX(i+1,j,k))
+     $                                +   dhy*(bY(i,j,k)+bY(i,j+1,k))
+     $                                +   dhz*(bZ(i,j,k)+bZ(i,j,k+1))
 
-                  g_m_d = gamma
-     $                 - (dhx*(bX(i,j,k)*cf0 + bX(i+1,j,k)*cf3)
-     $                 +  dhy*(bY(i,j,k)*cf1 + bY(i,j+1,k)*cf4)
-     $                 +  dhz*(bZ(i,j,k)*cf2 + bZ(i,j,k+1)*cf5))
+                                g_m_d = gamma
+     $                                - (dhx*(bX(i,j,k)*cf0 + bX(i+1,j,k)*cf3)
+     $                                +  dhy*(bY(i,j,k)*cf1 + bY(i,j+1,k)*cf4)
+     $                                +  dhz*(bZ(i,j,k)*cf2 + bZ(i,j,k+1)*cf5))
 
-                  rho =  dhx*( bX(i  ,j,k)*phi(i-1,j,k,n)
-     $                 +       bX(i+1,j,k)*phi(i+1,j,k,n) )
-     $                 + dhy*( bY(i,j  ,k)*phi(i,j-1,k,n)
-     $                 +       bY(i,j+1,k)*phi(i,j+1,k,n) )
-     $                 + dhz*( bZ(i,j,k  )*phi(i,j,k-1,n)
-     $                 +       bZ(i,j,k+1)*phi(i,j,k+1,n) )
+                                rho =  dhx*( bX(i  ,j,k)*phi(i-1,j,k,n)
+     $                              +       bX(i+1,j,k)*phi(i+1,j,k,n) )
+     $                              + dhy*( bY(i,j  ,k)*phi(i,j-1,k,n)
+     $                              +       bY(i,j+1,k)*phi(i,j+1,k,n) )
+     $                              + dhz*( bZ(i,j,k  )*phi(i,j,k-1,n)
+     $                              +       bZ(i,j,k+1)*phi(i,j,k+1,n) )
 
-                  res =  rhs(i,j,k,n) - (gamma*phi(i,j,k,n) - rho)
-                  phi(i,j,k,n) = phi(i,j,k,n) + omega/g_m_d * res
+                                res =  rhs(i,j,k,n) - (gamma*phi(i,j,k,n) - rho)
+                                phi(i,j,k,n) = phi(i,j,k,n) + omega/g_m_d * res
 
-               end do
-      !$omp end simd
+                            end do
+                            !$omp end simd
+                        end do
+                    end do
+                    !$omp end parallel do
+                end do
             end do
           end do
       end do
-      !$omp end teams distribute parallel do
+      !$omp end teams distribute
       !$omp end target      
       !$omp end target data
 
@@ -333,12 +353,13 @@ c
      $     bX,DIMS(bX),
      $     bY,DIMS(bY),
      $     bZ,DIMS(bZ),
-     $     lo,hi,nc,
+     $     lo,hi,cb,nc,
      $     h
      $     )
       implicit none
       REAL_T alpha, beta
-      integer lo(BL_SPACEDIM), hi(BL_SPACEDIM), nc
+      integer lo(BL_SPACEDIM), hi(BL_SPACEDIM)
+      integer cb(BL_SPACEDIM), nc
       integer DIMDEC(y)
       integer DIMDEC(x)
       integer DIMDEC(a)
@@ -353,7 +374,7 @@ c
       REAL_T bZ(DIMV(bZ))
       REAL_T h(BL_SPACEDIM)
 
-      integer i,j,k,n
+      integer i,j,k,n,ib,jb,kb,ibe,jbe,kbe
       REAL_T dhx,dhy,dhz
 
       dhx = beta/h(1)**2
@@ -362,32 +383,46 @@ c
 
       !$omp target update to(y,a)
 
-      !$omp target data map(to:lo, hi)
+      !$omp target data map(to:lo, hi, cb, dhx, dhy, dhz)
       !$omp target if(.TRUE.)
-      !$omp teams distribute parallel do collapse(4)
-      !&omp private(n,k,j,i)
+      !$omp teams distribute collapse(4)
+      !&omp private(n,kb,jb,ib,kbe,jbe,ibe)
       do n = 1, nc
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
-                  y(i,j,k,n) = alpha*a(i,j,k)*x(i,j,k,n)
-     $                 - dhx*
-     $                 (   bX(i+1,j,k)*( x(i+1,j,k,n) - x(i  ,j,k,n) )
-     $                 -   bX(i  ,j,k)*( x(i  ,j,k,n) - x(i-1,j,k,n) ) )
-     $                 - dhy*
-     $                 (   bY(i,j+1,k)*( x(i,j+1,k,n) - x(i,j  ,k,n) )
-     $                 -   bY(i,j  ,k)*( x(i,j  ,k,n) - x(i,j-1,k,n) ) )
-     $                 - dhz*
-     $                 (   bZ(i,j,k+1)*( x(i,j,k+1,n) - x(i,j,k  ,n) )
-     $                 -   bZ(i,j,k  )*( x(i,j,k  ,n) - x(i,j,k-1,n) ) )
+          do kb = lo(3), hi(3), cb(3)
+            do jb = lo(2), hi(2), cb(2)
+                do ib = lo(1), hi(1), cb(1)
+                    kbe = MIN(kb+cb(3)-1,hi(3))
+                    jbe = MIN(jb+cb(2)-1,hi(2))
+                    ibe = MIN(ib+cb(1)-1,hi(1))
+                    !$omp parallel do collapse(2) private(k,j)
+                    do k = kb, kbe
+                        do j = jb, jbe
+                            !$omp simd private(i)
+                            do i = ib, ibe
+                                y(i,j,k,n) = alpha*a(i,j,k)*x(i,j,k,n)
+     $                                     - dhx*
+     $                                      (   bX(i+1,j,k)
+     $                                          *( x(i+1,j,k,n) - x(i  ,j,k,n) )
+     $                                      -   bX(i  ,j,k)*( x(i  ,j,k,n) - x(i-1,j,k,n) ) )
+     $                                     - dhy*
+     $                                      (   bY(i,j+1,k)*( x(i,j+1,k,n) - x(i,j  ,k,n) )
+     $                                      -   bY(i,j  ,k)*( x(i,j  ,k,n) - x(i,j-1,k,n) ) )
+     $                                     - dhz*
+     $                                      (   bZ(i,j,k+1)*( x(i,j,k+1,n) - x(i,j,k  ,n) )
+     $                                      -   bZ(i,j,k  )*( x(i,j,k  ,n) - x(i,j,k-1,n) ) )
+                            end do
+                            !$omp end simd
+                        end do
+                    end do
+                    !$omp end parallel do
                end do
             end do
          end do
       end do
-      !$omp end teams distribute parallel do
+      !$omp end teams distribute
       !$omp end target
       !$omp end target data
-
+      
       !$omp target update from(y)
       end
 
@@ -402,12 +437,13 @@ c
      $     bX,DIMS(bX),
      $     bY,DIMS(bY),
      $     bZ,DIMS(bZ),
-     $     lo,hi,nc,
+     $     lo,hi,cb,nc,
      $     h
      $     )
       implicit none
       REAL_T alpha, beta, res
-      integer lo(BL_SPACEDIM), hi(BL_SPACEDIM), nc
+      integer lo(BL_SPACEDIM), hi(BL_SPACEDIM)
+      integer cb(BL_SPACEDIM), nc
       integer DIMDEC(a)
       integer DIMDEC(bX)
       integer DIMDEC(bY)
@@ -418,7 +454,7 @@ c
       REAL_T bZ(DIMV(bZ))
       REAL_T h(BL_SPACEDIM)
 
-      integer i,j,k,n
+      integer i,j,k,n,ib,jb,kb,ibe,jbe,kbe
       REAL_T dhx,dhy,dhz
 
       dhx = beta/h(1)**2
@@ -427,28 +463,45 @@ c
 
       res = 0.0D0
 
-      !$omp target data map(to: alpha, dhx, dhy, dhz, lo, hi)
+      !$omp target data map(to: alpha, dhx, dhy, dhz, lo, hi, cb)
       !&omp map(tofrom: res)
       !$omp target if(.TRUE.)
-      !$omp teams distribute parallel do simd collapse(4)
-      !&omp firstprivate(alpha,dhx,dhy,dhz) private(n,k,j,i) 
+      !$omp teams distribute collapse(4)
+      !&omp firstprivate(alpha,dhx,dhy,dhz) private(n,kb,jb,ib) 
       !&omp reduction(max:res)  
       do n = 1, nc
-         do k = lo(3), hi(3)
-            do j = lo(2), hi(2)
-               do i = lo(1), hi(1)
-                  res = max(res, abs(alpha*a(i,j,k)
-     &                 + dhx*(bX(i+1,j,k) + bX(i,j,k))
-     &                 + dhy*(bY(i,j+1,k) + bY(i,j,k))
-     $                 + dhz*(bZ(i,j,k+1) + bZ(i,j,k)))
-     &                 + abs( -dhx*bX(i+1,j,k)) + abs( -dhx*bX(i,j,k))
-     &                 + abs( -dhy*bY(i,j+1,k)) + abs( -dhy*bY(i,j,k))
-     &                 + abs( -dhz*bZ(i,j,k+1)) + abs( -dhz*bZ(i,j,k)))
+          do kb = lo(3), hi(3), cb(3)
+            do jb = lo(2), hi(2), cb(2)
+                do ib = lo(1), hi(1), cb(1)
+                    kbe = MIN(kb+cb(3)-1,hi(3))
+                    jbe = MIN(jb+cb(2)-1,hi(2))
+                    ibe = MIN(ib+cb(1)-1,hi(1))
+                    !$omp parallel do collapse(2) private(k,j)
+                    do k = kb, kbe
+                        do j = jb, jbe
+                            !$omp simd private(i)
+                            !&omp reduction(max:res)
+                            do i = ib, ibe
+                                res = max(res, abs(alpha*a(i,j,k)
+     $                              + dhx*(bX(i+1,j,k) + bX(i,j,k))
+     $                              + dhy*(bY(i,j+1,k) + bY(i,j,k))
+     $                              + dhz*(bZ(i,j,k+1) + bZ(i,j,k)))
+     $                              + abs( -dhx*bX(i+1,j,k)) 
+     $                              + abs( -dhx*bX(i,j,k))
+     $                              + abs( -dhy*bY(i,j+1,k)) 
+     $                              + abs( -dhy*bY(i,j,k))
+     $                              + abs( -dhz*bZ(i,j,k+1)) 
+     $                              + abs( -dhz*bZ(i,j,k)))
+                            end do
+                            !$omp end simd
+                        end do
+                    end do
+                    !omp end parallel do
                end do
             end do
          end do
       end do
-      !$omp end teams distribute parallel do simd
+      !$omp end teams distribute
       !$omp end target
       !$omp end target data
       end

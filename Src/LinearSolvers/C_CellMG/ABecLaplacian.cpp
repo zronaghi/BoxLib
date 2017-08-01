@@ -93,7 +93,7 @@ ABecLaplacian::norm (int nm, int level, const bool local)
 		       bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
 		       byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
 		       bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-		       tbx.loVect(), tbx.hiVect(), &nc,
+		       tbx.loVect(), tbx.hiVect(), tbx.cbVect(), &nc,
 		       h[level]);
 #endif
 
@@ -507,7 +507,7 @@ ABecLaplacian::Fsmooth (MultiFab&       solnL,
                   m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
                   f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
                   m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
-                  tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
+                  tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(), tbx.cbVect(),
                   &nc, h[level], &redBlackFlag);
 #endif
     }
@@ -701,7 +701,7 @@ ABecLaplacian::Fapply (MultiFab&       y,
                    ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
                    bzfab.dataPtr(), 
                    ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-                   tbx.loVect(), tbx.hiVect(), &num_comp,
+                   tbx.loVect(), tbx.hiVect(), tbx.cbVect(), &num_comp,
                    h[level]);
 #endif
     }

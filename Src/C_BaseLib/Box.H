@@ -217,6 +217,13 @@ public:
     // Return the coordinate of the high end in the given direction.
     //
     int bigEnd (int dir) const { return bigend[dir]; }
+    //get the blocks for cache blocking
+    const IntVect& cacheBlock () const& { return cacheblock; }
+    const IntVect& cacheBlock () && = delete;
+    //set the blocks for cache blocking
+    void setCacheBlock(const IntVect& cblock) {
+        cacheblock = cblock;
+    }
     //
     // Return the indexing type.
     //
@@ -254,6 +261,9 @@ public:
     //
     const int* hiVect () const& { return bigend.getVect(); }
     const int* hiVect () && = delete;
+    // return cblock vector as a pointer
+    const int* cbVect () const& { return cacheblock.getVect(); }
+    const int* cbVect () && = delete;
     //
     // Returns the coordinate normal to given face.
     //
@@ -457,6 +467,7 @@ public:
         BL_ASSERT(sameType(rhs));
         smallend.max(rhs.smallend);
         bigend.min(rhs.bigend);
+        cacheblock.min(rhs.cacheblock);
         return *this;
     }
     //
@@ -592,6 +603,7 @@ private:
 
     IntVect         smallend;
     IntVect         bigend;
+    IntVect         cacheblock;
     IndexType       btype;
 };
 

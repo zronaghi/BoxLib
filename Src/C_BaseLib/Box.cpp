@@ -27,7 +27,9 @@ Box::Box (const IntVect& small,
     bigend(D_DECL(small[0]+vec_len[0]-1,
                   small[1]+vec_len[1]-1,
                   small[2]+vec_len[2]-1))
-{}
+{
+    cacheblock = bigend;
+}
 
 Box::Box (const IntVect& small,
           const IntVect& big,
@@ -36,14 +38,18 @@ Box::Box (const IntVect& small,
     smallend(small),
     bigend(big),
     btype(t)
-{}
+{
+    cacheblock = bigend;
+}
 
 Box::Box (const IntVect& small,
           const IntVect& big)
     :
     smallend(small),
     bigend(big)
-{}
+{
+    cacheblock = bigend;
+}
 
 Box::Box (const IntVect& small,
           const IntVect& big,
@@ -54,6 +60,7 @@ Box::Box (const IntVect& small,
     btype(typ)
 {
     BL_ASSERT(typ >= IntVect::TheZeroVector() && typ <= IntVect::TheUnitVector());
+    cacheblock = bigend;
 }
 
 Box&

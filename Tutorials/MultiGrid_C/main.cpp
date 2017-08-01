@@ -180,6 +180,15 @@ enum bc_t {Periodic = 0,
             pp.query("plot_asol", plot_asol);
             pp.query("plot_err", plot_err);
             pp.query("comp_norm", comp_norm);
+            
+            //read cache blocking information
+            int kblock, jblock, iblock;
+            pp.query("block_z", kblock);
+            if(kblock == 0) kblock = 1024;
+            pp.query("block_y", jblock);
+            if(jblock == 0) jblock = 1024;
+            pp.query("block_x", iblock);
+            if(iblock == 0) iblock = 1024;
 
             Real a, b;
             pp.get("a",  a);
@@ -192,6 +201,7 @@ enum bc_t {Periodic = 0,
             IntVect dom_lo(D_DECL(0,0,0));
             IntVect dom_hi(D_DECL(n_cell-1,n_cell-1,n_cell-1));
             Box domain(dom_lo,dom_hi);
+            domain.setCacheBlock(IntVect(iblock,jblock,kblock));
 
             // Initialize the boxarray "bs" from the single box "bx"
             BoxArray bs(domain);
