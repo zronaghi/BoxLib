@@ -90,8 +90,8 @@ c-----------------------------------------------------------------------
 
       !$omp target data map(to: hi, lo)
       !$omp target if(.TRUE.)
-      !$omp teams distribute parallel do collapse(3) private(ioff)
-      !&omp firstprivate(h) default(shared)
+      !$omp teams distribute parallel do collapse(3)
+      !&omp private(ioff,n,k,j) firstprivate(h) default(shared)
       do n = 1, nc
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -150,6 +150,8 @@ c
 
       !$omp target data map(to: hi, lo, scal)
       !$omp target if(.TRUE.)
+      !$omp teams distribute parallel do simd collapse(4)
+      !&omp private(n,k,j,i) default(shared)
       do n = 1, nc
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -163,7 +165,12 @@ c
             end do
          end do
       end do
+      !$omp end teams distribute parallel do simd
+      !$omp end target
+      !$omp end target data
 
+      !$omp target update from(y)
+      
       end
 
 c-----------------------------------------------------------------------
