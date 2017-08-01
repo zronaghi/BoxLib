@@ -146,7 +146,11 @@ c
       REAL_T scal
 
       scal = 1.0D0/h**2
+      
+      !$omp target update to(x)
 
+      !$omp target data map(to: hi, lo, scal)
+      !$omp target if(.TRUE.)
       do n = 1, nc
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
