@@ -117,8 +117,8 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
 
       !$omp target data map(to:lo,hi) if(.TRUE.)
       !$omp target if(.TRUE.)
+      !$omp teams distribute parallel do collapse(3) private(ioff,k,j,n)
       do n = 1, nc
-      !$omp teams distribute parallel do collapse(2) private(ioff,k,j)
           do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                ioff = MOD(lo(1) + j + k + redblack,2)
@@ -163,8 +163,8 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
       !$omp end simd
             end do
           end do
-      !$omp end teams distribute parallel do
       end do
+      !$omp end teams distribute parallel do
       !$omp end target      
       !$omp end target data
 
@@ -430,10 +430,10 @@ c
       !$omp target data map(to: alpha, dhx, dhy, dhz, lo, hi)
       !&omp map(tofrom: res)
       !$omp target if(.TRUE.)
+      !$omp teams distribute parallel do simd collapse(4)
+      !&omp firstprivate(alpha,dhx,dhy,dhz) private(n,k,j,i) 
+      !&omp reduction(max:res)  
       do n = 1, nc
-      !$omp teams distribute parallel do simd collapse(3)
-      !&omp firstprivate(alpha,dhx,dhy,dhz) private(k,j,i)
-      !&omp reduction(max:res)
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
                do i = lo(1), hi(1)
@@ -447,8 +447,8 @@ c
                end do
             end do
          end do
-      !$omp end teams distribute parallel do simd
       end do
+      !$omp end teams distribute parallel do simd
       !$omp end target
       !$omp end target data
       end

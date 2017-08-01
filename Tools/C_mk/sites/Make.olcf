@@ -33,7 +33,7 @@ endif
 ifeq ($(USE_MPI),TRUE)
   CC  = mpicc
   CXX = mpic++
-  FC  = mpifort
+  FC  = mpif77
   F90 = mpif90
   LIBRARIES += -lmpi_ibm
 endif
