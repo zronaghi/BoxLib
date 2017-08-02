@@ -49,7 +49,7 @@ KOKKOS_DEVICES = OpenMP
 #KOKKOS_OPTIONS = aggressive_vectorization
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
-CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA
+CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA -DUSE_VIEWS
 #CPPFLAGS += -DCG_USE_OLD_CONVERGENCE_CRITERIA
 
 # USE_MPI must be TRUE if USE_HYPRE
