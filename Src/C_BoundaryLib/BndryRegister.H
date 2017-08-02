@@ -6,6 +6,8 @@
 #include <FabSet.H>
 
 class Orientation;
+class BndryRegister;
+void Copy (BndryRegister& dst, const BndryRegister& src);
 
 /*
         A BndryRegister organizes FabSets bounding each grid in a BoxArray.
@@ -62,6 +64,7 @@ private:
 class BndryRegister
 {
 
+    friend void Copy (BndryRegister& dst, const BndryRegister& src);
 public:
     //
     // The default constructor.
@@ -182,9 +185,6 @@ public:
     // Read (used for reading from checkpoint)
     //
     void read (const std::string& name, std::istream& is);
-
-    // Local copy function
-    static void Copy (BndryRegister& dst, const BndryRegister& src);
 
     //
     // AddProcsToComp

@@ -75,7 +75,7 @@ void
     {
         const MultiMask& smasks = src.masks[i];
         masks.set(i, new MultiMask(smasks.boxArray(), smasks.DistributionMap(), smasks.nComp()));
-        MultiMask::Copy(masks[i], smasks);
+        Copy(masks[i], smasks);
     }
 }
 

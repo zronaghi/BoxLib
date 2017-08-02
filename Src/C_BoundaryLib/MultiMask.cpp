@@ -79,8 +79,7 @@ MultiMask::MultiMask (const BoxArray& regba, const DistributionMapping& dm, cons
     }
 }
 
-void 
-MultiMask::Copy (MultiMask& dst, const MultiMask& src)
+void Copy (MultiMask& dst, const MultiMask& src)
 {
     BL_ASSERT(dst.nComp() == src.nComp());
     BL_ASSERT(dst.boxArray() == src.boxArray());

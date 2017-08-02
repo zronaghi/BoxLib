@@ -9,7 +9,10 @@
 #include <omp.h>
 #endif
 
+//forward declarations
 class MultiMaskIter;
+class MultiMask;
+void Copy (MultiMask& dst, const MultiMask& src);
 
 class MultiMask
 {
@@ -27,9 +30,8 @@ public:
     const BoxArray& boxArray () const { return m_fa.boxArray(); }
 
     const DistributionMapping& DistributionMap () const { return m_fa.DistributionMap(); }
-
-    static void Copy (MultiMask& dst, const MultiMask& src);
-
+    
+    friend void Copy (MultiMask& dst, const MultiMask& src);
     friend class MultiMaskIter;
 
 private:

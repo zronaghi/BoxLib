@@ -150,8 +150,8 @@ LinOp::initConstruct (const Real* _h)
 	const MultiMask& m = bgb->bndryMasks(face);
 	maskvals[0].set(face, new MultiMask(m.boxArray(), m.DistributionMap(), 1));
 	lmaskvals[0].set(face, new MultiMask(m.boxArray(), m.DistributionMap(), 1));
-	MultiMask::Copy(maskvals[0][face], m);
-	MultiMask::Copy(lmaskvals[0][face], m);
+	Copy(maskvals[0][face], m);
+	Copy(lmaskvals[0][face], m);
     }
 }
 
@@ -358,7 +358,7 @@ LinOp::prepareForLevel (int level)
 						face, 0, nGrow, 0, 1, true));
 	lmaskvals[level].set(face, new MultiMask(maskvals[level][face].boxArray(),
 						 maskvals[level][face].DistributionMap(), 1));
-	MultiMask::Copy(lmaskvals[level][face], maskvals[level][face]);
+	Copy(lmaskvals[level][face], maskvals[level][face]);
     }
 }
 

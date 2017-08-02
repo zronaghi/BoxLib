@@ -337,7 +337,7 @@ BndryRegister::read (const std::string& name, std::istream& is)
 
 // Local copy function
 void 
-BndryRegister::Copy (BndryRegister& dst, const BndryRegister& src)
+Copy (BndryRegister& dst, const BndryRegister& src)
 {
     for (OrientationIter face; face; ++face)
     {
