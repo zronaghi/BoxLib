@@ -2,8 +2,10 @@
 #include "LO_BCTYPES.H"
 
 
-subroutine comp_asol(asol, a_l1, a_l2, a_l3, a_h1, a_h2, a_h3, &
-                     lo, hi, dx, ibnd, offset) bind(C, name="comp_asol")
+subroutine comp_asol(asol, a_l1, a_l2, a_l3, &
+                     a_h1, a_h2, a_h3, &
+                     lo, hi, dx, ibnd, offset) &
+                     bind(C, name="comp_asol")
 
   implicit none
 
@@ -29,11 +31,15 @@ subroutine comp_asol(asol, a_l1, a_l2, a_l3, a_h1, a_h2, a_h3, &
            x = (dble(i)+offset(1))*dx(1)
 
            if (ibnd .eq. 0 .or. ibnd.eq. LO_NEUMANN) then
-              asol(i,j,k) = 1.d0 * cos(tpi*x) * cos(tpi*y) * cos(tpi*z) & 
-                         + .25d0 * cos(fpi*x) * cos(fpi*y) * cos(fpi*z)
+              asol(i,j,k) = 1.d0 * cos(tpi*x) &
+                          * cos(tpi*y) * cos(tpi*z) & 
+                          + .25d0 * cos(fpi*x) &
+                          * cos(fpi*y) * cos(fpi*z)
            else if (ibnd .eq. LO_DIRICHLET) then
-              asol(i,j,k) = 1.d0 * sin(tpi*x) * sin(tpi*y) * sin(tpi*z) & 
-                         + .25d0 * sin(fpi*x) * sin(fpi*y) * sin(fpi*z)
+              asol(i,j,k) = 1.d0 * sin(tpi*x) &
+                          * sin(tpi*y) * sin(tpi*z) & 
+                          + .25d0 * sin(fpi*x) &
+                          * sin(fpi*y) * sin(fpi*z)
            else
               print *, 'FORT_COMP_ASOL: unknown boundary type'
               stop
@@ -45,7 +51,9 @@ subroutine comp_asol(asol, a_l1, a_l2, a_l3, a_h1, a_h2, a_h3, &
 end subroutine comp_asol
 
 
-subroutine set_alpha(alpha, a_l1, a_l2, a_l3, a_h1, a_h2, a_h3, lo, hi, dx) bind(C, name="set_alpha")
+subroutine set_alpha(alpha, a_l1, a_l2, a_l3, &
+                    a_h1, a_h2, a_h3, lo, hi, dx) &
+                    bind(C, name="set_alpha")
 
   implicit none
   
@@ -68,7 +76,8 @@ end subroutine set_alpha
 
 
 subroutine set_cc_coef(coef, c_l1, c_l2, c_l3, c_h1, c_h2, c_h3, &
-                       lo, hi, dx, sigma, w) bind(C, name="set_cc_coef")
+                       lo, hi, dx, sigma, w) &
+                       bind(C, name="set_cc_coef")
 
   implicit none
 

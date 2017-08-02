@@ -9,7 +9,7 @@ F90 = xlf90_r
 CXXFLAGS = -g
 CFLAGS   = -g
 FFLAGS   = -g -qextname=flush
-F90FLAGS = -g -qlanglvl=2003std -qextname=flush
+F90FLAGS = -g -qextname=flush -qsuffix=f=f90 -qfree=f90  #-qlanglvl=2003std
 
 ########################################################################
 
@@ -38,8 +38,8 @@ endif
 
 ########################################################################
 
-FFLAGS += -qdpc -qarch=auto -qtune=auto -qmaxmem=-1  -qfixed=132 -Xptxas -v -J$(fmoddir) -I $(fmoddir)
-F90FLAGS += -qdpc -qarch=auto -qtune=auto -qmaxmem=-1 -qfixed -J$(fmoddir) -I $(fmoddir) -fimplicit-none
+FFLAGS += -qdpc -qarch=auto -qtune=auto -qmaxmem=-1  -qfixed=132 -Xptxas -v -qmoddir=$(fmoddir) -I $(fmoddir)
+F90FLAGS += -qzerosize -qdpc -qarch=auto -qtune=auto -qmaxmem=-1 -qmoddir=$(fmoddir) -I $(fmoddir) -fimplicit-none
 
 ########################################################################
 
