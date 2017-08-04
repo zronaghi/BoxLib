@@ -545,6 +545,8 @@ const Real* h)
     //blo
     const int *blo = bbx.loVect();
     const int *bhi = bbx.hiVect();
+    //cacheblock
+    const int *cb = bx.cbVect();
 
     Real omega= 1.15;
     Real dhx = beta/(h[0]*h[0]);
@@ -562,7 +564,7 @@ const Real* h)
     //execute
     double start_time = omp_get_wtime();
     for(unsigned int n=0; n<nc; n++){
-        Kokkos::Experimental::md_parallel_for(t_policy({lo[2],lo[1],lo[0]},{hi[2]+1,hi[1]+1,hi[0]+1},{4,4,1000}),
+        Kokkos::Experimental::md_parallel_for(t_policy({lo[2],lo[1],lo[0]},{hi[2]+1,hi[1]+1,hi[0]+1},{cb[2],cb[1],cb[0]}),
             [&](const int& k, const int& j, const int& i){
                 if ( (i + j + k + rb) % 2 ==0){
         
@@ -601,7 +603,7 @@ const Real* h)
     //execute
     double start_time = omp_get_wtime();
     for(unsigned int n=0; n<nc; n++){
-        Kokkos::Experimental::md_parallel_for(t_policy({lo[2],lo[1]},{hi[2]+1,hi[1]+1},{4,4}),
+        Kokkos::Experimental::md_parallel_for(t_policy({lo[2],lo[1]},{hi[2]+1,hi[1]+1},{cb[2],cb[1]}),
             [&](const int& k, const int& j){
                 int ioff = (lo[0] + j + k + rb) % 2;
                 for(int i=ioff; i<=hi[0]; i+=2){
