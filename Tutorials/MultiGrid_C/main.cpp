@@ -33,6 +33,7 @@
 #include <writePlotFile.H>
 
 #include <Kokkos_Core.hpp>
+#include "timer.h"
 
 int  verbose       = 2;     
 bool use_C_kernels = false;
@@ -450,10 +451,10 @@ void setup_rhs(MultiFab& rhs, const Geometry& geom)
   // We test the sum of the RHS to check solvability
   Real sum_rhs = 0.;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for ( MFIter mfi(rhs,true); mfi.isValid(); ++mfi ) {
+  //#ifdef _OPENMP
+  //#pragma omp parallel
+  //#endif
+  for ( MFIter mfi(rhs,false); mfi.isValid(); ++mfi ) {
     const Box& tbx = mfi.tilebox();
     const Box&  bx = mfi.validbox();
 

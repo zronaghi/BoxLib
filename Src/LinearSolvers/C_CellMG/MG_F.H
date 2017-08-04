@@ -69,6 +69,7 @@
 
 #include <ArrayLim.H>
 #include <Mask.H>
+#include <Kokkos_Core.hpp>
 
 void C_AVERAGE(
 		const Box& bx,
@@ -123,6 +124,82 @@ void C_FLUX(const Box& xbx,
 		const Real* h);
 
 #if (BL_SPACEDIM == 3)
+        template<class T>
+        class ViewFab{
+        public:
+            
+            T& operator()(const int& i, const int& j, const int& k, const int& n = 0){
+                return data[n](i-smallend[0],j-smallend[1],k-smallend[2]);
+            }
+            
+            const T& operator()(const int& i, const int& j, const int& k, const int& n = 0) const{
+                return data[n](i-smallend[0],j-smallend[1],k-smallend[2]);
+            }
+            
+            const T& operator()(int i, int j, int k, int n=0) const{
+                return data[n](i-smallend[0],j-smallend[1],k-smallend[2]);
+            }
+            
+            void init(const BaseFab<T>& rhs_, const std::string& name_){
+                name=name_;
+                smallend=rhs_.smallEnd();
+                bigend=rhs_.bigEnd();
+                length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
+                numvars=rhs_.nComp();
+                for(unsigned int n=0; n<numvars; n++){
+                    data.push_back(Kokkos::View<T***>(name+"_comp_"+std::to_string(n),length[0],length[1],length[2]));
+#pragma omp parallel for collapse(3)
+                    for(unsigned int k_=smallend[2]; k_<=bigend[2]; k_++){
+                        for(unsigned int j_=smallend[1]; j_<=bigend[1]; j_++){
+                            for(unsigned int i_=smallend[0]; i_<bigend[0]; i_++){
+                                const int k = k_ - smallend[2];
+                                const int j = j_ - smallend[1];
+                                const int i = i_ - smallend[0];
+                                data[n](i,j,k) = rhs_(IntVect(i_,j_,k_),n);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            ViewFab(){}
+            
+            ViewFab(const BaseFab<T>& rhs_, const std::string& name_){
+                init(rhs_,name_);
+            }
+            
+            ViewFab<T>& operator=(const ViewFab<T>& rhs_){
+                //clear old
+                data.clear();
+        
+                //copy stuff over
+                name=rhs_.name;
+                numvars=rhs_.numvars;
+                smallend=rhs_.smallend;
+                bigend=rhs_.bigend;
+                length=rhs_.length;
+                for(unsigned int n=0; n<numvars; n++){
+                    data.push_back(Kokkos::View<T***>(name+"_comp_"+std::to_string(n),length[0],length[1],length[2]));
+#pragma omp parallel for collapse(3)
+                    for(int k=smallend[2]; k<=bigend[2]; k++){
+                        for(int j=smallend[1]; j<=bigend[1]; j++){
+                            for(int i=smallend[0]; i<=bigend[0]; i++){
+                                (*this)(i,j,k,n) = rhs_(i,j,k,n);
+                            }
+                        }
+                    }
+                }
+        
+                return *this;
+            }
+            
+        private:
+            std::string name;
+            int numvars;
+            IntVect smallend, bigend, length;
+            std::vector< Kokkos::View<T***> > data;
+        };
+
 void C_GSRB_3D(const Box& bx,
         const Box& bbx,
         const int nc,
