@@ -124,7 +124,7 @@ void C_FLUX(const Box& xbx,
 		const Real* h);
 
 #if (BL_SPACEDIM == 3)
-        template<class T>
+template<class T>
         class ViewFab{
         public:
             
@@ -146,8 +146,9 @@ void C_FLUX(const Box& xbx,
                 bigend=rhs_.bigEnd();
                 length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
                 numvars=rhs_.nComp();
+		data=new Kokkos::View<T***>[numvars];
                 for(unsigned int n=0; n<numvars; n++){
-                    data.push_back(Kokkos::View<T***>(name+"_comp_"+std::to_string(n),length[0],length[1],length[2]));
+		  data[n]=Kokkos::View<T***>(name+"_comp_"+std::to_string(n),length[0],length[1],length[2]);
 #pragma omp parallel for collapse(3)
                     for(unsigned int k_=smallend[2]; k_<=bigend[2]; k_++){
                         for(unsigned int j_=smallend[1]; j_<=bigend[1]; j_++){
@@ -170,7 +171,7 @@ void C_FLUX(const Box& xbx,
             
             ViewFab<T>& operator=(const ViewFab<T>& rhs_){
                 //clear old
-                data.clear();
+	      delete [] data;
         
                 //copy stuff over
                 name=rhs_.name;
@@ -178,8 +179,10 @@ void C_FLUX(const Box& xbx,
                 smallend=rhs_.smallend;
                 bigend=rhs_.bigend;
                 length=rhs_.length;
+		numvars=rhs_.nComp();
+		data=new Kokkos::View<T***>[numvars];
                 for(unsigned int n=0; n<numvars; n++){
-                    data.push_back(Kokkos::View<T***>(name+"_comp_"+std::to_string(n),length[0],length[1],length[2]));
+		  data[n]=Kokkos::View<T***>(name+"_comp_"+std::to_string(n),length[0],length[1],length[2]);
 #pragma omp parallel for collapse(3)
                     for(int k=smallend[2]; k<=bigend[2]; k++){
                         for(int j=smallend[1]; j<=bigend[1]; j++){
@@ -197,7 +200,7 @@ void C_FLUX(const Box& xbx,
             std::string name;
             int numvars;
             IntVect smallend, bigend, length;
-            std::vector< Kokkos::View<T***> > data;
+            Kokkos::View<T***>* data;
         };
 
 void C_GSRB_3D(const Box& bx,

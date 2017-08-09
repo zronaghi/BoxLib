@@ -14,7 +14,7 @@ public:
     //swap indices here to get "natural" layout
     KOKKOS_INLINE_FUNCTION
     Real& operator()(const int& i, const int& j, const int& k, const int& n = 0){
-        return data[n](k-smallend[2], j-smallend[1], i-smallend[0]);
+      return data[n](k-smallend[2], j-smallend[1], i-smallend[0]);
     }
     
     KOKKOS_INLINE_FUNCTION
@@ -28,9 +28,11 @@ public:
         bigend=rhs_.bigEnd();
         length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
         numvars=rhs_.nComp();
+	//realloc data
+	data=new Kokkos::View<Real***>[numvars];
         
         for(unsigned int n=0; n<numvars; n++){
-            data.push_back(Kokkos::View<Real***>(name+"_comp_"+std::to_string(n),length[2],length[1],length[0]));
+            data[n]=Kokkos::View<Real***>(name+"_comp_"+std::to_string(n),length[2],length[1],length[0]);
 #pragma omp parallel for collapse(3)
             for(int k=smallend[2]; k<=bigend[2]; k++){
                 for(int j=smallend[1]; j<=bigend[1]; j++){
@@ -49,7 +51,8 @@ public:
     }
     
     ViewFab<Real>& operator=(const ViewFab<Real>& rhs_){
-        data.clear();
+      //delete rhs data
+      delete [] data;
         
         //copy stuff over
         name=rhs_.name;
@@ -57,9 +60,11 @@ public:
         smallend=rhs_.smallend;
         bigend=rhs_.bigend;
         length=rhs_.length;
+	//realloc data
+	data=new Kokkos::View<Real***>[numvars];
         
         for(unsigned int n=0; n<numvars; n++){
-            data.push_back(Kokkos::View<Real***>(name+"_comp_"+std::to_string(n),length[2],length[1],length[0]));
+            data[n]=Kokkos::View<Real***>(name+"_comp_"+std::to_string(n),length[2],length[1],length[0]);
 #pragma omp parallel for collapse(3)
             for(int k=smallend[2]; k<=bigend[2]; k++){
                 for(int j=smallend[1]; j<=bigend[1]; j++){
@@ -104,7 +109,7 @@ private:
     std::string name;
     int numvars;
     IntVect smallend, bigend, length;
-    std::vector< Kokkos::View<Real***> > data;
+    Kokkos::View<Real***>* data;
 };
 
 template<>
@@ -127,9 +132,11 @@ public:
         bigend=rhs_.bigEnd();
         length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
         numvars=rhs_.nComp();
+	//realloc data
+	data=new Kokkos::View<int***>[numvars];
         
         for(unsigned int n=0; n<numvars; n++){
-            data.push_back(Kokkos::View<int***>(name+"_comp_"+std::to_string(n),length[2],length[1],length[0]));
+            data[n]=Kokkos::View<int***>(name+"_comp_"+std::to_string(n),length[2],length[1],length[0]);
 #pragma omp parallel for collapse(3)
             for(int k=smallend[2]; k<=bigend[2]; k++){
                 for(int j=smallend[1]; j<=bigend[1]; j++){
@@ -149,7 +156,7 @@ public:
     
     ViewFab<int>& operator=(const ViewFab<int>& rhs_){
         //clear old
-        data.clear();
+      delete [] data;
         
         //copy stuff over
         name=rhs_.name;
@@ -157,9 +164,11 @@ public:
         smallend=rhs_.smallend;
         bigend=rhs_.bigend;
         length=rhs_.length;
+	//realloc data
+	data=new Kokkos::View<int***>[numvars];
         
         for(unsigned int n=0; n<numvars; n++){
-            data.push_back(Kokkos::View<int***>(name+"_comp_"+std::to_string(n),length[2],length[1],length[0]));
+            data[n]=Kokkos::View<int***>(name+"_comp_"+std::to_string(n),length[2],length[1],length[0]);
 #pragma omp parallel for collapse(3)
             for(int k=smallend[2]; k<=bigend[2]; k++){
                 for(int j=smallend[1]; j<=bigend[1]; j++){
@@ -177,7 +186,7 @@ private:
     std::string name;
     int numvars;
     IntVect smallend, bigend, length;
-    std::vector< Kokkos::View<int***> > data;
+    Kokkos::View<int***>* data;
 };
 
 
@@ -201,7 +210,7 @@ const FArrayBox& f){
     //execute
     for(int n=0; n<nc; n++){
       Kokkos::Experimental::md_parallel_for(t_policy({lo[2],lo[1],lo[0]},{hi[2]+1,hi[1]+1,hi[0]+1},{cb[2],cb[1],cb[0]}),
-					    [&](const int& k, const int& j, const int& i){
+					    KOKKOS_LAMBDA(const int& k, const int& j, const int& i){
 					      cv(i,j,k,n) =  (fv(2*i+1,2*j+1,2*k,n) + fv(2*i,2*j+1,2*k,n) + fv(2*i+1,2*j,2*k,n) + fv(2*i,2*j,2*k,n))*0.125;
 					      cv(i,j,k,n) += (fv(2*i+1,2*j+1,2*k+1,n) + fv(2*i,2*j+1,2*k+1,n) + fv(2*i+1,2*j,2*k+1,n) + fv(2*i,2*j,2*k+1,n))*0.125;
 					    });
