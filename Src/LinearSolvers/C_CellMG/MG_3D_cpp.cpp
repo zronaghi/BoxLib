@@ -287,6 +287,7 @@ const FArrayBox& c){
 //     element.
 //     
 //-----------------------------------------------------------------------
+#if 0
 //GSRB Functor
 struct C_GSRB_Functor {
     // Data used by the loop body
@@ -391,6 +392,8 @@ struct C_GSRB_Functor {
         }
     }
 };
+
+#else
 
 //GSRB Functor
 struct C_GSRB_View_Functor {
@@ -510,6 +513,7 @@ struct C_GSRB_View_Functor {
         else return 0.;
     }
 };
+#endif
 
 //GSRB kernel
 void C_GSRB_3D(

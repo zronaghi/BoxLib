@@ -9,6 +9,7 @@
 #include <SPACE.H>
 #include <Array.H>
 #include <BLassert.H>
+#include <Kokkos_Core.hpp>
 
 //
 // An Integer Vector in SPACEDIM-Dimensional Space
@@ -61,10 +62,12 @@ public:
     //
     // Returns a reference to the i'th coordinate of the IntVect.
     //
+    KOKKOS_INLINE_FUNCTION
     int& operator[] (int i) { BL_ASSERT(i>=0 && i < BL_SPACEDIM); return vect[i]; }
     //
     // Returns the i'th coordinate of the IntVect.
     //
+    KOKKOS_INLINE_FUNCTION
     int operator[] (int i) const { BL_ASSERT(i>=0 && i < BL_SPACEDIM); return vect[i]; }
     //
     // Set i'th coordinate of IntVect to val.

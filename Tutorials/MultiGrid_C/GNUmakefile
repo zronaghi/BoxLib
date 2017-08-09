@@ -29,7 +29,7 @@ DIM	= 3
 
 #COMP = intel
 #FCOMP = ifort
-COMP = gnu
+COMP = kokkos
 FCOMP = gfortran
 
 USE_HYPRE = FALSE
@@ -45,7 +45,12 @@ HPGMG_USE_SUBCOMM = TRUE
 HPGMG_BOTTOM_SOLVER= BICGSTAB
 HPGMG_SMOOTHER = GSRB
 
-KOKKOS_DEVICES = OpenMP
+KOKKOS_DEVICES = Cuda
+KOKKOS_ARCH = Pascal60
+
+#KOKKOS_DEVICES = OpenMP
+#KOKKOS_ARCH = Power8
+
 #KOKKOS_OPTIONS = aggressive_vectorization
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
@@ -55,7 +60,7 @@ CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA -DUSE_VIEWS
 # USE_MPI must be TRUE if USE_HYPRE
 USE_MPI=FALSE
 #USE_OMP=TRUE
-USE_OMP=FALSE
+USE_OMP=TRUE
 
 EBASE = main
 
@@ -64,7 +69,9 @@ include $(BOXLIB_HOME)/Tools/C_mk/Make.defs
 CEXE_sources += $(EBASE).cpp
 
 include $(KOKKOS_MAKEFILE)
-CPPFLAGS += $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS)
+KOKKOS_DEVICES = Cuda
+KOKKOS_ARCH = Pascal60
+CPPFLAGS += $(KOKKOS_CXXFLAGS) $(KOKKOS_CPPFLAGS) -DKOKKOS_ENABLE_CUDA -DKOKKOS_HAVE_CUDA 
 include Make.package
 include $(BOXLIB_HOME)/Src/C_BoundaryLib/Make.package
 include $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG/Make.package

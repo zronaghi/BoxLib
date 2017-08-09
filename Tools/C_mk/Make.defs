@@ -98,6 +98,9 @@ ifeq ($(lowercase_comp),$(filter $(lowercase_comp),gcc gnu g++))
 else ifeq ($(lowercase_comp),intel)
   $(info Loading $(BOXLIB_HOME)/Tools/C_mk/comps/intel.mak...)
   include        $(BOXLIB_HOME)/Tools/C_mk/comps/intel.mak
+else ifeq ($(lowercase_comp),kokkos)
+  $(info Loading $(BOXLIB_HOME)/Tools/C_mk/comps/kokkos.mak...)
+  include        $(BOXLIB_HOME)/Tools/C_mk/comps/kokkos.mak
 else ifeq ($(lowercase_comp),cray)
   $(info Loading $(BOXLIB_HOME)/Tools/C_mk/comps/cray.mak...)
   include        $(BOXLIB_HOME)/Tools/C_mk/comps/cray.mak

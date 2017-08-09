@@ -130,7 +130,7 @@ public:
     //
     // return reference to "b" coefficients
     //
-    const MultiFab& bCoefficients (int level=0);
+  const MultiFab& bCoefficients (int level=0);
     //
     // copy _a into "a" coeffs for base level
     //
