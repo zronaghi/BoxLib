@@ -26,6 +26,7 @@ public:
     
     void init(const FArrayBox& rhs_, const std::string& name_){
         name=name_;
+	Kokkos::Profiling::pushRegion("Init ViewFab "+name);
         smallend=rhs_.smallEnd();
         bigend=rhs_.bigEnd();
         length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
@@ -45,6 +46,7 @@ public:
                 }
             }
         }
+	Kokkos::Profiling::popRegion();
     }
     
     ViewFab(){}
@@ -56,6 +58,7 @@ public:
     ViewFab<Real>& operator=(const ViewFab<Real>& rhs_){
         //copy stuff over
         name=rhs_.name;
+	Kokkos::Profiling::pushRegion("Copy ViewFab "+name);
         numvars=rhs_.numvars;
         smallend=rhs_.smallend;
         bigend=rhs_.bigend;
@@ -73,6 +76,7 @@ public:
                 }
             }
         }
+	Kokkos::Profiling::popRegion();
         
         return *this;
     }
