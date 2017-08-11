@@ -23,7 +23,8 @@ endif
 #
 $(executable):	$(objForExecs) $(KOKKOS_LINK_DEPENDS)
 	@echo Linking $@ ...
-	$(SILENT) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(includes) $(LDFLAGS) $(KOKKOS_LDFLAGS) -o $@ $^ $(libraries)
+	#$(SILENT) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(includes) $(LDFLAGS) $(KOKKOS_LDFLAGS) -o $@ $^ $(libraries)
+	$(SILENT) $(LD) $(CPPFLAGS) $(includes) $(LDFLAGS) $(KOKKOS_LDFLAGS) -o $@ $^ $(libraries)
 #	@echo SUCCESS
 
 clean::
@@ -57,10 +58,10 @@ TAGS:	$(allSources)
 #
 # Rules for objects.
 #
-$(objEXETempDir)/%.o: %.cpp
+$(objEXETempDir)/%.o: %.cpp $(KOKKOS_CPP_DEPENDS)
 	@echo Compiling $*.cpp ...
 	@if [ ! -d $(objEXETempDir) ]; then mkdir -p $(objEXETempDir); fi
-	$(SILENT) $(CCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(includes) -c $< $(EXE_OUTPUT_OPTION)
+	$(SILENT) $(CCACHE) $(CXX) $(CXXFLAGS) $(KOKKOS_CXXFLAGS) $(CPPFLAGS) $(KOKKOS_CPPFLAGS) $(includes) -c $< $(EXE_OUTPUT_OPTION)
 
 $(objEXETempDir)/%.o: %.c
 	@echo Compiling $*.c ...

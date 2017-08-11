@@ -2,9 +2,10 @@
 # Generic setup for using kokkos
 #
 CXX = nvcc_wrapper
-CC  = nvcc_wrapper
+CC  = gcc
 FC  = gfortran
 F90 = gfortran
+LD = g++
 
 CXXFLAGS =
 CFLAGS   =
@@ -104,4 +105,4 @@ else
   quadmath_lib = $(quadmath_libso)
 endif
 
-override XTRALIBS += $(gfortran_lib) $(quadmath_lib)
+override XTRALIBS += $(gfortran_lib) #$(quadmath_lib)
