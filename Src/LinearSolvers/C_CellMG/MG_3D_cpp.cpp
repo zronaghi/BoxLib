@@ -65,13 +65,13 @@ public:
     ViewFab(){}
 
   void syncH2D(){
-    std::cout << "upload view(" << name << ") ..." << std::flush;
+    std::cout << "uploading view(" << name << ") ... " << std::flush;
     Kokkos::deep_copy(d_data,h_data);
     std::cout << "done!" << std::endl;
   }
 
   void syncD2H(){
-    std::cout << "upload view(" << name << ") ..." << std::flush;
+    std::cout << "downloading view(" << name << ") ... " << std::flush;
     Kokkos::deep_copy(h_data,d_data);
     std::cout << "done!" << std::endl;
   }
@@ -189,11 +189,15 @@ public:
     ViewFab(){}
 
   void syncH2D(){
-    Kokkos::deep_copy(h_data,d_data);
+    std::cout << "uploading view(" << name << ") ... " << std::flush;
+    Kokkos::deep_copy(d_data,h_data);
+    std::cout << "done!" << std::endl;
   }
 
   void syncD2H(){
-    Kokkos::deep_copy(d_data,h_data);
+    std::cout << "downloading view(" << name << ") ... " << std::flush;
+    Kokkos::deep_copy(h_data,d_data);
+    std::cout << "done!" << std::endl;
   }
   
     ViewFab<int>(const Mask& rhs_, const std::string name_){
@@ -339,7 +343,7 @@ const FArrayBox& c){
 
 //-----------------------------------------------------------------------
 //      
-//     Gauss-Seidel Red-Black (GSRB):
+//     Gauss-SeidelRed-Black (GSRB):
 //     Apply the GSRB relaxation to the state phi for the equation
 //     L(phi) = alpha*a(x)*phi(x) - beta*Div(b(x)Grad(phi(x))) = rhs(x)
 //     central differenced, according to the arrays of boundary
@@ -606,20 +610,24 @@ public:
     bYv.syncH2D();
     bZv.syncH2D();
     
-    //some parameters              
-    dhx = beta/(h[0]*h[0]);
-    dhy = beta/(h[1]*h[1]);
-    dhz = beta/(h[2]*h[2]);
+    //helpers
+    d_helpers=Kokkos::View<Real[4],devspace>("helpers");
+    h_helpers=Kokkos::create_mirror_view(d_helpers);
+    h_helpers(0) = beta/(h[0]*h[0]);
+    h_helpers(1) = beta/(h[1]*h[1]);
+    h_helpers(2) = beta/(h[2]*h[2]);
+    h_helpers(3) = alpha;
+    Kokkos::deep_copy(d_helpers,h_helpers);
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int n, const int k, const int j, const int i) const{
-    yv(i,j,k,n) = alpha * av(i,j,k) * xv(i,j,k,n)
-      - dhx * (   bXv(i+1,j,  k  ) * ( xv(i+1,j,  k,  n) - xv(i,  j,  k  ,n) )
+    yv(i,j,k,n) = d_helpers(3) * av(i,j,k) * xv(i,j,k,n)
+      - d_helpers(0) * (   bXv(i+1,j,  k  ) * ( xv(i+1,j,  k,  n) - xv(i,  j,  k  ,n) )
 		  - bXv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i-1,j,  k  ,n) ) )
-      - dhy * (   bYv(i,  j+1,k  ) * ( xv(i,  j+1,k,  n) - xv(i,  j  ,k  ,n) )
+      - d_helpers(1) * (   bYv(i,  j+1,k  ) * ( xv(i,  j+1,k,  n) - xv(i,  j  ,k  ,n) )
 		  - bYv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i,  j-1,k  ,n) ) )
-      - dhz * (   bZv(i,  j,  k+1) * ( xv(i,  j,  k+1,n) - xv(i,  j  ,k  ,n) )
+      - d_helpers(2) * (   bZv(i,  j,  k+1) * ( xv(i,  j,  k+1,n) - xv(i,  j  ,k  ,n) )
 		  - bZv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i,  j,  k-1,n) ) );
   }
 
@@ -632,7 +640,9 @@ private:
   ViewFab<Real> yv, xv, av, bXv, bYv, bZv;
   Box bx;
   int nc;
-  Real alpha, beta, dhx, dhy, dhz;
+  Kokkos::View<Real[4],devspace> d_helpers;
+  Kokkos::View<Real[4],devspace>::HostMirror h_helpers;
+  Real alpha, beta; //, dhx, dhy, dhz;
 };
 
 void C_ADOTX(
