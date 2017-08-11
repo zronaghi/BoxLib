@@ -6,6 +6,8 @@
 #include <ArrayLim.H>
 #include <iostream>
 
+typedef Kokkos::Device<Kokkos::OpenMP,Kokkos::CudaUVMSpace>::memory_space  hostdev;
+
 //a small class for wrapping kokkos views nicely
 template<>
 class ViewFab<Real> {
@@ -29,7 +31,9 @@ public:
         length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
         numvars=rhs_.nComp();
 	//realloc data
-	data=Kokkos::View<Real****>(name,numvars,length[2],length[1],length[0]);
+	std::cout << "view(" << name << "): " << length[0] << " " << length[1] << " " << length[2] << " " << numvars << std::endl;
+
+	data=Kokkos::View<Real****,hostdev>(name,numvars,length[2],length[1],length[0]);
 
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
@@ -57,7 +61,7 @@ public:
         bigend=rhs_.bigend;
         length=rhs_.length;
 	//realloc data
-	data=Kokkos::View<Real****>(name,numvars,length[2],length[1],length[0]);
+	data=Kokkos::View<Real****,hostdev>(name,numvars,length[2],length[1],length[0]);
         
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
@@ -104,7 +108,7 @@ private:
     std::string name;
     int numvars;
     IntVect smallend, bigend, length;
-    Kokkos::View<Real****> data;
+  Kokkos::View<Real****,hostdev> data;
 };
 
 template<>
@@ -128,7 +132,7 @@ public:
         length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
         numvars=rhs_.nComp();
 	//realloc data
-	data=Kokkos::View<int****>(name,numvars,length[2],length[1],length[0]);
+	data=Kokkos::View<int****,hostdev>(name,numvars,length[2],length[1],length[0]);
         
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
@@ -156,7 +160,7 @@ public:
         bigend=rhs_.bigend;
         length=rhs_.length;
 	//realloc data
-	data=Kokkos::View<int****>(name,numvars,length[2],length[1],length[0]);
+	data=Kokkos::View<int****,hostdev>(name,numvars,length[2],length[1],length[0]);
         
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
@@ -176,7 +180,7 @@ private:
     std::string name;
     int numvars;
     IntVect smallend, bigend, length;
-    Kokkos::View<int****> data;
+  Kokkos::View<int****,hostdev> data;
 };
 
 
@@ -341,8 +345,12 @@ public:
     lo0=bx.loVect()[0];
     hi0=bx.hiVect()[0];
 
-    blo=const_cast<int*>(bbx.loVect());
-    bhi=const_cast<int*>(bbx.hiVect());
+    blo=Kokkos::View<int[3], hostdev>("blo");
+    bhi=Kokkos::View<int[3], hostdev>("bhi");
+    for(unsigned int d=0; d<3; d++){
+      blo(d)=bbx.loVect()[d];
+      bhi(d)=bbx.hiVect()[d];
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -350,12 +358,12 @@ public:
     if ( (i + j + k + rb) % 2 ==0){
 
       //BC terms                                                                                                                                                                                                          
-      Real cf0 = ( (i==blo[0]) && (m0v(blo[0]-1,j,k)>0) ? f0v(blo[0],j,k) : 0. );
-      Real cf1 = ( (j==blo[1]) && (m1v(i,blo[1]-1,k)>0) ? f1v(i,blo[1],k) : 0. );
-      Real cf2 = ( (k==blo[2]) && (m2v(i,j,blo[2]-1)>0) ? f2v(i,j,blo[2]) : 0. );
-      Real cf3 = ( (i==bhi[0]) && (m3v(bhi[0]+1,j,k)>0) ? f3v(bhi[0],j,k) : 0. );
-      Real cf4 = ( (j==bhi[1]) && (m4v(i,bhi[1]+1,k)>0) ? f4v(i,bhi[1],k) : 0. );
-      Real cf5 = ( (k==bhi[2]) && (m5v(i,j,bhi[2]+1)>0) ? f5v(i,j,bhi[2]) : 0. );
+      Real cf0 = ( (i==blo(0)) && (m0v(blo(0)-1,j,k)>0) ? f0v(blo(0),j,k) : 0. );
+      Real cf1 = ( (j==blo(1)) && (m1v(i,blo(1)-1,k)>0) ? f1v(i,blo(1),k) : 0. );
+      Real cf2 = ( (k==blo(2)) && (m2v(i,j,blo(2)-1)>0) ? f2v(i,j,blo(2)) : 0. );
+      Real cf3 = ( (i==bhi(0)) && (m3v(bhi(0)+1,j,k)>0) ? f3v(bhi(0),j,k) : 0. );
+      Real cf4 = ( (j==bhi(1)) && (m4v(i,bhi(1)+1,k)>0) ? f4v(i,bhi(1),k) : 0. );
+      Real cf5 = ( (k==bhi(2)) && (m5v(i,j,bhi(2)+1)>0) ? f5v(i,j,bhi(2)) : 0. );
 
       //assign ORA constants                                                                                                                                                                                              
       double gamma = alpha * av(i,j,k)
@@ -422,7 +430,8 @@ private:
   Box bx, bbx;
   int nc, rb;
   Real alpha, beta, dhx, dhy, dhz, omega;
-  int lo0, hi0, *blo, *bhi;
+  int lo0, hi0;
+  Kokkos::View<int[3], hostdev> blo, bhi;
 };
 
 //GSRB kernel
