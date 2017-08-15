@@ -745,6 +745,7 @@ int             level)
 	//#ifdef _OPENMP
 	//#pragma omp parallel
 	//#endif
+	int count=0;
 	for (MFIter ymfi(y,tiling); ymfi.isValid(); ++ymfi)
 	{
 		const Box&       tbx  = ymfi.tilebox();
@@ -772,6 +773,9 @@ int             level)
 #endif
 #if (BL_SPACEDIM ==3)
 		if(use_C_kernels){
+		  std::cout << "BOX ADOTX Iteration " << count << std::endl;
+		  std::cout << "Bounds: (" << yfab.smallEnd()[0] << "," << yfab.smallEnd()[1] << "," << yfab.smallEnd()[2] << ")" << std::endl;
+
 			C_ADOTX(tbx,
 				nc,
 				yfab,
@@ -783,6 +787,7 @@ int             level)
 				byfab,
 				bzfab,
 				h[level]);
+			count++;
 		}
 		else{
 			FORT_ADOTX(yfab.dataPtr(dst_comp),
