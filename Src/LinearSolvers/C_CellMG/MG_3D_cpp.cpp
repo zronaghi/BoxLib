@@ -23,6 +23,8 @@ public:
     
     KOKKOS_INLINE_FUNCTION
     Real& operator()(const int& i, const int& j, const int& k, const int& n = 0) const {
+      //printf("real(%i,%i,%i)\n",i,j,k);
+      printf("real(%i,%i,%i)\t shifted(%i,%i,%i)\n",i,j,k,i-smallend[0],j-smallend[1],k-smallend[2]);
       return d_data(n, k-smallend[2], j-smallend[1], i-smallend[0]);
     }
 
@@ -41,13 +43,12 @@ public:
         bigend=rhs_.bigEnd();
         length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
         numvars=rhs_.nComp();
-	//realloc data
-	std::cout << "view(" << name << "): " << length[0] << " " << length[1] << " " << length[2] << " " << numvars << std::endl;
-
 	d_data=Kokkos::View<Real****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
 	h_data=Kokkos::create_mirror(d_data);
 
-	std::cout << "after view(" << name << ")" << std::endl;
+	std::cout << "view(" << name << "), smallend: (" << smallend[0] << "," << smallend[1] << "," << smallend[2] << ")" << std::endl;
+	std::cout << "view(" << name << "), bigend: (" << bigend[0] << "," << bigend[1] << "," << bigend[2] << ")" << std::endl;
+	std::cout << "view(" << name << "), length: (" << length[0] << "," << length[1] << "," << length[2] << ")" << std::endl;
 	
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
@@ -66,12 +67,14 @@ public:
 
   void syncH2D(){
     std::cout << "uploading view(" << name << ") ... " << std::flush;
+    Kokkos::fence();
     Kokkos::deep_copy(d_data,h_data);
     std::cout << "done!" << std::endl;
   }
 
   void syncD2H(){
     std::cout << "downloading view(" << name << ") ... " << std::flush;
+    Kokkos::fence();
     Kokkos::deep_copy(h_data,d_data);
     std::cout << "done!" << std::endl;
   }
@@ -85,8 +88,11 @@ public:
         name=rhs_.name;
 	Kokkos::Profiling::pushRegion("Copy ViewFab "+name);
         numvars=rhs_.numvars;
+
+	//we need that on the device too:
         smallend=rhs_.smallend;
         bigend=rhs_.bigend;
+	//length of box
         length=rhs_.length;
 	//realloc data
 	d_data=Kokkos::View<Real****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
@@ -95,11 +101,11 @@ public:
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
             for(int k=smallend[2]; k<=bigend[2]; k++){
-                for(int j=smallend[1]; j<=bigend[1]; j++){
-                    for(int i=smallend[0]; i<=bigend[0]; i++){
-                        this->getHostElem(i,j,k,n) = rhs_(i,j,k,n);
-                    }
-                }
+	      for(int j=smallend[1]; j<=bigend[1]; j++){
+		for(int i=smallend[0]; i<=bigend[0]; i++){
+		  this->getHostElem(i,j,k,n) = rhs_(i,j,k,n);
+		}
+	      }
             }
         }
 	Kokkos::Profiling::popRegion();
@@ -190,12 +196,14 @@ public:
 
   void syncH2D(){
     std::cout << "uploading view(" << name << ") ... " << std::flush;
+    Kokkos::fence();
     Kokkos::deep_copy(d_data,h_data);
     std::cout << "done!" << std::endl;
   }
 
   void syncD2H(){
     std::cout << "downloading view(" << name << ") ... " << std::flush;
+    Kokkos::fence();
     Kokkos::deep_copy(h_data,d_data);
     std::cout << "done!" << std::endl;
   }
@@ -622,13 +630,14 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int n, const int k, const int j, const int i) const{
-    yv(i,j,k,n) = d_helpers(3) * av(i,j,k) * xv(i,j,k,n)
+    yv(i,j,k,n) = 0.5;
+    /*yv(i,j,k,n) = d_helpers(3) * av(i,j,k) * xv(i,j,k,n)
       - d_helpers(0) * (   bXv(i+1,j,  k  ) * ( xv(i+1,j,  k,  n) - xv(i,  j,  k  ,n) )
 		  - bXv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i-1,j,  k  ,n) ) )
       - d_helpers(1) * (   bYv(i,  j+1,k  ) * ( xv(i,  j+1,k,  n) - xv(i,  j  ,k  ,n) )
 		  - bYv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i,  j-1,k  ,n) ) )
       - d_helpers(2) * (   bZv(i,  j,  k+1) * ( xv(i,  j,  k+1,n) - xv(i,  j  ,k  ,n) )
-		  - bZv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i,  j,  k-1,n) ) );
+      - bZv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i,  j,  k-1,n) ) );*/
   }
 
   void fill(FArrayBox& yfab){
@@ -669,9 +678,12 @@ const Real* h)
 
     //create policy
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
+
+    std::cout << "BOX LO (" << lo[0] << "," << lo[1] << "," << lo[2] << ")" << std::endl;
+    std::cout << "BOX HI (" << hi[0] << "," << hi[1] << "," << hi[2] << ")" << std::endl;
     
     //execute
-    Kokkos::Experimental::md_parallel_for(t_policy({0,lo[2],lo[1],lo[0]},{nc,hi[2]+1,hi[1]+1,hi[0]+1},{nc,cb[2],cb[1],cb[0]}),cadxfunc);
+    Kokkos::parallel_for(t_policy({0,lo[2],lo[1],lo[0]},{nc,hi[2]+1,hi[1]+1,hi[0]+1},{nc,cb[2],cb[1],cb[0]}),cadxfunc);
     
     //write back result
     cadxfunc.fill(y);

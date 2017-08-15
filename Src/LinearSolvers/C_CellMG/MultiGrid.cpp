@@ -279,7 +279,12 @@ LinOp::BC_Mode  bc_mode)
 	// the initial residual (rhs[0]) rather than the initial RHS (_rhs)
 	// to begin the solve.
 	//
+
+	std::cout << "I AM HERE" << std::endl;
+	
 	Lp.residual(*rhs[level],_rhs,*cor[level],level,bc_mode);
+
+	std::cout << "NOW HERE" << std::endl;
 
 	//
 	// Now initialize correction to zero at this level (auto-filled at levels below)
