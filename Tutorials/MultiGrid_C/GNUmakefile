@@ -80,7 +80,7 @@ include $(BOXLIB_HOME)/Src/C_BoundaryLib/Make.package
 include $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG/Make.package
 include $(BOXLIB_HOME)/Src/LinearSolvers/C_CellMG4/Make.package
 include $(BOXLIB_HOME)/Src/C_BaseLib/Make.package
-LIBRARIES += $(KOKKOS_LDFLAGS) $(KOKKOS_LIBS)
+LIBRARIES += $(KOKKOS_LIBS)
 
 INCLUDE_LOCATIONS += $(BOXLIB_HOME)/Src/C_BoundaryLib
 vpathdir += $(BOXLIB_HOME)/Src/C_BoundaryLib

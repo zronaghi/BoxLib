@@ -23,8 +23,6 @@ public:
     
     KOKKOS_INLINE_FUNCTION
     Real& operator()(const int& i, const int& j, const int& k, const int& n = 0) const {
-      //printf("real(%i,%i,%i)\n",i,j,k);
-      printf("real(%i,%i,%i)\t shifted(%i,%i,%i)\n",i,j,k,i-smallend[0],j-smallend[1],k-smallend[2]);
       return d_data(n, k-smallend[2], j-smallend[1], i-smallend[0]);
     }
 
@@ -86,29 +84,29 @@ public:
     ViewFab<Real>& operator=(const ViewFab<Real>& rhs_){
         //copy stuff over
         name=rhs_.name;
-	Kokkos::Profiling::pushRegion("Copy ViewFab "+name);
+	      Kokkos::Profiling::pushRegion("Copy ViewFab "+name);
         numvars=rhs_.numvars;
 
-	//we need that on the device too:
+        //we need that on the device too:
         smallend=rhs_.smallend;
         bigend=rhs_.bigend;
-	//length of box
+        //length of box
         length=rhs_.length;
-	//realloc data
-	d_data=Kokkos::View<Real****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
-	h_data=Kokkos::create_mirror_view(d_data);
+        //realloc data
+        d_data=Kokkos::View<Real****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
+        h_data=Kokkos::create_mirror_view(d_data);
         
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
             for(int k=smallend[2]; k<=bigend[2]; k++){
-	      for(int j=smallend[1]; j<=bigend[1]; j++){
-		for(int i=smallend[0]; i<=bigend[0]; i++){
-		  this->getHostElem(i,j,k,n) = rhs_(i,j,k,n);
-		}
-	      }
+	            for(int j=smallend[1]; j<=bigend[1]; j++){
+                for(int i=smallend[0]; i<=bigend[0]; i++){
+                  this->getHostElem(i,j,k,n) = rhs_(i,j,k,n);
+                }
+	            }
             }
         }
-	Kokkos::Profiling::popRegion();
+        Kokkos::Profiling::popRegion();
         
         return *this;
     }
@@ -176,9 +174,9 @@ public:
         bigend=rhs_.bigEnd();
         length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
         numvars=rhs_.nComp();
-	//realloc data
-	d_data=Kokkos::View<int****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
-	h_data=Kokkos::create_mirror_view(d_data);
+	      //realloc data
+        d_data=Kokkos::View<int****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
+        h_data=Kokkos::create_mirror_view(d_data);
         
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
@@ -219,9 +217,9 @@ public:
         smallend=rhs_.smallend;
         bigend=rhs_.bigend;
         length=rhs_.length;
-	//realloc data
-	d_data=Kokkos::View<int****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
-	h_data=Kokkos::create_mirror_view(d_data);
+	      //realloc data
+        d_data=Kokkos::View<int****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
+        h_data=Kokkos::create_mirror_view(d_data);
         
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
@@ -597,9 +595,7 @@ const Real* h)
 //ADOTX Functor
 struct C_ADOTX_FUNCTOR{
 public:
-  C_ADOTX_FUNCTOR(const Box& bx_, 
-		  const int& nc_, 
-		  const FArrayBox& y_, 
+  C_ADOTX_FUNCTOR(const FArrayBox& y_, 
 		  const FArrayBox& x_,  
 		  const Real& alpha_, 
 		  const Real& beta_, 
@@ -608,7 +604,7 @@ public:
 		  const FArrayBox& bY_,
 		  const FArrayBox& bZ_,
 		  const Real* h) :
-    yv(y_,"yv"), xv(x_,"xv"), av(a_,"av"), bXv(bX_,"bXv"), bYv(bY_,"bYv"), bZv(bZ_,"bZv"), nc(nc_), bx(bx_), alpha(alpha_), beta(beta_) {
+    yv(y_,"yv"), xv(x_,"xv"), av(a_,"av"), bXv(bX_,"bXv"), bYv(bY_,"bYv"), bZv(bZ_,"bZv"), alpha(alpha_), beta(beta_) {
 
     //sync
     yv.syncH2D();
@@ -630,6 +626,7 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int n, const int k, const int j, const int i) const{
+    //printf("(i,j,k,n) = (%i,%i,%i,%i)\n",i,j,k,n);
     yv(i,j,k,n) = 0.5;
     /*yv(i,j,k,n) = d_helpers(3) * av(i,j,k) * xv(i,j,k,n)
       - d_helpers(0) * (   bXv(i+1,j,  k  ) * ( xv(i+1,j,  k,  n) - xv(i,  j,  k  ,n) )
@@ -674,7 +671,7 @@ const Real* h)
     const int *cb = bx.cbVect();
 
     //create functor
-    C_ADOTX_FUNCTOR cadxfunc(bx,nc,y,x,alpha,beta,a,bX,bY,bZ,h);
+    C_ADOTX_FUNCTOR cadxfunc(y,x,alpha,beta,a,bX,bY,bZ,h);
 
     //create policy
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
