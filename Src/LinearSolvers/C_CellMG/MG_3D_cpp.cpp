@@ -66,17 +66,11 @@ public:
   ViewFab(){}
 
   void syncH2D(){
-    std::cout << "uploading view(" << name << ") ... " << std::flush;
-    Kokkos::fence();
     Kokkos::deep_copy(d_data,h_data);
-    std::cout << "done!" << std::endl;
   }
 
   void syncD2H(){
-    std::cout << "downloading view(" << name << ") ... " << std::flush;
-    Kokkos::fence();
     Kokkos::deep_copy(h_data,d_data);
-    std::cout << "done!" << std::endl;
   }
   
   ViewFab(const FArrayBox& rhs_, const std::string& name_){
@@ -196,17 +190,11 @@ public:
   ViewFab(){}
 
   void syncH2D(){
-    std::cout << "uploading view(" << name << ") ... " << std::flush;
-    Kokkos::fence();
     Kokkos::deep_copy(d_data,h_data);
-    std::cout << "done!" << std::endl;
   }
 
   void syncD2H(){
-    std::cout << "downloading view(" << name << ") ... " << std::flush;
-    Kokkos::fence();
     Kokkos::deep_copy(h_data,d_data);
-    std::cout << "done!" << std::endl;
   }
   
   ViewFab<int>(const Mask& rhs_, const std::string name_){
@@ -431,19 +419,8 @@ public:
     lo0=bx.loVect()[0];
     hi0=bx.hiVect()[0];
         
-    blo=const_cast<int*>(bbx.loVect());
-    bhi=const_cast<int*>(bbx.hiVect());
-
-    d_blo=Kokkos::View<int[3], devspace>("blo");
-    h_blo=Kokkos::create_mirror_view(d_blo);
-    d_bhi=Kokkos::View<int[3], devspace>("bhi");
-    h_bhi=Kokkos::create_mirror_view(d_bhi);
-    for(unsigned int d=0; d<3; d++){
-      h_blo(d)=bbx.loVect()[d];
-      h_bhi(d)=bbx.hiVect()[d];
-    }
-    Kokkos::deep_copy(h_blo,d_blo);
-    Kokkos::deep_copy(h_bhi,d_bhi);
+    blo=bbx.smallEnd();
+    bhi=bbx.bigEnd();
   }
     
   void setComp(const int& n){
@@ -455,12 +432,12 @@ public:
     if ( (i + j + k + rb) % 2 ==0){
 
       //BC terms
-      Real cf0 = ( (i==d_blo[0]) && (m0v(d_blo[0]-1,j,k)>0) ? f0v(d_blo[0],j,k) : 0. );
-      Real cf1 = ( (j==d_blo[1]) && (m1v(i,d_blo[1]-1,k)>0) ? f1v(i,d_blo[1],k) : 0. );
-      Real cf2 = ( (k==d_blo[2]) && (m2v(i,j,d_blo[2]-1)>0) ? f2v(i,j,d_blo[2]) : 0. );
-      Real cf3 = ( (i==d_bhi[0]) && (m3v(d_bhi[0]+1,j,k)>0) ? f3v(d_bhi[0],j,k) : 0. );
-      Real cf4 = ( (j==d_bhi[1]) && (m4v(i,d_bhi[1]+1,k)>0) ? f4v(i,d_bhi[1],k) : 0. );
-      Real cf5 = ( (k==d_bhi[2]) && (m5v(i,j,d_bhi[2]+1)>0) ? f5v(i,j,d_bhi[2]) : 0. );
+      Real cf0 = ( (i==blo[0]) && (m0v(blo[0]-1,j,k)>0) ? f0v(blo[0],j,k) : 0. );
+      Real cf1 = ( (j==blo[1]) && (m1v(i,blo[1]-1,k)>0) ? f1v(i,blo[1],k) : 0. );
+      Real cf2 = ( (k==blo[2]) && (m2v(i,j,blo[2]-1)>0) ? f2v(i,j,blo[2]) : 0. );
+      Real cf3 = ( (i==bhi[0]) && (m3v(bhi[0]+1,j,k)>0) ? f3v(bhi[0],j,k) : 0. );
+      Real cf4 = ( (j==bhi[1]) && (m4v(i,bhi[1]+1,k)>0) ? f4v(i,bhi[1],k) : 0. );
+      Real cf5 = ( (k==bhi[2]) && (m5v(i,j,bhi[2]+1)>0) ? f5v(i,j,bhi[2]) : 0. );
 
       //assign ORA constants
       double gamma = alpha * av(i,j,k)
@@ -488,12 +465,12 @@ public:
     for(int i=ioff; i<=hi0; i+=2){
 
       //BC terms
-      Real cf0 = ( (i==d_blo[0]) && (m0v(d_blo[0]-1,j,k)>0) ? f0v(d_blo[0],j,k) : 0. );
-      Real cf1 = ( (j==d_blo[1]) && (m1v(i,d_blo[1]-1,k)>0) ? f1v(i,d_blo[1],k) : 0. );
-      Real cf2 = ( (k==d_blo[2]) && (m2v(i,j,d_blo[2]-1)>0) ? f2v(i,j,d_blo[2]) : 0. );
-      Real cf3 = ( (i==d_bhi[0]) && (m3v(d_bhi[0]+1,j,k)>0) ? f3v(d_bhi[0],j,k) : 0. );
-      Real cf4 = ( (j==d_bhi[1]) && (m4v(i,d_bhi[1]+1,k)>0) ? f4v(i,d_bhi[1],k) : 0. );
-      Real cf5 = ( (k==d_bhi[2]) && (m5v(i,j,d_bhi[2]+1)>0) ? f5v(i,j,d_bhi[2]) : 0. );
+      Real cf0 = ( (i==blo[0]) && (m0v(blo[0]-1,j,k)>0) ? f0v(blo[0],j,k) : 0. );
+      Real cf1 = ( (j==blo[1]) && (m1v(i,blo[1]-1,k)>0) ? f1v(i,blo[1],k) : 0. );
+      Real cf2 = ( (k==blo[2]) && (m2v(i,j,blo[2]-1)>0) ? f2v(i,j,blo[2]) : 0. );
+      Real cf3 = ( (i==bhi[0]) && (m3v(bhi[0]+1,j,k)>0) ? f3v(bhi[0],j,k) : 0. );
+      Real cf4 = ( (j==bhi[1]) && (m4v(i,bhi[1]+1,k)>0) ? f4v(i,bhi[1],k) : 0. );
+      Real cf5 = ( (k==bhi[2]) && (m5v(i,j,bhi[2]+1)>0) ? f5v(i,j,bhi[2]) : 0. );
 
       //assign ORA constants
       double gamma = alpha * av(i,j,k)
@@ -561,9 +538,7 @@ private:
   int rb, comp;
   Real alpha, beta, dhx, dhy, dhz, omega;
   int lo0, hi0;
-  int *blo, *bhi;
-  Kokkos::View<int[3], devspace> d_blo, d_bhi;
-  Kokkos::View<int[3], devspace>::HostMirror h_blo, h_bhi;
+  IntVect blo, bhi;
 };
 
 //GSRB kernel
@@ -616,8 +591,10 @@ const Real* h)
 #else
   typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3> > t_policy;
   //execute
+  Kokkos::fence();
   double start_time = omp_get_wtime();
   Kokkos::Experimental::md_parallel_for(t_policy({0,lo[2],lo[1]},{nc,hi[2]+1,hi[1]+1},{nc,cb[2],cb[1]}),cgsrbfunc);
+  Kokkos::fence();
   double end_time =  omp_get_wtime();
 #endif
   std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;

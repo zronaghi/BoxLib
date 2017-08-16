@@ -773,10 +773,6 @@ int             level)
 #endif
 #if (BL_SPACEDIM ==3)
 		if(use_C_kernels){
-		  std::cout << "BOX ADOTX Iteration " << count << std::endl;
-		  std::cout << "Bounds LO: (" << yfab.smallEnd()[0] << "," << yfab.smallEnd()[1] << "," << yfab.smallEnd()[2] << ")" << std::endl;
-      std::cout << "Bounds HI: (" << yfab.bigEnd()[0] << "," << yfab.bigEnd()[1] << "," << yfab.bigEnd()[2] << ")" << std::endl;
-
 			C_ADOTX(tbx,
 				nc,
 				yfab,
