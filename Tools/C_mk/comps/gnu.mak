@@ -5,6 +5,7 @@ CXX = g++
 CC  = gcc
 FC  = gfortran
 F90 = gfortran
+LD = g++
 
 CXXFLAGS =
 CFLAGS   =

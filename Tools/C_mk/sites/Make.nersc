@@ -9,8 +9,13 @@ endif
 
 ifdef PE_ENV
   lowercase_peenv := $(shell echo $(PE_ENV) | tr A-Z a-z)
-  ifneq ($(lowercase_peenv),$(lowercase_comp))
-    has_compiler_mismatch = COMP=$(COMP) does not match PrgEnv-$(lowercase_peenv)
+  test_comp := $(lowercase_comp)
+  ifeq ($(lowercase_comp),kokkos)
+    test_comp := gnu
+  endif
+
+  ifneq ($(lowercase_peenv),$(test_comp))
+    has_compiler_mismatch = COMP=$(test_comp) does not match PrgEnv-$(lowercase_peenv)
   endif
 endif
 
