@@ -124,7 +124,7 @@ const Real* h)
 	//blo
 	const int *blo = bbx.loVect();
 	const int *bhi = bbx.hiVect();
-	
+	    
 	//some parameters
 	Real omega= 1.15;
 	Real dhx = beta/(h[0]*h[0]);
@@ -135,6 +135,7 @@ const Real* h)
 		for (int k = lo[2]; k <= hi[2]; ++k) {
 			for (int j = lo[1]; j <= hi[1]; ++j) {
 				int ioff = (lo[0] + j + k + rb)%2;
+#pragma omp simd
 				for (int i = lo[0] + ioff; i <= hi[0]; i+=2) {
 					
 					//BC terms
@@ -252,12 +253,14 @@ const Real* h)
 								+ dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )
 								+ dhy * ( bY(IntVect(i,j+1,k)) + bY(IntVect(i,j,k)) )
 								+ dhz * ( bZ(IntVect(i,j,k+1)) + bZ(IntVect(i,j,k)) );
-					res = std::max(res,std::abs(tmpval));
 					
 					//now add the rest
-					res +=    std::abs( dhx * bX(IntVect(i+1,j,k)) ) + std::abs( dhx * bX(IntVect(i,j,k)) )
-							+ std::abs( dhy * bY(IntVect(i,j+1,k)) ) + std::abs( dhy * bY(IntVect(i,j,k)) )
-							+ std::abs( dhz * bZ(IntVect(i,j,k+1)) ) + std::abs( dhz * bZ(IntVect(i,j,k)) );
+					tmpval +=    std::abs( dhx * bX(IntVect(i+1,j,k)) ) + std::abs( dhx * bX(IntVect(i,j,k)) )
+							   + std::abs( dhy * bY(IntVect(i,j+1,k)) ) + std::abs( dhy * bY(IntVect(i,j,k)) )
+							   + std::abs( dhz * bZ(IntVect(i,j,k+1)) ) + std::abs( dhz * bZ(IntVect(i,j,k)) );
+                    
+                    //now, take the max
+                    res = std::max(res,std::abs(tmpval));
 				}
 			}
 		}

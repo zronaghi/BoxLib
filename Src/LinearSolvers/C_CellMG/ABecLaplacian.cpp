@@ -67,7 +67,7 @@ Real
 	Real res = 0.0;
 
 	const bool tiling = true;
-
+    
 #ifdef _OPENMP
 #pragma omp parallel reduction(max:res)
 #endif
@@ -92,7 +92,6 @@ Real
 			tbx.loVect(), tbx.hiVect(), &nc,
 			h[level]);
 #elif (BL_SPACEDIM==3)
-			
 			if(use_C_kernels){
 				C_NORMA(
 					tbx,
@@ -117,13 +116,13 @@ Real
 					h[level]);
 			}
 #endif
-
 			res = std::max(res, tres);
 		}
 	}
-
+    
 	if (!local)
 		ParallelDescriptor::ReduceRealMax(res,color());
+    
 	return res;
 }
 
@@ -484,10 +483,13 @@ int             redBlackFlag)
 	const int nc = 1;
 
 	const bool tiling = true;
-
+    
 	//DEBUG
 	//__itt_resume();
 	//DEBUG
+
+    //timer start
+    double start_time = omp_get_wtime();
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -597,6 +599,10 @@ int             redBlackFlag)
 #endif //(BL_SPACEDIM == 3)
 	}
 	
+    //timer end
+    double end_time =  omp_get_wtime();
+    std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;
+    
 	//DEBUG
 	//__itt_pause();
 	//DEBUG
