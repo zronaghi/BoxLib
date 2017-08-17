@@ -10,31 +10,31 @@ Real ABecLaplacian::alpha_def = 1.0;
 Real ABecLaplacian::beta_def  = 1.0;
 
 ABecLaplacian::ABecLaplacian (const BndryData& _bd,
-                              Real             _h)
+Real             _h)
     :
-    LinOp(_bd,_h),
-    alpha(alpha_def),
-    beta(beta_def)
+LinOp(_bd,_h),
+alpha(alpha_def),
+beta(beta_def)
 {
     initCoefficients(_bd.boxes());
 }
 
 ABecLaplacian::ABecLaplacian (const BndryData& _bd,
-                              const Real*      _h)
+const Real*      _h)
     :
-    LinOp(_bd,_h),
-    alpha(alpha_def),
-    beta(beta_def)
+LinOp(_bd,_h),
+alpha(alpha_def),
+beta(beta_def)
 {
     initCoefficients(_bd.boxes());
 }
 
 ABecLaplacian::ABecLaplacian (BndryData*  _bd,
-                              const Real* _h)
+const Real* _h)
     :
-    LinOp(_bd,_h),
-    alpha(alpha_def),
-    beta(beta_def)
+LinOp(_bd,_h),
+alpha(alpha_def),
+beta(beta_def)
 {
     initCoefficients(_bd->boxes());
 }
@@ -45,7 +45,7 @@ ABecLaplacian::~ABecLaplacian ()
 }
 
 Real
-ABecLaplacian::norm (int nm, int level, const bool local)
+    ABecLaplacian::norm (int nm, int level, const bool local)
 {
     BL_PROFILE("ABecLaplacian::norm()");
 
@@ -53,8 +53,8 @@ ABecLaplacian::norm (int nm, int level, const bool local)
     const MultiFab& a   = aCoefficients(level);
 
     D_TERM(const MultiFab& bX  = bCoefficients(0,level);,
-           const MultiFab& bY  = bCoefficients(1,level);,
-           const MultiFab& bZ  = bCoefficients(2,level););
+    const MultiFab& bY  = bCoefficients(1,level);,
+    const MultiFab& bZ  = bCoefficients(2,level););
 
     //const int nc = a.nComp(); // FIXME: This LinOp only really support single-component
     const int nc = 1;
@@ -62,76 +62,76 @@ ABecLaplacian::norm (int nm, int level, const bool local)
 
     const bool tiling = false;
 
-//#ifdef _OPENMP
-//#pragma omp parallel reduction(max:res)
-//#endif
+    //#ifdef _OPENMP
+    //#pragma omp parallel reduction(max:res)
+    //#endif
     {
-	for (MFIter amfi(a,tiling); amfi.isValid(); ++amfi)
-	{
-	    Real tres;
+        for (MFIter amfi(a,tiling); amfi.isValid(); ++amfi)
+        {
+            Real tres;
 	    
-	    const Box&       tbx  = amfi.tilebox();
-	    const FArrayBox& afab = a[amfi];
+            const Box&       tbx  = amfi.tilebox();
+            const FArrayBox& afab = a[amfi];
 	    
-	    D_TERM(const FArrayBox& bxfab = bX[amfi];,
-		   const FArrayBox& byfab = bY[amfi];,
-		   const FArrayBox& bzfab = bZ[amfi];);
+            D_TERM(const FArrayBox& bxfab = bX[amfi];,
+            const FArrayBox& byfab = bY[amfi];,
+            const FArrayBox& bzfab = bZ[amfi];);
 	    
 #if (BL_SPACEDIM==2)
-	    FORT_NORMA(&tres,
-		       &alpha, &beta,
-		       afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-		       bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-		       byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-		       tbx.loVect(), tbx.hiVect(), &nc,
-		       h[level]);
+            FORT_NORMA(&tres,
+            &alpha, &beta,
+            afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+            bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+            byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+            tbx.loVect(), tbx.hiVect(), &nc,
+            h[level]);
 #elif (BL_SPACEDIM==3)
-	    
-	    FORT_NORMA(&tres,
-		       &alpha, &beta,
-		       afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-		       bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-		       byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-		       bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-		       tbx.loVect(), tbx.hiVect(), tbx.cbVect(), &nc,
-		       h[level]);
+            FORT_NORMA(&tres,
+            &alpha, &beta,
+            afab.dataPtr(),  ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+            bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+            byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+            bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+            tbx.loVect(), tbx.hiVect(), tbx.cbVect(), &nc,
+            h[level]);
 #endif
 
-	    res = std::max(res, tres);
-	}
+            res = std::max(res, tres);
+        }
     }
 
     if (!local)
         ParallelDescriptor::ReduceRealMax(res,color());
+    
     return res;
 }
 
 void
-ABecLaplacian::clearToLevel (int level)
+    ABecLaplacian::clearToLevel (int level)
 {
-  BL_ASSERT(level >= -1);
+    BL_ASSERT(level >= -1);
 
-  for (int i = level+1; i < numLevels(); ++i)
-  {
-    if (acoefs[i] != 0) {
-      delete acoefs[i];
-      acoefs[i] = 0;
-    }
-    a_valid[i] = false;
-
-    for (int j = 0; j < BL_SPACEDIM; ++j)
+    for (int i = level+1; i < numLevels(); ++i)
     {
-      if (bcoefs[i][j] != 0) {
-        delete bcoefs[i][j];
-        bcoefs[i][j] = 0;
-      }
+        if (acoefs[i] != 0) {
+            delete acoefs[i];
+            acoefs[i] = 0;
+        }
+        a_valid[i] = false;
+
+        for (int j = 0; j < BL_SPACEDIM; ++j)
+        {
+            if (bcoefs[i][j] != 0) {
+                delete bcoefs[i][j];
+                bcoefs[i][j] = 0;
+            }
+        }
+        b_valid[i] = false;
     }
-    b_valid[i] = false;
-  }
 }
 
 void
-ABecLaplacian::prepareForLevel (int level)
+    ABecLaplacian::prepareForLevel (int level)
 {
     LinOp::prepareForLevel(level);
 
@@ -190,7 +190,7 @@ ABecLaplacian::prepareForLevel (int level)
 }
 
 void
-ABecLaplacian::initCoefficients (const BoxArray& _ba)
+    ABecLaplacian::initCoefficients (const BoxArray& _ba)
 {
     const int nComp=1;
     const int nGrow=0;
@@ -214,7 +214,7 @@ ABecLaplacian::initCoefficients (const BoxArray& _ba)
 }
 
 void
-ABecLaplacian::aCoefficients (const MultiFab& _a)
+    ABecLaplacian::aCoefficients (const MultiFab& _a)
 {
     BL_ASSERT(_a.ok());
     BL_ASSERT(_a.boxArray() == (acoefs[0])->boxArray());
@@ -223,15 +223,15 @@ ABecLaplacian::aCoefficients (const MultiFab& _a)
 }
 
 void
-ABecLaplacian::ZeroACoefficients ()
+    ABecLaplacian::ZeroACoefficients ()
 {
     invalidate_a_to_level(0);
     (*acoefs[0]).setVal(0,0,acoefs[0]->nComp(),acoefs[0]->nGrow());
 }
 
 void
-ABecLaplacian::bCoefficients (const MultiFab& _b,
-                              int             dir)
+    ABecLaplacian::bCoefficients (const MultiFab& _b,
+int             dir)
 {
     BL_ASSERT(_b.ok());
     BL_ASSERT(_b.boxArray() == (bcoefs[0][dir])->boxArray());
@@ -240,9 +240,9 @@ ABecLaplacian::bCoefficients (const MultiFab& _b,
 }
 
 void
-ABecLaplacian::bCoefficients (const FArrayBox& _b,
-                              int              dir,
-                              int              gridno)
+    ABecLaplacian::bCoefficients (const FArrayBox& _b,
+int              dir,
+int              gridno)
 {
     BL_ASSERT(_b.box().contains((bcoefs[0][dir])->boxArray()[gridno]));
     invalidate_b_to_level(0);
@@ -250,23 +250,23 @@ ABecLaplacian::bCoefficients (const FArrayBox& _b,
 }
 
 const MultiFab&
-ABecLaplacian::aCoefficients (int level)
+    ABecLaplacian::aCoefficients (int level)
 {
     prepareForLevel(level);
     return *acoefs[level];
 }
 
 const MultiFab&
-ABecLaplacian::bCoefficients (int dir,int level)
+    ABecLaplacian::bCoefficients (int dir,int level)
 {
     prepareForLevel(level);
     return *bcoefs[level][dir];
 }
 
 void
-ABecLaplacian::setCoefficients (const MultiFab &_a,
-                                const MultiFab &_bX,
-                                const MultiFab &_bY)
+    ABecLaplacian::setCoefficients (const MultiFab &_a,
+const MultiFab &_bX,
+const MultiFab &_bY)
 {
     aCoefficients(_a);
     bCoefficients(_bX, 0);
@@ -274,8 +274,8 @@ ABecLaplacian::setCoefficients (const MultiFab &_a,
 }
 
 void
-ABecLaplacian::setCoefficients (const MultiFab& _a,
-                                const MultiFab* _b)
+    ABecLaplacian::setCoefficients (const MultiFab& _a,
+const MultiFab* _b)
 {
     aCoefficients(_a);
     for (int n = 0; n < BL_SPACEDIM; ++n)
@@ -283,8 +283,8 @@ ABecLaplacian::setCoefficients (const MultiFab& _a,
 }
 
 void
-ABecLaplacian::setCoefficients (const MultiFab& _a,
-                                const PArray<MultiFab>& _b)
+    ABecLaplacian::setCoefficients (const MultiFab& _a,
+const PArray<MultiFab>& _b)
 {
     aCoefficients(_a);
     for (int n = 0; n < BL_SPACEDIM; ++n)
@@ -292,7 +292,7 @@ ABecLaplacian::setCoefficients (const MultiFab& _a,
 }
 
 void
-ABecLaplacian::invalidate_a_to_level (int lev)
+    ABecLaplacian::invalidate_a_to_level (int lev)
 {
     lev = (lev >= 0 ? lev : 0);
     for (int i = lev; i < numLevels(); i++)
@@ -300,7 +300,7 @@ ABecLaplacian::invalidate_a_to_level (int lev)
 }
 
 void
-ABecLaplacian::invalidate_b_to_level (int lev)
+    ABecLaplacian::invalidate_b_to_level (int lev)
 {
     lev = (lev >= 0 ? lev : 0);
     for (int i = lev; i < numLevels(); i++)
@@ -308,17 +308,17 @@ ABecLaplacian::invalidate_b_to_level (int lev)
 }
 
 void
-ABecLaplacian::compFlux (D_DECL(MultiFab &xflux, MultiFab &yflux, MultiFab &zflux),
-			 MultiFab& in, const BC_Mode& bc_mode,
-			 int src_comp, int dst_comp, int num_comp, int bnd_comp)
+    ABecLaplacian::compFlux (D_DECL(MultiFab &xflux, MultiFab &yflux, MultiFab &zflux),
+MultiFab& in, const BC_Mode& bc_mode,
+int src_comp, int dst_comp, int num_comp, int bnd_comp)
 {
-  compFlux(D_DECL(xflux, yflux, zflux), in, true, bc_mode, src_comp, dst_comp, num_comp, bnd_comp);
+    compFlux(D_DECL(xflux, yflux, zflux), in, true, bc_mode, src_comp, dst_comp, num_comp, bnd_comp);
 }
 
 void
-ABecLaplacian::compFlux (D_DECL(MultiFab &xflux, MultiFab &yflux, MultiFab &zflux),
-                         MultiFab& in, bool do_ApplyBC, const BC_Mode& bc_mode,
-			 int src_comp, int dst_comp, int num_comp, int bnd_comp)
+    ABecLaplacian::compFlux (D_DECL(MultiFab &xflux, MultiFab &yflux, MultiFab &zflux),
+MultiFab& in, bool do_ApplyBC, const BC_Mode& bc_mode,
+int src_comp, int dst_comp, int num_comp, int bnd_comp)
 {
     BL_PROFILE("ABecLaplacian::compFlux()");
 
@@ -326,69 +326,69 @@ ABecLaplacian::compFlux (D_DECL(MultiFab &xflux, MultiFab &yflux, MultiFab &zflu
     BL_ASSERT(num_comp==1);
 
     if (do_ApplyBC)
-      applyBC(in,src_comp,num_comp,level,bc_mode,bnd_comp);
+        applyBC(in,src_comp,num_comp,level,bc_mode,bnd_comp);
 
     const MultiFab& a = aCoefficients(level);
 
     D_TERM(const MultiFab& bX = bCoefficients(0,level);,
-           const MultiFab& bY = bCoefficients(1,level);,
-           const MultiFab& bZ = bCoefficients(2,level););
+    const MultiFab& bY = bCoefficients(1,level);,
+    const MultiFab& bZ = bCoefficients(2,level););
 
     const bool tiling = false;
 
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
+    //#ifdef _OPENMP
+    //#pragma omp parallel
+    //#endif
     for (MFIter inmfi(in,tiling); inmfi.isValid(); ++inmfi)
     {
         D_TERM(const Box& xbx   = inmfi.nodaltilebox(0);,
-	       const Box& ybx   = inmfi.nodaltilebox(1);,
-	       const Box& zbx   = inmfi.nodaltilebox(2););
+        const Box& ybx   = inmfi.nodaltilebox(1);,
+        const Box& zbx   = inmfi.nodaltilebox(2););
 
         FArrayBox& infab = in[inmfi];
 
         D_TERM(const FArrayBox& bxfab = bX[inmfi];,
-               const FArrayBox& byfab = bY[inmfi];,
-               const FArrayBox& bzfab = bZ[inmfi];);
+        const FArrayBox& byfab = bY[inmfi];,
+        const FArrayBox& bzfab = bZ[inmfi];);
 
         D_TERM(FArrayBox& xfluxfab = xflux[inmfi];,
-               FArrayBox& yfluxfab = yflux[inmfi];,
-               FArrayBox& zfluxfab = zflux[inmfi];);
+        FArrayBox& yfluxfab = yflux[inmfi];,
+        FArrayBox& zfluxfab = zflux[inmfi];);
 
         FORT_FLUX(infab.dataPtr(src_comp),
-		  ARLIM(infab.loVect()), ARLIM(infab.hiVect()),
-		  &alpha, &beta, a[inmfi].dataPtr(), 
-		  ARLIM(a[inmfi].loVect()), ARLIM(a[inmfi].hiVect()),
-		  bxfab.dataPtr(), 
-		  ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+        ARLIM(infab.loVect()), ARLIM(infab.hiVect()),
+        &alpha, &beta, a[inmfi].dataPtr(), 
+        ARLIM(a[inmfi].loVect()), ARLIM(a[inmfi].hiVect()),
+        bxfab.dataPtr(), 
+        ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
 #if (BL_SPACEDIM >= 2)
-		  byfab.dataPtr(), 
-		  ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+        byfab.dataPtr(), 
+        ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
 #if (BL_SPACEDIM == 3)
-		  bzfab.dataPtr(), 
-		  ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+        bzfab.dataPtr(), 
+        ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
 #endif
 #endif
-		  xbx.loVect(), xbx.hiVect(), 
+        xbx.loVect(), xbx.hiVect(), 
 #if (BL_SPACEDIM >= 2)
-		  ybx.loVect(), ybx.hiVect(), 
+        ybx.loVect(), ybx.hiVect(), 
 #if (BL_SPACEDIM == 3)
-		  zbx.loVect(), zbx.hiVect(), 
+        zbx.loVect(), zbx.hiVect(), 
 #endif
 #endif
-		  &num_comp,
-		  h[level],
-		  xfluxfab.dataPtr(dst_comp),
-		  ARLIM(xfluxfab.loVect()), ARLIM(xfluxfab.hiVect())
+        &num_comp,
+        h[level],
+        xfluxfab.dataPtr(dst_comp),
+        ARLIM(xfluxfab.loVect()), ARLIM(xfluxfab.hiVect())
 #if (BL_SPACEDIM >= 2)
-		  ,yfluxfab.dataPtr(dst_comp),
-		  ARLIM(yfluxfab.loVect()), ARLIM(yfluxfab.hiVect())
+            ,yfluxfab.dataPtr(dst_comp),
+        ARLIM(yfluxfab.loVect()), ARLIM(yfluxfab.hiVect())
 #endif
 #if (BL_SPACEDIM == 3)
-		  ,zfluxfab.dataPtr(dst_comp),
-		  ARLIM(zfluxfab.loVect()), ARLIM(zfluxfab.hiVect())
+            ,zfluxfab.dataPtr(dst_comp),
+        ARLIM(zfluxfab.loVect()), ARLIM(zfluxfab.hiVect())
 #endif
-		  );
+            );
     }
 }
         
@@ -397,10 +397,10 @@ ABecLaplacian::compFlux (D_DECL(MultiFab &xflux, MultiFab &yflux, MultiFab &zflu
 //
 
 void
-ABecLaplacian::Fsmooth (MultiFab&       solnL,
-                        const MultiFab& rhsL,
-                        int             level,
-                        int             redBlackFlag)
+    ABecLaplacian::Fsmooth (MultiFab&       solnL,
+const MultiFab& rhsL,
+int             level,
+int             redBlackFlag)
 {
     BL_PROFILE("ABecLaplacian::Fsmooth()");
 
@@ -417,8 +417,8 @@ ABecLaplacian::Fsmooth (MultiFab&       solnL,
     const MultiFab& a = aCoefficients(level);
 
     D_TERM(const MultiFab& bX = bCoefficients(0,level);,
-           const MultiFab& bY = bCoefficients(1,level);,
-           const MultiFab& bZ = bCoefficients(2,level););
+    const MultiFab& bY = bCoefficients(1,level);,
+    const MultiFab& bZ = bCoefficients(2,level););
 
     oitr.rewind();
     const MultiMask& mm0 = maskvals[level][oitr()]; oitr++;
@@ -432,15 +432,17 @@ ABecLaplacian::Fsmooth (MultiFab&       solnL,
 
     //const int nc = solnL.nComp(); // FIXME: This LinOp only really supports single-component
     const int nc = 1;
-
     const bool tiling = false;
 
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
+    //timer start
+    double start_time = omp_get_wtime();
+
+    //#ifdef _OPENMP
+    //#pragma omp parallel
+    //#endif
     for (MFIter solnLmfi(solnL,tiling); solnLmfi.isValid(); ++solnLmfi)
     {
-	const Mask& m0 = mm0[solnLmfi];
+        const Mask& m0 = mm0[solnLmfi];
         const Mask& m1 = mm1[solnLmfi];
         const Mask& m2 = mm2[solnLmfi];
         const Mask& m3 = mm3[solnLmfi];
@@ -449,15 +451,15 @@ ABecLaplacian::Fsmooth (MultiFab&       solnL,
         const Mask& m5 = mm5[solnLmfi];
 #endif
 
-	const Box&       tbx     = solnLmfi.tilebox();
+        const Box&       tbx     = solnLmfi.tilebox();
         const Box&       vbx     = solnLmfi.validbox();
         FArrayBox&       solnfab = solnL[solnLmfi];
         const FArrayBox& rhsfab  = rhsL[solnLmfi];
         const FArrayBox& afab    = a[solnLmfi];
 
         D_TERM(const FArrayBox& bxfab = bX[solnLmfi];,
-               const FArrayBox& byfab = bY[solnLmfi];,
-               const FArrayBox& bzfab = bZ[solnLmfi];);
+        const FArrayBox& byfab = bY[solnLmfi];,
+        const FArrayBox& bzfab = bZ[solnLmfi];);
 
         const FArrayBox& f0fab = f0[solnLmfi];
         const FArrayBox& f1fab = f1[solnLmfi];
@@ -470,53 +472,57 @@ ABecLaplacian::Fsmooth (MultiFab&       solnL,
 
 #if (BL_SPACEDIM == 2)
         FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
-                  rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
-                  &alpha, &beta,
-                  afab.dataPtr(), ARLIM(afab.loVect()),    ARLIM(afab.hiVect()),
-                  bxfab.dataPtr(), ARLIM(bxfab.loVect()),   ARLIM(bxfab.hiVect()),
-                  byfab.dataPtr(), ARLIM(byfab.loVect()),   ARLIM(byfab.hiVect()),
-                  f0fab.dataPtr(), ARLIM(f0fab.loVect()),   ARLIM(f0fab.hiVect()),
-                  m0.dataPtr(), ARLIM(m0.loVect()),   ARLIM(m0.hiVect()),
-                  f1fab.dataPtr(), ARLIM(f1fab.loVect()),   ARLIM(f1fab.hiVect()),
-                  m1.dataPtr(), ARLIM(m1.loVect()),   ARLIM(m1.hiVect()),
-                  f2fab.dataPtr(), ARLIM(f2fab.loVect()),   ARLIM(f2fab.hiVect()),
-                  m2.dataPtr(), ARLIM(m2.loVect()),   ARLIM(m2.hiVect()),
-                  f3fab.dataPtr(), ARLIM(f3fab.loVect()),   ARLIM(f3fab.hiVect()),
-                  m3.dataPtr(), ARLIM(m3.loVect()),   ARLIM(m3.hiVect()),
-                  tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
-                  &nc, h[level], &redBlackFlag);
+        rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
+        &alpha, &beta,
+        afab.dataPtr(), ARLIM(afab.loVect()),    ARLIM(afab.hiVect()),
+        bxfab.dataPtr(), ARLIM(bxfab.loVect()),   ARLIM(bxfab.hiVect()),
+        byfab.dataPtr(), ARLIM(byfab.loVect()),   ARLIM(byfab.hiVect()),
+        f0fab.dataPtr(), ARLIM(f0fab.loVect()),   ARLIM(f0fab.hiVect()),
+        m0.dataPtr(), ARLIM(m0.loVect()),   ARLIM(m0.hiVect()),
+        f1fab.dataPtr(), ARLIM(f1fab.loVect()),   ARLIM(f1fab.hiVect()),
+        m1.dataPtr(), ARLIM(m1.loVect()),   ARLIM(m1.hiVect()),
+        f2fab.dataPtr(), ARLIM(f2fab.loVect()),   ARLIM(f2fab.hiVect()),
+        m2.dataPtr(), ARLIM(m2.loVect()),   ARLIM(m2.hiVect()),
+        f3fab.dataPtr(), ARLIM(f3fab.loVect()),   ARLIM(f3fab.hiVect()),
+        m3.dataPtr(), ARLIM(m3.loVect()),   ARLIM(m3.hiVect()),
+        tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(),
+        &nc, h[level], &redBlackFlag);
 #endif
 
 #if (BL_SPACEDIM == 3)
         FORT_GSRB(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
-                  rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
-                  &alpha, &beta,
-                  afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-                  bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-                  byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-                  bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-                  f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
-                  m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
-                  f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
-                  m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
-                  f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
-                  m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
-                  f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
-                  m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
-                  f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
-                  m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
-                  f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
-                  m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
-                  tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(), tbx.cbVect(),
-                  &nc, h[level], &redBlackFlag);
+        rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
+        &alpha, &beta,
+        afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+        bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+        byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+        bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+        f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
+        m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
+        f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
+        m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
+        f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
+        m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
+        f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
+        m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
+        f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
+        m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
+        f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
+        m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
+        tbx.loVect(), tbx.hiVect(), vbx.loVect(), vbx.hiVect(), tbx.cbVect(),
+        &nc, h[level], &redBlackFlag);
 #endif
     }
+    
+    //timer end
+    double end_time =  omp_get_wtime();
+    //std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;
 }
 
 void
-ABecLaplacian::Fsmooth_jacobi (MultiFab&       solnL,
-                               const MultiFab& rhsL,
-                               int             level)
+    ABecLaplacian::Fsmooth_jacobi (MultiFab&       solnL,
+const MultiFab& rhsL,
+int             level)
 {
     BL_PROFILE("ABecLaplacian::Fsmooth_jacobi()");
 
@@ -533,8 +539,8 @@ ABecLaplacian::Fsmooth_jacobi (MultiFab&       solnL,
     const MultiFab& a = aCoefficients(level);
 
     D_TERM(const MultiFab& bX = bCoefficients(0,level);,
-           const MultiFab& bY = bCoefficients(1,level);,
-           const MultiFab& bZ = bCoefficients(2,level););
+    const MultiFab& bY = bCoefficients(1,level);,
+    const MultiFab& bZ = bCoefficients(2,level););
 
     oitr.rewind();
     const MultiMask& mm0 = maskvals[level][oitr()]; oitr++;
@@ -549,12 +555,12 @@ ABecLaplacian::Fsmooth_jacobi (MultiFab&       solnL,
     //const int nc = solnL.nComp(); // FIXME: This LinOp only really supports single-component
     const int nc = 1;
 
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
+    //#ifdef _OPENMP
+    //#pragma omp parallel
+    //#endif
     for (MFIter solnLmfi(solnL,false); solnLmfi.isValid(); ++solnLmfi)
     {
-	const Mask& m0 = mm0[solnLmfi];
+        const Mask& m0 = mm0[solnLmfi];
         const Mask& m1 = mm1[solnLmfi];
         const Mask& m2 = mm2[solnLmfi];
         const Mask& m3 = mm3[solnLmfi];
@@ -569,8 +575,8 @@ ABecLaplacian::Fsmooth_jacobi (MultiFab&       solnL,
         const FArrayBox& afab    = a[solnLmfi];
 
         D_TERM(const FArrayBox& bxfab = bX[solnLmfi];,
-               const FArrayBox& byfab = bY[solnLmfi];,
-               const FArrayBox& bzfab = bZ[solnLmfi];);
+        const FArrayBox& byfab = bY[solnLmfi];,
+        const FArrayBox& bzfab = bZ[solnLmfi];);
 
         const FArrayBox& f0fab = f0[solnLmfi];
         const FArrayBox& f1fab = f1[solnLmfi];
@@ -583,69 +589,69 @@ ABecLaplacian::Fsmooth_jacobi (MultiFab&       solnL,
 
 #if (BL_SPACEDIM == 2)
         FORT_JACOBI(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
-                    rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
-                    &alpha, &beta,
-                    afab.dataPtr(), ARLIM(afab.loVect()),    ARLIM(afab.hiVect()),
-                    bxfab.dataPtr(), ARLIM(bxfab.loVect()),   ARLIM(bxfab.hiVect()),
-                    byfab.dataPtr(), ARLIM(byfab.loVect()),   ARLIM(byfab.hiVect()),
-                    f0fab.dataPtr(), ARLIM(f0fab.loVect()),   ARLIM(f0fab.hiVect()),
-                    m0.dataPtr(), ARLIM(m0.loVect()),   ARLIM(m0.hiVect()),
-                    f1fab.dataPtr(), ARLIM(f1fab.loVect()),   ARLIM(f1fab.hiVect()),
-                    m1.dataPtr(), ARLIM(m1.loVect()),   ARLIM(m1.hiVect()),
-                    f2fab.dataPtr(), ARLIM(f2fab.loVect()),   ARLIM(f2fab.hiVect()),
-                    m2.dataPtr(), ARLIM(m2.loVect()),   ARLIM(m2.hiVect()),
-                    f3fab.dataPtr(), ARLIM(f3fab.loVect()),   ARLIM(f3fab.hiVect()),
-                    m3.dataPtr(), ARLIM(m3.loVect()),   ARLIM(m3.hiVect()),
-                    vbx.loVect(), vbx.hiVect(),
-                    &nc, h[level]);
+        rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
+        &alpha, &beta,
+        afab.dataPtr(), ARLIM(afab.loVect()),    ARLIM(afab.hiVect()),
+        bxfab.dataPtr(), ARLIM(bxfab.loVect()),   ARLIM(bxfab.hiVect()),
+        byfab.dataPtr(), ARLIM(byfab.loVect()),   ARLIM(byfab.hiVect()),
+        f0fab.dataPtr(), ARLIM(f0fab.loVect()),   ARLIM(f0fab.hiVect()),
+        m0.dataPtr(), ARLIM(m0.loVect()),   ARLIM(m0.hiVect()),
+        f1fab.dataPtr(), ARLIM(f1fab.loVect()),   ARLIM(f1fab.hiVect()),
+        m1.dataPtr(), ARLIM(m1.loVect()),   ARLIM(m1.hiVect()),
+        f2fab.dataPtr(), ARLIM(f2fab.loVect()),   ARLIM(f2fab.hiVect()),
+        m2.dataPtr(), ARLIM(m2.loVect()),   ARLIM(m2.hiVect()),
+        f3fab.dataPtr(), ARLIM(f3fab.loVect()),   ARLIM(f3fab.hiVect()),
+        m3.dataPtr(), ARLIM(m3.loVect()),   ARLIM(m3.hiVect()),
+        vbx.loVect(), vbx.hiVect(),
+        &nc, h[level]);
 #endif
 
 #if (BL_SPACEDIM == 3)
         FORT_JACOBI(solnfab.dataPtr(), ARLIM(solnfab.loVect()),ARLIM(solnfab.hiVect()),
-                    rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
-                    &alpha, &beta,
-                    afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-                    bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-                    byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-                    bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-                    f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
-                    m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
-                    f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
-                    m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
-                    f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
-                    m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
-                    f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
-                    m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
-                    f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
-                    m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
-                    f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
-                    m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
-                    vbx.loVect(), vbx.hiVect(),
-                    &nc, h[level]);
+        rhsfab.dataPtr(), ARLIM(rhsfab.loVect()), ARLIM(rhsfab.hiVect()),
+        &alpha, &beta,
+        afab.dataPtr(), ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+        bxfab.dataPtr(), ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+        byfab.dataPtr(), ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+        bzfab.dataPtr(), ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+        f0fab.dataPtr(), ARLIM(f0fab.loVect()), ARLIM(f0fab.hiVect()),
+        m0.dataPtr(), ARLIM(m0.loVect()), ARLIM(m0.hiVect()),
+        f1fab.dataPtr(), ARLIM(f1fab.loVect()), ARLIM(f1fab.hiVect()),
+        m1.dataPtr(), ARLIM(m1.loVect()), ARLIM(m1.hiVect()),
+        f2fab.dataPtr(), ARLIM(f2fab.loVect()), ARLIM(f2fab.hiVect()),
+        m2.dataPtr(), ARLIM(m2.loVect()), ARLIM(m2.hiVect()),
+        f3fab.dataPtr(), ARLIM(f3fab.loVect()), ARLIM(f3fab.hiVect()),
+        m3.dataPtr(), ARLIM(m3.loVect()), ARLIM(m3.hiVect()),
+        f4fab.dataPtr(), ARLIM(f4fab.loVect()), ARLIM(f4fab.hiVect()),
+        m4.dataPtr(), ARLIM(m4.loVect()), ARLIM(m4.hiVect()),
+        f5fab.dataPtr(), ARLIM(f5fab.loVect()), ARLIM(f5fab.hiVect()),
+        m5.dataPtr(), ARLIM(m5.loVect()), ARLIM(m5.hiVect()),
+        vbx.loVect(), vbx.hiVect(),
+        &nc, h[level]);
 #endif
     }
 }
 
 #include <fstream>
 void
-ABecLaplacian::Fapply (MultiFab&       y,
-                       const MultiFab& x,
-                       int             level)
+    ABecLaplacian::Fapply (MultiFab&       y,
+const MultiFab& x,
+int             level)
 {
-  int num_comp = 1;
-  int src_comp = 0;
-  int dst_comp = 0;
+    int num_comp = 1;
+    int src_comp = 0;
+    int dst_comp = 0;
 
-  Fapply(y,dst_comp,x,src_comp,num_comp,level);
+    Fapply(y,dst_comp,x,src_comp,num_comp,level);
 }
 
 void
-ABecLaplacian::Fapply (MultiFab&       y,
-		       int             dst_comp,
-                       const MultiFab& x,
-		       int             src_comp,
-		       int             num_comp,
-                       int             level)
+    ABecLaplacian::Fapply (MultiFab&       y,
+int             dst_comp,
+const MultiFab& x,
+int             src_comp,
+int             num_comp,
+int             level)
 {
     BL_PROFILE("ABecLaplacian::Fapply()");
 
@@ -655,14 +661,14 @@ ABecLaplacian::Fapply (MultiFab&       y,
     const MultiFab& a   = aCoefficients(level);
 
     D_TERM(const MultiFab& bX  = bCoefficients(0,level);,
-           const MultiFab& bY  = bCoefficients(1,level);,
-           const MultiFab& bZ  = bCoefficients(2,level););
+    const MultiFab& bY  = bCoefficients(1,level);,
+    const MultiFab& bZ  = bCoefficients(2,level););
 
     const bool tiling = false;
 
-//#ifdef _OPENMP
-//#pragma omp parallel
-//#endif
+    //#ifdef _OPENMP
+    //#pragma omp parallel
+    //#endif
     for (MFIter ymfi(y,tiling); ymfi.isValid(); ++ymfi)
     {
         const Box&       tbx  = ymfi.tilebox();
@@ -671,38 +677,38 @@ ABecLaplacian::Fapply (MultiFab&       y,
         const FArrayBox& afab = a[ymfi];
 
         D_TERM(const FArrayBox& bxfab = bX[ymfi];,
-               const FArrayBox& byfab = bY[ymfi];,
-               const FArrayBox& bzfab = bZ[ymfi];);
+        const FArrayBox& byfab = bY[ymfi];,
+        const FArrayBox& bzfab = bZ[ymfi];);
 
 #if (BL_SPACEDIM == 2)
         FORT_ADOTX(yfab.dataPtr(dst_comp),
-                   ARLIM(yfab.loVect()),ARLIM(yfab.hiVect()),
-                   xfab.dataPtr(src_comp),
-                   ARLIM(xfab.loVect()), ARLIM(xfab.hiVect()),
-                   &alpha, &beta, afab.dataPtr(), 
-                   ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-                   bxfab.dataPtr(), 
-                   ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-                   byfab.dataPtr(), 
-                   ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-                   tbx.loVect(), tbx.hiVect(), &num_comp,
-                   h[level]);
+        ARLIM(yfab.loVect()),ARLIM(yfab.hiVect()),
+        xfab.dataPtr(src_comp),
+        ARLIM(xfab.loVect()), ARLIM(xfab.hiVect()),
+        &alpha, &beta, afab.dataPtr(), 
+        ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+        bxfab.dataPtr(), 
+        ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+        byfab.dataPtr(), 
+        ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+        tbx.loVect(), tbx.hiVect(), &num_comp,
+        h[level]);
 #endif
 #if (BL_SPACEDIM ==3)
         FORT_ADOTX(yfab.dataPtr(dst_comp),
-                   ARLIM(yfab.loVect()), ARLIM(yfab.hiVect()),
-                   xfab.dataPtr(src_comp),
-                   ARLIM(xfab.loVect()), ARLIM(xfab.hiVect()),
-                   &alpha, &beta, afab.dataPtr(), 
-                   ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
-                   bxfab.dataPtr(), 
-                   ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
-                   byfab.dataPtr(), 
-                   ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
-                   bzfab.dataPtr(), 
-                   ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
-                   tbx.loVect(), tbx.hiVect(), tbx.cbVect(), &num_comp,
-                   h[level]);
+        ARLIM(yfab.loVect()), ARLIM(yfab.hiVect()),
+        xfab.dataPtr(src_comp),
+        ARLIM(xfab.loVect()), ARLIM(xfab.hiVect()),
+        &alpha, &beta, afab.dataPtr(), 
+        ARLIM(afab.loVect()), ARLIM(afab.hiVect()),
+        bxfab.dataPtr(), 
+        ARLIM(bxfab.loVect()), ARLIM(bxfab.hiVect()),
+        byfab.dataPtr(), 
+        ARLIM(byfab.loVect()), ARLIM(byfab.hiVect()),
+        bzfab.dataPtr(), 
+        ARLIM(bzfab.loVect()), ARLIM(bzfab.hiVect()),
+        tbx.loVect(), tbx.hiVect(), tbx.cbVect(), &num_comp,
+        h[level]);
 #endif
     }
 }

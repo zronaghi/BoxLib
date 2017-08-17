@@ -51,6 +51,8 @@
           end do
           !$omp end teams distribute parallel do simd
           !$omp end target
+          
+          !$omp target update from(c)
       end
 
 
@@ -106,4 +108,6 @@
           end do
           !$omp end teams distribute parallel do simd
           !$omp end target
+          
+          !$omp target update from(f)
       end

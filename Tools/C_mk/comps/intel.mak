@@ -49,9 +49,9 @@ GENERIC_COMP_FLAGS =
 
 ifeq ($(USE_OMP),TRUE)
   ifeq ($(firstword $(sort 16.0 $(intel_version))), 16.0) 
-    GENERIC_COMP_FLAGS += -qopenmp
+    GENERIC_COMP_FLAGS += -qopenmp -qopenmp-offload=host
   else
-    GENERIC_COMP_FLAGS += -openmp
+    GENERIC_COMP_FLAGS += -openmp -qopenmp-offload=host
   endif
 endif
 

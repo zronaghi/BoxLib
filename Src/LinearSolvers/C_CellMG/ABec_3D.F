@@ -381,7 +381,7 @@ c
       dhy = beta/h(2)**2
       dhz = beta/h(3)**2
 
-      !$omp target update to(y,a)
+      !$omp target update to(y,a,x,bX,bY,bZ)
 
       !$omp target data map(to:lo, hi, cb, dhx, dhy, dhz)
       !$omp target if(.TRUE.)
@@ -462,13 +462,16 @@ c
       dhz = beta/h(3)**2
 
       res = 0.0D0
-
-      !$omp target data map(to: alpha, dhx, dhy, dhz, lo, hi, cb)
+      
+      !$omp target update to(a,bX,bY,bZ)
+      
+      !$omp target data map(to: alpha, dhx, dhy, dhz, lo, hi, cb, nc)
       !&omp map(tofrom: res)
       !$omp target if(.TRUE.)
       !$omp teams distribute collapse(4)
-      !&omp firstprivate(alpha,dhx,dhy,dhz) private(n,kb,jb,ib) 
-      !&omp reduction(max:res)  
+      !&omp private(n,kb,jb,ib,kbe,jbe,ibe,k,j,i) 
+      !&omp firstprivate(alpha,dhx,dhy,dhz)
+      !&omp reduction(max:res)
       do n = 1, nc
           do kb = lo(3), hi(3), cb(3)
             do jb = lo(2), hi(2), cb(2)
@@ -476,11 +479,9 @@ c
                     kbe = MIN(kb+cb(3)-1,hi(3))
                     jbe = MIN(jb+cb(2)-1,hi(2))
                     ibe = MIN(ib+cb(1)-1,hi(1))
-                    !$omp parallel do collapse(2) private(k,j)
+                    !$omp parallel do simd collapse(3)
                     do k = kb, kbe
                         do j = jb, jbe
-                            !$omp simd private(i)
-                            !&omp reduction(max:res)
                             do i = ib, ibe
                                 res = max(res, abs(alpha*a(i,j,k)
      $                              + dhx*(bX(i+1,j,k) + bX(i,j,k))
@@ -493,10 +494,9 @@ c
      $                              + abs( -dhz*bZ(i,j,k+1)) 
      $                              + abs( -dhz*bZ(i,j,k)))
                             end do
-                            !$omp end simd
                         end do
                     end do
-                    !omp end parallel do
+                    !omp end parallel do simd
                end do
             end do
          end do
