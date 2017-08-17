@@ -118,10 +118,12 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
 c     offloading or not?
       offload = .true.
       
-      !$omp target update to(phi) if(offload)
+      !$omp target update to(phi,rhs)
+      !$omp target update to(f0,f1,f2,f3,f4,f5,m0,m1,m2,m3,m4,m5)
+      !$omp target update to(bX,bY,bZ)
       
       !$omp target data map(to:lo,hi,cb,dhx,dhy,dhz) if(offload)
-      !&omp target data map(to: omega,redblack) if(offload)
+      !&omp target data map(to:omega,redblack) if(offload)
       !$omp target if(offload)
       !$omp teams distribute collapse(4) private(kb,jb,ib,kbe,jbe,ibe,n) 
       !&omp if(offload)
@@ -132,7 +134,8 @@ c     offloading or not?
                     kbe = MIN(kb+cb(3)-1,hi(3))
                     jbe = MIN(jb+cb(2)-1,hi(2))
                     ibe = MIN(ib+cb(1)-1,hi(1))
-                    !$omp parallel do collapse(2) private(k,j,i,ioff)
+                    !$omp parallel do collapse(2) 
+                    !&omp private(k,j,i,ioff)
                     do k = kb, kbe
                         do j = jb, jbe
                             ioff = MOD(lo(1) + j + k + redblack,2)
@@ -188,7 +191,7 @@ c     offloading or not?
       !$omp end target      
       !$omp end target data
 
-      !$omp target update from (phi)
+      !$omp target update from(phi)
       end
 c-----------------------------------------------------------------------
 c      
@@ -480,6 +483,7 @@ c
                     jbe = MIN(jb+cb(2)-1,hi(2))
                     ibe = MIN(ib+cb(1)-1,hi(1))
                     !$omp parallel do simd collapse(3)
+                    !&omp reduction(max:res)
                     do k = kb, kbe
                         do j = jb, jbe
                             do i = ib, ibe
