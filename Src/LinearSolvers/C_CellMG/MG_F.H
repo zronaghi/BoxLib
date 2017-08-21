@@ -124,6 +124,76 @@ void C_FLUX(const Box& xbx,
 		const Real* h);
 
 #if (BL_SPACEDIM == 3)
+
+        //ND
+        template<typename T>
+        using hostview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
+        template<typename T>
+        using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::CudaSpace>;
+
+        ////4D
+        //template <typename T>
+        //struct KokkosOffsetView4 {
+        //    
+        //    KokkosOffsetView4(IntVect, )
+        //    
+        //    devview<T****> view;
+        //    int offset[4] = {};
+        //}
+        //
+        //template <typename itype, typename ViewType>
+        //struct is_rank_4 {
+        //    static constexpr bool value = ViewType::rank == 4u;
+        //}
+        //
+        //template <typename itype, typename ViewType>
+        //struct is_rank_3 {
+        //    static constexpr bool value = ViewType::rank == 3u;
+        //}
+        //
+        //template <typename... Args>
+        //struct KokkosOffsetView
+        //{
+        //    using view_type =  Kokkos::View<Args...>;
+        //    static constexpr unsigned rank = view_type::rank;
+        //    using reference = typename view_type::reference;
+        //    
+        //    //4D
+        //    template <typename itype>
+        //    typename std::enable_if< is_rank4<itype, view_type>, reference >::type
+        //    KOKKOS_FORCEINLINE_FUNCTION
+        //    operator()(itype i, int j, int k, int n){
+        //        return view(i-offset[0], j-offset[1], k-offset[2], n-offset[3]);
+        //    }
+        //    
+        //    template <typename itype>
+        //    typename std::enable_if< is_rank4<itype, view_type>, reference >::type
+        //    setOffset(const Intvect& offset_){
+        //        for(unsigned int d=0; d<4; d++) offset[d]=offset_(d);
+        //    }
+        //    
+        //    //3D
+        //    template <typename itype>
+        //    typename std::enable_if< is_rank3<itype, view_type>, reference >::type
+        //    KOKKOS_FORCEINLINE_FUNCTION
+        //    operator()(itype i, int j, int k){
+        //        return view(i-offset[0], j-offset[1], k-offset[2]);
+        //    }
+        //    
+        //    template <typename itype>
+        //    typename std::enable_if< is_rank3<itype, view_type>, reference >::type
+        //    setOffset(const Intvect& offset_){
+        //        for(unsigned int d=0; d<3; d++) offset[d]=offset_(d);
+        //    }
+        //    
+        //    template <typename... A>
+        //    KokkosOffsetView(A &&... a) : view( std::forward<A>(a) ){}
+        //    
+        //    //members
+        //    view_type view;
+        //    int offset[rank] = {};
+        //};
+
 template<class T>
         class ViewFab{
         public:

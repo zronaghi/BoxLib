@@ -106,4 +106,4 @@ else
   quadmath_lib = $(quadmath_libso)
 endif
 
-override XTRALIBS += $(gfortran_lib) # $(quadmath_lib)
+override XTRALIBS += $(gfortran_lib) $(quadmath_lib)
