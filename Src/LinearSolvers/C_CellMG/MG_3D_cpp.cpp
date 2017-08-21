@@ -23,6 +23,7 @@ public:
     //access operator
     KOKKOS_FORCEINLINE_FUNCTION
     Real& operator()(const int i, const int j, const int k, const int n = 0) const {
+        printf("(%i,%i,%i)\n", i-smallend[0], j-smallend[1], k-smallend[2]);
         return d_data(i-smallend[0], j-smallend[1], k-smallend[2], n);
     }
     
@@ -265,7 +266,12 @@ public:
     f0v(f0_,"f0v"), f1v(f1_,"f1v"), f2v(f2_,"f2v"), f3v(f3_,"f3v"), f4v(f4_,"f4v"), f5v(f5_,"f5v"),
     m0v(m0_,"m0v"), m1v(m1_,"m1v"), m2v(m2_,"m2v"), m3v(m3_,"m3v"), m4v(m4_,"m4v"), m5v(m5_,"m5v"),
     rb(rb_), comp(0), bx(bx_), bbx(bbx_), alpha(alpha_), beta(beta_) {
-
+        
+        //DEBUG
+        std::cout << "Box dims (" << phi_.length()[0] << "," << phi_.length()[1] << "," << phi_.length()[2] << ")" << std::endl;
+        std::cout << "Lower end (" << phi_.smallEnd()[0] << "," << phi_.smallEnd()[1] << "," << phi_.smallEnd()[2] << ")" << std::endl;
+        //DEBUG
+        
         //some parameters
         omega= 1.15;
         dhx = beta/(h[0]*h[0]);
@@ -471,8 +477,7 @@ const Real* h)
 //
 //ADOTX Functor
 struct C_ADOTX_FUNCTOR{
-
-
+    
 public:
 
     C_ADOTX_FUNCTOR(const FArrayBox& y_,
