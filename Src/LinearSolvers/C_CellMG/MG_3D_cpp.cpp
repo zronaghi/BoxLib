@@ -18,13 +18,13 @@ typedef Kokkos::HostSpace devspace;
 template<>
 class ViewFab<Real> {
 public:
-    
+
     //swap indices here to get "natural" layout
     KOKKOS_INLINE_FUNCTION
     Real& operator()(const int& i, const int& j, const int& k, const int& n = 0){
         return d_data(n, k-smallend[2], j-smallend[1], i-smallend[0]);
     }
-  
+
     KOKKOS_INLINE_FUNCTION
     Real& operator()(const int& i, const int& j, const int& k, const int& n = 0) const {
         return d_data(n, k-smallend[2], j-smallend[1], i-smallend[0]);
@@ -37,7 +37,7 @@ public:
     Real& getHostElem(const int& i, const int& j, const int& k, const int& n = 0) {
         return h_data(n, k-smallend[2], j-smallend[1], i-smallend[0]);
     }
-  
+
     void init(const FArrayBox& rhs_, const std::string& name_){
         name=name_;
         Kokkos::Profiling::pushRegion("Init ViewFab "+name);
@@ -45,11 +45,11 @@ public:
         bigend=rhs_.bigEnd();
         length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
         numvars=rhs_.nComp();
-        
+
         //allocate views
         d_data=Kokkos::View<Real****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
         h_data=Kokkos::create_mirror(d_data);
-	
+
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
             for(int k=smallend[2]; k<=bigend[2]; k++){
@@ -62,7 +62,7 @@ public:
         }
         Kokkos::Profiling::popRegion();
     }
-    
+
     ViewFab(){}
 
     void syncH2D(){
@@ -72,11 +72,11 @@ public:
     void syncD2H(){
         Kokkos::deep_copy(h_data,d_data);
     }
-  
+
     ViewFab(const FArrayBox& rhs_, const std::string& name_){
         init(rhs_,name_);
     }
-    
+
     ViewFab<Real>& operator=(const ViewFab<Real>& rhs_){
         //copy stuff over
         name=rhs_.name;
@@ -91,7 +91,7 @@ public:
         //realloc data
         d_data=Kokkos::View<Real****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
         h_data=Kokkos::create_mirror_view(d_data);
-        
+
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
             for(int k=smallend[2]; k<=bigend[2]; k++){
@@ -103,10 +103,10 @@ public:
             }
         }
         Kokkos::Profiling::popRegion();
-        
+
         return *this;
     }
-    
+
     void fill(FArrayBox& lhs_) const{
         //do some sanity checks:
         bool is_ok=true;
@@ -133,7 +133,7 @@ public:
             }
         }
     }
-        
+
 private:
     std::string name;
     int numvars;
@@ -145,12 +145,12 @@ private:
 template<>
 class ViewFab<int> {
 public:
-    
+
     KOKKOS_INLINE_FUNCTION
     int& operator()(const int& i, const int& j, const int& k, const int& n=0){
         return d_data(n, k-smallend[2], j-smallend[1], i-smallend[0]);
     }
-    
+
     KOKKOS_INLINE_FUNCTION
     const int& operator()(const int& i, const int& j, const int& k, const int& n=0) const{
         return d_data(n, k-smallend[2], j-smallend[1], i-smallend[0]);
@@ -163,7 +163,7 @@ public:
     const int& getHostElem(const int& i, const int& j, const int& k, const int& n=0) const{
         return h_data(n, k-smallend[2], j-smallend[1], i-smallend[0]);
     }
-    
+
 
     void init(const Mask& rhs_, const std::string& name_){
         name=name_;
@@ -174,7 +174,7 @@ public:
         //realloc data
         d_data=Kokkos::View<int****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
         h_data=Kokkos::create_mirror_view(d_data);
-        
+
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
             for(int k=smallend[2]; k<=bigend[2]; k++){
@@ -186,7 +186,7 @@ public:
             }
         }
     }
-    
+
     ViewFab(){}
 
     void syncH2D(){
@@ -196,11 +196,11 @@ public:
     void syncD2H(){
         Kokkos::deep_copy(h_data,d_data);
     }
-  
+
     ViewFab<int>(const Mask& rhs_, const std::string name_){
         init(rhs_,name_);
     }
-    
+
     ViewFab<int>& operator=(const ViewFab<int>& rhs_){
         //copy stuff over
         name=rhs_.name;
@@ -211,7 +211,7 @@ public:
         //realloc data
         d_data=Kokkos::View<int****,devspace>(Kokkos::ViewAllocateWithoutInitializing(name),numvars,length[2],length[1],length[0]);
         h_data=Kokkos::create_mirror_view(d_data);
-        
+
 #pragma omp parallel for collapse(4)
         for(unsigned int n=0; n<numvars; n++){
             for(int k=smallend[2]; k<=bigend[2]; k++){
@@ -222,10 +222,10 @@ public:
                 }
             }
         }
-        
+
         return *this;
     }
-    
+
 private:
     std::string name;
     int numvars;
@@ -264,14 +264,14 @@ void C_AVERAGE(
 const int nc,
 FArrayBox& c,
 const FArrayBox& f){
-	
+
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
     const int* cb = bx.cbVect();
-	
+
     //create functor
     C_AVERAGE_FUNCTOR cavfunc(c,f);
-    
+
     //define policy
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
 
@@ -315,7 +315,7 @@ void C_INTERP(const Box& bx,
 const int nc,
 FArrayBox& f,
 const FArrayBox& c){
-	
+
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
     const int* cb = bx.cbVect();
@@ -325,38 +325,38 @@ const FArrayBox& c){
 
     //define policy
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
-	
+
     // Execute functor
     Kokkos::Experimental::md_parallel_for(t_policy({0,lo[2],lo[1],lo[0]},{nc,hi[2]+1,hi[1]+1,hi[0]+1},{nc,cb[2],cb[1],cb[0]}),cintfunc);
-  
+
     //write back
     cintfunc.fill(f);
 }
 
 
 //-----------------------------------------------------------------------
-//      
+//
 //     Gauss-SeidelRed-Black (GSRB):
 //     Apply the GSRB relaxation to the state phi for the equation
 //     L(phi) = alpha*a(x)*phi(x) - beta*Div(b(x)Grad(phi(x))) = rhs(x)
 //     central differenced, according to the arrays of boundary
 //     masks (m#) and auxiliary data (f#).
-//     
+//
 //     In general, if the linear operator L=gamma*y-rho, the GS relaxation
 //     is y = (R - rho)/gamma.  Near a boundary, the ghost data is filled
 //     using a polynomial interpolant based on the "old" phi values, so
 //     L=(gamma-delta)*y - rho + delta*yOld.  The resulting iteration is
-//     
+//
 //     y = (R - delta*yOld + rho)/(gamma - delta)
-//     
+//
 //     This expression is valid additionally in the interior provided
 //     delta->0 there.  delta is constructed by summing all the
-//     contributions to the central stencil element coming from boundary 
-//     interpolants.  The f#s contain the corresponding coefficient of 
-//     the interpolating polynomial.  The masks are set > 0 if the boundary 
-//     value was filled with an interpolant involving the central stencil 
+//     contributions to the central stencil element coming from boundary
+//     interpolants.  The f#s contain the corresponding coefficient of
+//     the interpolating polynomial.  The masks are set > 0 if the boundary
+//     value was filled with an interpolant involving the central stencil
 //     element.
-//     
+//
 //-----------------------------------------------------------------------
 //GSRB functor
 struct C_GSRB_FUNCTOR{
@@ -384,8 +384,8 @@ public:
     const Mask& m4_,
     const FArrayBox& f5_,
     const Mask& m5_,
-    const Real* h) : 
-    phiv(phi_,"phiv"), rhsv(rhs_,"rhsv"), av(a_,"av"), bXv(bX_,"bXv"), bYv(bY_,"bYv"), bZv(bZ_,"bZv"), 
+    const Real* h) :
+    phiv(phi_,"phiv"), rhsv(rhs_,"rhsv"), av(a_,"av"), bXv(bX_,"bXv"), bYv(bY_,"bYv"), bZv(bZ_,"bZv"),
     f0v(f0_,"f0v"), f1v(f1_,"f1v"), f2v(f2_,"f2v"), f3v(f3_,"f3v"), f4v(f4_,"f4v"), f5v(f5_,"f5v"),
     m0v(m0_,"m0v"), m1v(m1_,"m1v"), m2v(m2_,"m2v"), m3v(m3_,"m3v"), m4v(m4_,"m4v"), m5v(m5_,"m5v"),
     rb(rb_), comp(0), bx(bx_), bbx(bbx_), alpha(alpha_), beta(beta_) {
@@ -409,7 +409,7 @@ public:
         m3v.syncH2D();
         m4v.syncH2D();
         m5v.syncH2D();
-    
+
         //some parameters
         omega= 1.15;
         dhx = beta/(h[0]*h[0]);
@@ -418,11 +418,11 @@ public:
 
         lo0=bx.loVect()[0];
         hi0=bx.hiVect()[0];
-        
+
         blo=bbx.smallEnd();
         bhi=bbx.bigEnd();
     }
-    
+
     void setComp(const int& n){
         comp=n;
     }
@@ -432,7 +432,7 @@ public:
 
         int ioff = (lo0 + j + k + rb) % 2;
         int i = 2 * (ii-lo0) + lo0 + ioff;
-        
+
         //be careful to not run over
         if(i<=hi0){
 
@@ -454,11 +454,11 @@ public:
                 - dhx * (bXv(i,j,k)*cf0 + bXv(i+1,j,k)*cf3)
                     - dhy * (bYv(i,j,k)*cf1 + bYv(i,j+1,k)*cf4)
                         - dhz * (bZv(i,j,k)*cf2 + bZv(i,j,k+1)*cf5);
-      
+
             double rho =  dhx * (bXv(i,j,k)*phiv(i-1,j,k,n) + bXv(i+1,j,k)*phiv(i+1,j,k,n))
                 + dhy * (bYv(i,j,k)*phiv(i,j-1,k,n) + bYv(i,j+1,k)*phiv(i,j+1,k,n))
                     + dhz * (bZv(i,j,k)*phiv(i,j,k-1,n) + bZv(i,j,k+1)*phiv(i,j,k+1,n));
-      
+
             double res = rhsv(i,j,k,n) - gamma * phiv(i,j,k,n) + rho;
             phiv(i,j,k,n) += omega/g_m_d * res;
         }
@@ -487,16 +487,16 @@ public:
                 - dhx * (bXv(i,j,k)*cf0 + bXv(i+1,j,k)*cf3)
                     - dhy * (bYv(i,j,k)*cf1 + bYv(i,j+1,k)*cf4)
                         - dhz * (bZv(i,j,k)*cf2 + bZv(i,j,k+1)*cf5);
-      
+
             double rho =  dhx * (bXv(i,j,k)*phiv(i-1,j,k,n) + bXv(i+1,j,k)*phiv(i+1,j,k,n))
                 + dhy * (bYv(i,j,k)*phiv(i,j-1,k,n) + bYv(i,j+1,k)*phiv(i,j+1,k,n))
                     + dhz * (bZv(i,j,k)*phiv(i,j,k-1,n) + bZv(i,j,k+1)*phiv(i,j,k+1,n));
-      
+
             double res = rhsv(i,j,k,n) - gamma * phiv(i,j,k,n) + rho;
             phiv(i,j,k,n) += omega/g_m_d * res;
         }
     }
-    
+
     KOKKOS_INLINE_FUNCTION
     void operator()(const int k, const int j) const{
         int ioff = (lo0 + j + k + rb) % 2;
@@ -520,11 +520,11 @@ public:
                 - dhx * (bXv(i,j,k)*cf0 + bXv(i+1,j,k)*cf3)
                     - dhy * (bYv(i,j,k)*cf1 + bYv(i,j+1,k)*cf4)
                         - dhz * (bZv(i,j,k)*cf2 + bZv(i,j,k+1)*cf5);
-      
+
             double rho =  dhx * (bXv(i,j,k)*phiv(i-1,j,k,comp) + bXv(i+1,j,k)*phiv(i+1,j,k,comp))
                 + dhy * (bYv(i,j,k)*phiv(i,j-1,k,comp) + bYv(i,j+1,k)*phiv(i,j+1,k,comp))
                     + dhz * (bZv(i,j,k)*phiv(i,j,k-1,comp) + bZv(i,j,k+1)*phiv(i,j,k+1,comp));
-      
+
             double res = rhsv(i,j,k,comp) - gamma * phiv(i,j,k,comp) + rho;
             phiv(i,j,k,comp) += omega/g_m_d * res;
         }
@@ -586,8 +586,8 @@ const Real* h)
 
     //create functors
     C_GSRB_FUNCTOR cgsrbfunc(bx, bbx, rb, alpha, beta, phi, rhs, a, bX, bY, bZ, f0, m0, f1, m1, f2, m2, f3, m3, f4, m4, f5, m5, h);
-    
-#if 1
+
+#if 0
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
     //execute
     Kokkos::fence();
@@ -607,7 +607,7 @@ const Real* h)
     double end_time =  omp_get_wtime();
 #endif
     std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;
-            
+
     //copy data back from the views
     cgsrbfunc.fill(phi);
 }
@@ -618,21 +618,21 @@ const Real* h)
 //
 //ADOTX Functor
 struct C_ADOTX_FUNCTOR{
-  
-  
+
+
 public:
-  
+
     C_ADOTX_FUNCTOR(const FArrayBox& y_,
-    const FArrayBox& x_,  
-    const Real& alpha_, 
-    const Real& beta_, 
-    const FArrayBox& a_, 
+    const FArrayBox& x_,
+    const Real& alpha_,
+    const Real& beta_,
+    const FArrayBox& a_,
     const FArrayBox& bX_,
     const FArrayBox& bY_,
     const FArrayBox& bZ_,
     const Real* h) :
     yv(y_,"yv"), xv(x_,"xv"), av(a_,"av"), bXv(bX_,"bXv"), bYv(bY_,"bYv"), bZv(bZ_,"bZv"), alpha(alpha_), beta(beta_) {
-    
+
         //sync
         yv.syncH2D();
         xv.syncH2D();
@@ -640,7 +640,7 @@ public:
         bXv.syncH2D();
         bYv.syncH2D();
         bZv.syncH2D();
-    
+
         //helpers
         d_helpers=Kokkos::View<Real[4],devspace>("helpers");
         h_helpers=Kokkos::create_mirror_view(d_helpers);
@@ -700,10 +700,10 @@ const Real* h)
 
     //create policy
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
-    
+
     //execute
     Kokkos::parallel_for(t_policy({0,lo[2],lo[1],lo[0]},{nc,hi[2]+1,hi[1]+1,hi[0]+1},{nc,cb[2],cb[1],cb[0]}),cadxfunc);
-    
+
     //write back result
     cadxfunc.fill(y);
 
@@ -729,12 +729,12 @@ const Real* h)
     //box extends:
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
-	
+
     //some parameters
     Real dhx = beta/(h[0]*h[0]);
     Real dhy = beta/(h[1]*h[1]);
     Real dhz = beta/(h[2]*h[2]);
-	
+
     //initialize to zero
     res = 0.0;
 
@@ -742,7 +742,7 @@ const Real* h)
         for (int k = lo[2]; k <= hi[2]; ++k) {
             for (int j = lo[1]; j <= hi[1]; ++j) {
                 for (int i = lo[0]; i <= hi[0]; ++i) {
-            
+
                     //first part:
                     Real tmpval = alpha*a(IntVect(i,j,k))
                                 + dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )
@@ -791,7 +791,7 @@ const Real* h)
     const int *yhi = ybx.hiVect();
     const int *zlo = zbx.loVect();
     const int *zhi = zbx.hiVect();
-	
+
     //some parameters
     Real dhx = beta/(h[0]*h[0]);
     Real dhy = beta/(h[1]*h[1]);

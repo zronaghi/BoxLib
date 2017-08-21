@@ -5,7 +5,8 @@ CXX = nvcc_wrapper
 CC  = gcc
 FC  = gfortran
 F90 = gfortran
-LD = g++
+#LD = g++
+LD = nvcc_wrapper
 
 CXXFLAGS =
 CFLAGS   =
@@ -105,4 +106,4 @@ else
   quadmath_lib = $(quadmath_libso)
 endif
 
-override XTRALIBS += $(gfortran_lib) $(quadmath_lib)
+override XTRALIBS += $(gfortran_lib) # $(quadmath_lib)
