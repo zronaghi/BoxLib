@@ -28,10 +28,10 @@ ifeq ($(DEBUG),TRUE)
 
 else
 
-  CXXFLAGS += -g -O2 -ip -qopt-report=5 -qopt-report-phase=vec
-  CFLAGS   += -g -O2 -ip -qopt-report=5 -qopt-report-phase=vec
-  FFLAGS   += -g -O2 -ip -qopt-report=5 -qopt-report-phase=vec
-  F90FLAGS += -g -O2 -ip -qopt-report=5 -qopt-report-phase=vec
+  CXXFLAGS += -g -O2 -qopt-report=5 -qopt-report-phase=vec -ip
+  CFLAGS   += -g -O2 -qopt-report=5 -qopt-report-phase=vec -ip
+  FFLAGS   += -g -O2 -qopt-report=5 -qopt-report-phase=vec -ip
+  F90FLAGS += -g -O2 -qopt-report=5 -qopt-report-phase=vec -ip
 
 endif
 

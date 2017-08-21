@@ -435,7 +435,7 @@ int             redBlackFlag)
     const bool tiling = false;
 
     //timer start
-    double start_time = omp_get_wtime();
+    //double start_time = omp_get_wtime();
 
     //#ifdef _OPENMP
     //#pragma omp parallel
@@ -515,18 +515,18 @@ int             redBlackFlag)
     }
     
     //DEBUG
-    int count=0;
-    for (MFIter solnLmfi(solnL,false); solnLmfi.isValid(); ++solnLmfi){
-        FArrayBox&       solnfab = solnL[solnLmfi];
-        const FArrayBox& rhsfab  = rhsL[solnLmfi];
-        std::cout << "GSRB PHI-NORM(" << count << "): L0 = " << solnfab.norm(0) << " L1 = " << solnfab.norm(1) << std::endl;
-        std::cout << "GSRB RHS-NORM(" << count << "): L0 = " << rhsfab.norm(0) << " L1 = " << rhsfab.norm(1) << std::endl;
-        count++;
-    }
+    //int count=0;
+    //for (MFIter solnLmfi(solnL,false); solnLmfi.isValid(); ++solnLmfi){
+    //    FArrayBox&       solnfab = solnL[solnLmfi];
+    //    const FArrayBox& rhsfab  = rhsL[solnLmfi];
+    //    std::cout << "GSRB PHI-NORM(" << count << "): L0 = " << solnfab.norm(0) << " L1 = " << solnfab.norm(1) << std::endl;
+    //    std::cout << "GSRB RHS-NORM(" << count << "): L0 = " << rhsfab.norm(0) << " L1 = " << rhsfab.norm(1) << std::endl;
+    //    count++;
+    //}
     //DEBUG
     
     //timer end
-    double end_time =  omp_get_wtime();
+    //double end_time =  omp_get_wtime();
     //std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;
 }
 
