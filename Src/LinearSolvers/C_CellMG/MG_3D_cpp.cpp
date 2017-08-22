@@ -680,10 +680,11 @@ const Real* h)
     C_ADOTX_FUNCTOR cadxfunc(y,x,alpha,beta,a,bX,bY,bZ,h,lo[2],hi[2]+1);
 
     //create policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left>> t_policy;
 
     //execute
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, nc}, {cb[0], cb[1], nc}), cadxfunc);
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, nc}, {32, 1, 1}), cadxfunc);
+//  Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, nc}), cadxfunc);
 
     //write back result
     cadxfunc.fill();
