@@ -318,21 +318,6 @@ public:
     void operator()(const int j, const int k, const int n) const{
         int ioff = (lo0 + j + k + rb) % 2;
 
-      //devsubview<Real> s_av = Kokkos::subview(av.d_data,
-      //    Kokkos::pair<int, int>(ioff, hi0+1), j, k, n);
-      //devsubview<Real> s_bXv = Kokkos::subview(bXv.d_data,
-      //    Kokkos::pair<int, int>(ioff, hi0+1), j, k, n);
-      //devsubview<Real> s_bXv_pi = Kokkos::subview(bXv.d_data,
-      //    Kokkos::pair<int, int>(ioff + 1, hi0+2), j, k, n);
-      //devsubview<Real> s_bYv = Kokkos::subview(bYv.d_data,
-      //    Kokkos::pair<int, int>(ioff, hi0+1), j, k, n);
-      //devsubview<Real> s_bYv_pj = Kokkos::subview(bYv.d_data,
-      //    Kokkos::pair<int, int>(ioff, hi0+1), j+1, k, n);
-      //devsubview<Real> s_bZv = Kokkos::subview(bZv.d_data,
-      //    Kokkos::pair<int, int>(ioff, hi0+1), j, k, n);
-      //devsubview<Real> s_bZv_pk = Kokkos::subview(bZv.d_data,
-      //    Kokkos::pair<int, int>(ioff, hi0+1), j+1, k, n);
-
         for(int i=ioff; i<=hi0; i+=2){
 
             //BC terms
@@ -477,6 +462,7 @@ public:
     KOKKOS_FORCEINLINE_FUNCTION
     void operator()(const int i, const int j, const int n) const{
 
+#if SANE
       devsubview<Real> s_yv = Kokkos::subview(yv.d_data,
           i - yv.smallend[0],
           j - yv.smallend[1],
@@ -555,14 +541,101 @@ public:
           j - bZv.smallend[1],
           Kokkos::pair<int, int>(wbegin - bZv.smallend[2] + 1, wend - bZv.smallend[2] + 1),
           0);
+#else
+      __restrict__ Real* const s_yv = Kokkos::subview(yv.d_data,
+          i - yv.smallend[0],
+          j - yv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - yv.smallend[2], wend - yv.smallend[2]),
+          n).data();
 
-      int wlen = wend - wbegin;
+      __restrict__ Real const* const s_av = Kokkos::subview(av.d_data,
+          i - av.smallend[0],
+          j - av.smallend[1],
+          Kokkos::pair<int, int>(wbegin - av.smallend[2], wend - av.smallend[2]),
+          0).data();
+
+      __restrict__ Real const* const s_xv = Kokkos::subview(xv.d_data,
+          i - xv.smallend[0],
+          j - xv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - xv.smallend[2], wend - xv.smallend[2]),
+          n).data();
+      __restrict__ Real const* const s_xv_pi = Kokkos::subview(xv.d_data,
+          i - xv.smallend[0] + 1,
+          j - xv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - xv.smallend[2], wend - xv.smallend[2]),
+          n).data();
+      __restrict__ Real const* const s_xv_mi = Kokkos::subview(xv.d_data,
+          i - xv.smallend[0] - 1,
+          j - xv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - xv.smallend[2], wend - xv.smallend[2]),
+          n).data();
+      __restrict__ Real const* const s_xv_pj = Kokkos::subview(xv.d_data,
+          i - xv.smallend[0],
+          j - xv.smallend[1] + 1,
+          Kokkos::pair<int, int>(wbegin - xv.smallend[2], wend - xv.smallend[2]),
+          n).data();
+      __restrict__ Real const* const s_xv_mj = Kokkos::subview(xv.d_data,
+          i - xv.smallend[0],
+          j - xv.smallend[1] - 1,
+          Kokkos::pair<int, int>(wbegin - xv.smallend[2], wend - xv.smallend[2]),
+          n).data();
+      __restrict__ Real const* const s_xv_pk = Kokkos::subview(xv.d_data,
+          i - xv.smallend[0],
+          j - xv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - xv.smallend[2] + 1, wend - xv.smallend[2] + 1),
+          n).data();
+      __restrict__ Real const* const s_xv_mk = Kokkos::subview(xv.d_data,
+          i - xv.smallend[0],
+          j - xv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - xv.smallend[2] - 1, wend - xv.smallend[2] - 1),
+          n).data();
+
+      __restrict__ Real const* const s_bXv = Kokkos::subview(bXv.d_data,
+          i - bXv.smallend[0],
+          j - bXv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - bXv.smallend[2], wend - bXv.smallend[2]),
+          0).data();
+      __restrict__ Real const* const s_bXv_pi = Kokkos::subview(bXv.d_data,
+          i - bXv.smallend[0] + 1,
+          j - bXv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - bXv.smallend[2], wend - bXv.smallend[2]),
+          0).data();
+      __restrict__ Real const* const s_bYv = Kokkos::subview(bYv.d_data,
+          i - bYv.smallend[0],
+          j - bYv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - bYv.smallend[2], wend - bYv.smallend[2]),
+          0).data();
+      __restrict__ Real const* const s_bYv_pj = Kokkos::subview(bYv.d_data,
+          i - bYv.smallend[0],
+          j - bYv.smallend[1] + 1,
+          Kokkos::pair<int, int>(wbegin - bYv.smallend[2], wend - bYv.smallend[2]),
+          0).data();
+      __restrict__ Real const* const s_bZv = Kokkos::subview(bZv.d_data,
+          i - bZv.smallend[0],
+          j - bZv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - bZv.smallend[2], wend - bZv.smallend[2]),
+          0).data();
+      __restrict__ Real const* const s_bZv_pk = Kokkos::subview(bZv.d_data,
+          i - bZv.smallend[0],
+          j - bZv.smallend[1],
+          Kokkos::pair<int, int>(wbegin - bZv.smallend[2] + 1, wend - bZv.smallend[2] + 1),
+          0).data();
+#endif
+
+      const int wlen = wend - wbegin;
+
+      const int yv_s = yv.d_data.dimension_0() * yv.d_data.dimension_1();
+      const int av_s = av.d_data.dimension_0() * av.d_data.dimension_1();
+      const int xv_s = xv.d_data.dimension_0() * xv.d_data.dimension_1();
+      const int bXv_s = bXv.d_data.dimension_0() * bXv.d_data.dimension_1();
+      const int bYv_s = bYv.d_data.dimension_0() * bYv.d_data.dimension_1();
+      const int bZv_s = bZv.d_data.dimension_0() * bZv.d_data.dimension_1();
 
       for (int w = 0; w < wlen; ++w) {
-        s_yv[w] = alpha * s_av[w] * s_xv[w]
-            - dhx * ( s_bXv_pi[w] * ( s_xv_pi[w] - s_xv[w] ) - s_bXv[w] * ( s_xv[w] - s_xv_mi[w] ) )
-            - dhy * ( s_bYv_pj[w] * ( s_xv_pj[w] - s_xv[w] ) - s_bYv[w] * ( s_xv[w] - s_xv_mj[w] ) )
-            - dhz * ( s_bZv_pk[w] * ( s_xv_pk[w] - s_xv[w] ) - s_bZv[w] * ( s_xv[w] - s_xv_mk[w] ) );
+        s_yv[w * yv_s] = alpha * s_av[w * av_s] * s_xv[w * xv_s]
+            - dhx * ( s_bXv_pi[w * bXv_s] * ( s_xv_pi[w * xv_s] - s_xv[w * xv_s] ) - s_bXv[w * bXv_s] * ( s_xv[w * xv_s] - s_xv_mi[w * xv_s] ) )
+            - dhy * ( s_bYv_pj[w * bYv_s] * ( s_xv_pj[w * xv_s] - s_xv[w * xv_s] ) - s_bYv[w * bYv_s] * ( s_xv[w * xv_s] - s_xv_mj[w * xv_s] ) )
+            - dhz * ( s_bZv_pk[w * bZv_s] * ( s_xv_pk[w * xv_s] - s_xv[w * xv_s] ) - s_bZv[w * bZv_s] * ( s_xv[w * xv_s] - s_xv_mk[w * xv_s] ) );
       }
 
 //      yv(i,j,k,n) = alpha * av(i,j,k) * xv(i,j,k,n)
