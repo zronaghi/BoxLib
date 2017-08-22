@@ -182,8 +182,8 @@ public:
     beta(beta_)
   {
     phiv.syncH2D();
-    //these should not be needed:
-    rhsv.syncH2D();
+
+    //these should not be needed?
     av.syncH2D();
     bXv.syncH2D();
     bYv.syncH2D();
@@ -200,6 +200,12 @@ public:
     m3v.syncH2D();
     m4v.syncH2D();
     m5v.syncH2D();
+
+    static bool first = true;
+    if (first) {
+      rhsv.syncH2D();
+      first = false;
+    }
       
     //some parameters
     omega= 1.15;
