@@ -23,7 +23,6 @@ public:
     //access operator
     KOKKOS_FORCEINLINE_FUNCTION
     Real& operator()(const int i, const int j, const int k, const int n = 0) const {
-        printf("(%i,%i,%i)\n", i-smallend[0], j-smallend[1], k-smallend[2]);
         return d_data(i-smallend[0], j-smallend[1], k-smallend[2], n);
     }
     
@@ -356,39 +355,6 @@ public:
         }
     }
 
-    //KOKKOS_FORCEINLINE_FUNCTION
-    //void operator()(const int j, const int k) const{
-    //    int ioff = (lo0 + j + k + rb) % 2;
-    //    for(int i=ioff; i<=hi0; i+=2){
-    //
-    //        //BC terms
-    //        Real cf0 = ( (i==blo[0]) && (m0v(blo[0]-1,j,k)>0) ? f0v(blo[0],j,k) : 0. );
-    //        Real cf1 = ( (j==blo[1]) && (m1v(i,blo[1]-1,k)>0) ? f1v(i,blo[1],k) : 0. );
-    //        Real cf2 = ( (k==blo[2]) && (m2v(i,j,blo[2]-1)>0) ? f2v(i,j,blo[2]) : 0. );
-    //        Real cf3 = ( (i==bhi[0]) && (m3v(bhi[0]+1,j,k)>0) ? f3v(bhi[0],j,k) : 0. );
-    //        Real cf4 = ( (j==bhi[1]) && (m4v(i,bhi[1]+1,k)>0) ? f4v(i,bhi[1],k) : 0. );
-    //        Real cf5 = ( (k==bhi[2]) && (m5v(i,j,bhi[2]+1)>0) ? f5v(i,j,bhi[2]) : 0. );
-    //
-    //        //assign ORA constants
-    //        double gamma = alpha * av(i,j,k)
-    //            + dhx * (bXv(i,j,k) + bXv(i+1,j,k))
-    //                + dhy * (bYv(i,j,k) + bYv(i,j+1,k))
-    //                    + dhz * (bZv(i,j,k) + bZv(i,j,k+1));
-    //
-    //        double g_m_d = gamma
-    //            - dhx * (bXv(i,j,k)*cf0 + bXv(i+1,j,k)*cf3)
-    //                - dhy * (bYv(i,j,k)*cf1 + bYv(i,j+1,k)*cf4)
-    //                    - dhz * (bZv(i,j,k)*cf2 + bZv(i,j,k+1)*cf5);
-    //
-    //        double rho =  dhx * (bXv(i,j,k)*phiv(i-1,j,k,comp) + bXv(i+1,j,k)*phiv(i+1,j,k,comp))
-    //            + dhy * (bYv(i,j,k)*phiv(i,j-1,k,comp) + bYv(i,j+1,k)*phiv(i,j+1,k,comp))
-    //                + dhz * (bZv(i,j,k)*phiv(i,j,k-1,comp) + bZv(i,j,k+1)*phiv(i,j,k+1,comp));
-    //
-    //        double res = rhsv(i,j,k,comp) - gamma * phiv(i,j,k,comp) + rho;
-    //        phiv(i,j,k,comp) += omega/g_m_d * res;
-    //    }
-    //}
-
     void fill(){
         phiv.syncD2H();
     }
@@ -464,7 +430,7 @@ const Real* h)
     Kokkos::fence();
     double end_time =  omp_get_wtime();
 #endif
-    std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;
+    //std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;
 
     //copy data back from the views
     cgsrbfunc.fill();
@@ -544,7 +510,7 @@ const Real* h)
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
 
     //execute
-    Kokkos::parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cadxfunc);
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cadxfunc);
 
     //write back result
     cadxfunc.fill();
@@ -596,7 +562,7 @@ const Real* h)
                              + std::abs( dhz * bZ(IntVect(i,j,k+1)) ) + std::abs( dhz * bZ(IntVect(i,j,k)) );
 
                     //max:
-                    res = std::max(res,std::abs(tmpval));
+                    res = std::max(res,tmpval);
                 }
             }
         }

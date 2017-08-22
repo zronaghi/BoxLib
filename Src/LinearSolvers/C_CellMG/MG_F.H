@@ -128,8 +128,13 @@ void C_FLUX(const Box& xbx,
         //ND
         template<typename T>
         using hostview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
+#ifdef KOKKOS_ENABLE_CUDA
         template<typename T>
         using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::CudaSpace>;
+#else
+        template<typename T>
+        using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace>;
+#endif
 
         ////4D
         //template <typename T>
