@@ -52,7 +52,7 @@ public:
         init(rhs_,name_);
     }
 
-private:
+public:
     hostview<Real****> h_data;
     devview<Real****> d_data;
     int smallend[4];
@@ -317,6 +317,22 @@ public:
     KOKKOS_FORCEINLINE_FUNCTION
     void operator()(const int j, const int k, const int n) const{
         int ioff = (lo0 + j + k + rb) % 2;
+
+      //devsubview<Real> s_av = Kokkos::subview(av.d_data,
+      //    Kokkos::pair<int, int>(ioff, hi0+1), j, k, n);
+      //devsubview<Real> s_bXv = Kokkos::subview(bXv.d_data,
+      //    Kokkos::pair<int, int>(ioff, hi0+1), j, k, n);
+      //devsubview<Real> s_bXv_pi = Kokkos::subview(bXv.d_data,
+      //    Kokkos::pair<int, int>(ioff + 1, hi0+2), j, k, n);
+      //devsubview<Real> s_bYv = Kokkos::subview(bYv.d_data,
+      //    Kokkos::pair<int, int>(ioff, hi0+1), j, k, n);
+      //devsubview<Real> s_bYv_pj = Kokkos::subview(bYv.d_data,
+      //    Kokkos::pair<int, int>(ioff, hi0+1), j+1, k, n);
+      //devsubview<Real> s_bZv = Kokkos::subview(bZv.d_data,
+      //    Kokkos::pair<int, int>(ioff, hi0+1), j, k, n);
+      //devsubview<Real> s_bZv_pk = Kokkos::subview(bZv.d_data,
+      //    Kokkos::pair<int, int>(ioff, hi0+1), j+1, k, n);
+
         for(int i=ioff; i<=hi0; i+=2){
 
             //BC terms
@@ -446,23 +462,113 @@ public:
     const FArrayBox& bX_,
     const FArrayBox& bY_,
     const FArrayBox& bZ_,
-    const Real* h) :
+    const Real* h,
+    const int ibegin_in,
+    const int iend_in) :
     yv(y_,"yv"), xv(x_,"xv"), av(a_,"av"), bXv(bX_,"bXv"), bYv(bY_,"bYv"), bZv(bZ_,"bZv"), alpha(alpha_), beta(beta_) {
         //helpers
         dhx = beta/(h[0]*h[0]);
         dhy = beta/(h[1]*h[1]);
         dhz = beta/(h[2]*h[2]);
+        ibegin = ibegin_in;
+        iend = iend_in;
     }
 
     KOKKOS_FORCEINLINE_FUNCTION
-    void operator()(const int i, const int j, const int k, const int n) const{
-        yv(i,j,k,n) = alpha * av(i,j,k) * xv(i,j,k,n)
-            - dhx * (   bXv(i+1,j,  k  ) * ( xv(i+1,j,  k,  n) - xv(i,  j,  k  ,n) )
-                - bXv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i-1,j,  k  ,n) ) )
-                    - dhy * (   bYv(i,  j+1,k  ) * ( xv(i,  j+1,k,  n) - xv(i,  j  ,k  ,n) )
-                        - bYv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i,  j-1,k  ,n) ) )
-                            - dhz * (   bZv(i,  j,  k+1) * ( xv(i,  j,  k+1,n) - xv(i,  j  ,k  ,n) )
-                                - bZv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i,  j,  k-1,n) ) );
+    void operator()(const int j, const int k, const int n) const{
+
+      devsubview<Real> s_yv = Kokkos::subview(yv.d_data,
+          Kokkos::pair<int, int>(ibegin - yv.smallend[0], iend - yv.smallend[0]),
+          j - yv.smallend[1],
+          k - yv.smallend[2],
+          n);
+
+      devsubview<Real> s_av = Kokkos::subview(av.d_data,
+          Kokkos::pair<int, int>(ibegin - av.smallend[0], iend - av.smallend[0]),
+          j - av.smallend[1],
+          k - av.smallend[2],
+          0);
+
+      devsubview<Real> s_xv = Kokkos::subview(xv.d_data,
+          Kokkos::pair<int, int>(ibegin - xv.smallend[0], iend - xv.smallend[0]),
+          j - xv.smallend[1],
+          k - xv.smallend[2],
+          n);
+      devsubview<Real> s_xv_pi = Kokkos::subview(xv.d_data,
+          Kokkos::pair<int, int>(ibegin - xv.smallend[0] + 1, iend - xv.smallend[0] + 1),
+          j - xv.smallend[1],
+          k - xv.smallend[2],
+          n);
+      devsubview<Real> s_xv_mi = Kokkos::subview(xv.d_data,
+          Kokkos::pair<int, int>(ibegin - xv.smallend[0] - 1, iend - xv.smallend[0] - 1),
+          j - xv.smallend[1],
+          k - xv.smallend[2],
+          n);
+      devsubview<Real> s_xv_pj = Kokkos::subview(xv.d_data,
+          Kokkos::pair<int, int>(ibegin - xv.smallend[0], iend - xv.smallend[0]),
+          j - xv.smallend[1] + 1,
+          k - xv.smallend[2],
+          n);
+      devsubview<Real> s_xv_mj = Kokkos::subview(xv.d_data,
+          Kokkos::pair<int, int>(ibegin - xv.smallend[0], iend - xv.smallend[0]),
+          j - xv.smallend[1] - 1,
+          k - xv.smallend[2],
+          n);
+      devsubview<Real> s_xv_pk = Kokkos::subview(xv.d_data,
+          Kokkos::pair<int, int>(ibegin - xv.smallend[0], iend - xv.smallend[0]),
+          j - xv.smallend[1],
+          k - xv.smallend[2] + 1,
+          n);
+      devsubview<Real> s_xv_mk = Kokkos::subview(xv.d_data,
+          Kokkos::pair<int, int>(ibegin - xv.smallend[0], iend - xv.smallend[0]),
+          j - xv.smallend[1],
+          k - xv.smallend[2] - 1,
+          n);
+
+      devsubview<Real> s_bXv = Kokkos::subview(bXv.d_data,
+          Kokkos::pair<int, int>(ibegin - bXv.smallend[0], iend - bXv.smallend[0]),
+          j - bXv.smallend[1],
+          k - bXv.smallend[2],
+          0);
+      devsubview<Real> s_bXv_pi = Kokkos::subview(bXv.d_data,
+          Kokkos::pair<int, int>(ibegin - bXv.smallend[0] + 1, iend - bXv.smallend[0] + 1),
+          j - bXv.smallend[1],
+          k - bXv.smallend[2],
+          0);
+      devsubview<Real> s_bYv = Kokkos::subview(bYv.d_data,
+          Kokkos::pair<int, int>(ibegin - bYv.smallend[0], iend - bYv.smallend[0]),
+          j - bYv.smallend[1],
+          k - bYv.smallend[2],
+          0);
+      devsubview<Real> s_bYv_pj = Kokkos::subview(bYv.d_data,
+          Kokkos::pair<int, int>(ibegin - bYv.smallend[0], iend - bYv.smallend[0]),
+          j - bYv.smallend[1] + 1,
+          k - bYv.smallend[2],
+          0);
+      devsubview<Real> s_bZv = Kokkos::subview(bZv.d_data,
+          Kokkos::pair<int, int>(ibegin - bZv.smallend[0], iend - bZv.smallend[0]),
+          j - bZv.smallend[1],
+          k - bZv.smallend[2],
+          0);
+      devsubview<Real> s_bZv_pk = Kokkos::subview(bZv.d_data,
+          Kokkos::pair<int, int>(ibegin - bZv.smallend[0], iend - bZv.smallend[0]),
+          j - bZv.smallend[1],
+          k - bZv.smallend[2] + 1,
+          0);
+
+      int ilen = iend - ibegin;
+
+      for (int i = 0; i < ilen; ++i) {
+        s_yv[i] = alpha * s_av[i] * s_xv[i]
+            - dhx * ( s_bXv_pi[i] * ( s_xv_pi[i] - s_xv[i] ) - s_bXv[i] * ( s_xv[i] - s_xv_mi[i] ) )
+            - dhy * ( s_bYv_pj[i] * ( s_xv_pj[i] - s_xv[i] ) - s_bYv[i] * ( s_xv[i] - s_xv_mj[i] ) )
+            - dhz * ( s_bZv_pk[i] * ( s_xv_pk[i] - s_xv[i] ) - s_bZv[i] * ( s_xv[i] - s_xv_mk[i] ) );
+      }
+
+//      yv(i,j,k,n) = alpha * av(i,j,k) * xv(i,j,k,n)
+//          - dhx * ( bXv(i+1,j  ,k  ) * ( xv(i+1,j  ,k  ,n) - xv(i,  j,  k,  n) ) - bXv(i,  j,  k  ) * ( xv (i,  j,  k, n) - xv(i-1,j  ,k  ,n) ) )
+//          - dhy * ( bYv(i,  j+1,k  ) * ( xv(i  ,j+1,k  ,n) - xv(i,  j,  k,  n) ) - bYv(i,  j,  k  ) * ( xv (i,  j,  k, n) - xv(i  ,j-1,k  ,n) ) )
+//          - dhz * ( bZv(i,  j  ,k+1) * ( xv(i  ,j  ,k+1,n) - xv(i,  j,  k,  n) ) - bZv(i,  j,  k  ) * ( xv (i,  j,  k, n) - xv(i  ,j  ,k-1,n) ) );
     }
 
     void fill(){
@@ -474,6 +580,8 @@ private:
     Box bx;
     int nc;
     Real alpha, beta, dhx, dhy, dhz;
+    int ibegin;
+    int iend;
 };
 
 void C_ADOTX(
@@ -496,13 +604,13 @@ const Real* h)
     const int *cb = bx.cbVect();
 
     //create functor
-    C_ADOTX_FUNCTOR cadxfunc(y,x,alpha,beta,a,bX,bY,bZ,h);
+    C_ADOTX_FUNCTOR cadxfunc(y,x,alpha,beta,a,bX,bY,bZ,h,lo[0],hi[0]+1);
 
     //create policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left> > t_policy;
 
     //execute
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cadxfunc);
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, nc}, {cb[1], cb[2], nc}), cadxfunc);
 
     //write back result
     cadxfunc.fill();
