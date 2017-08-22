@@ -6,137 +6,36 @@
 #include <ArrayLim.H>
 #include <iostream>
 
-
-//a small class for wrapping kokkos views nicely
-template<>
-class ViewFab<Real> {
-public:
-
-    //access operator
-    KOKKOS_FORCEINLINE_FUNCTION
-    Real& operator()(const int i, const int j, const int k, const int n = 0) const {
-        return d_data(i-smallend[0], j-smallend[1], k-smallend[2], n);
-    }
-    
-    //constructor
-    void init(const FArrayBox& rhs_, const std::string& name){
-        //start profiling
-        Kokkos::Profiling::pushRegion("Init ViewFab "+name);
-        
-        //copy offset
-        for(unsigned int d=0; d<3; d++){
-            smallend[d]=rhs_.smallEnd()[d];
-        }
-        smallend[3]=0;
-            
-        //create host view
-        h_data=hostview<Real****>(const_cast<Real*>(rhs_.dataPtr()), rhs_.length()[0], rhs_.length()[1], rhs_.length()[2], rhs_.nComp());
-        d_data=devview<Real****>(name,rhs_.length()[0],rhs_.length()[1],rhs_.length()[2],rhs_.nComp());
-        
-        //upload
-        syncH2D();
-        
-        //end profiling
-        Kokkos::Profiling::popRegion();
-    }
-
-    void syncH2D(){
-        Kokkos::deep_copy(d_data,h_data);
-    }
-
-    void syncD2H(){
-        Kokkos::deep_copy(h_data,d_data);
-    }
-
-    ViewFab(const FArrayBox& rhs_, const std::string& name_){
-        init(rhs_,name_);
-    }
-
-private:
-    hostview<Real****> h_data;
-    devview<Real****> d_data;
-    int smallend[4];
-};
-
-//integer version
-template<>
-class ViewFab<int> {
-public:
-
-    //access operator
-    KOKKOS_FORCEINLINE_FUNCTION
-    int& operator()(const int i, const int j, const int k, const int n = 0) const {
-        return d_data(i-smallend[0], j-smallend[1], k-smallend[2], n);
-    }
-    
-    //constructor
-    void init(const Mask& rhs_, const std::string& name){
-        //start profiling
-        Kokkos::Profiling::pushRegion("Init ViewFab "+name);
-        
-        //copy offset
-        for(unsigned int d=0; d<3; d++){
-            smallend[d]=rhs_.smallEnd()[d];
-        }
-        smallend[3]=0;
-            
-        //create host view
-        h_data=hostview<int****>(const_cast<int*>(rhs_.dataPtr()),rhs_.length()[0],rhs_.length()[1],rhs_.length()[2],rhs_.nComp());
-        d_data=devview<int****>(name,rhs_.length()[0],rhs_.length()[1],rhs_.length()[2],rhs_.nComp());
-        
-        //upload data
-        syncH2D();
-        
-        //end profiling
-        Kokkos::Profiling::popRegion();
-    }
-
-    void syncH2D(){
-        Kokkos::deep_copy(d_data,h_data);
-    }
-
-    void syncD2H(){
-        Kokkos::deep_copy(h_data,d_data);
-    }
-
-    ViewFab(const Mask& rhs_, const std::string& name_){
-        init(rhs_,name_);
-    }
-
-private:
-    hostview<int****> h_data;
-    devview<int****> d_data;
-    int smallend[4];
-};
-
-
 //Average Functor
 struct C_AVERAGE_FUNCTOR{
 public:
-    C_AVERAGE_FUNCTOR(const FArrayBox& c_, const FArrayBox& f_) : cv(c_,"cv"), fv(f_,"fv"){}
+    C_AVERAGE_FUNCTOR(const FArrayBox& c_, const FArrayBox& f_) :
+      cv(c_.view_fab), fv(f_.view_fab)
+    {
+      cv.syncH2D();
+      fv.syncH2D();
+    }
 
     KOKKOS_FORCEINLINE_FUNCTION
     void operator()(const int i, const int j, const int k, const int n) const{
-        cv(i,j,k,n) =  (fv(2*i+1,2*j+1,2*k,n) + fv(2*i,2*j+1,2*k,n) + fv(2*i+1,2*j,2*k,n) + fv(2*i,2*j,2*k,n))*0.125;
-        cv(i,j,k,n) += (fv(2*i+1,2*j+1,2*k+1,n) + fv(2*i,2*j+1,2*k+1,n) + fv(2*i+1,2*j,2*k+1,n) + fv(2*i,2*j,2*k+1,n))*0.125;
+      cv(i,j,k,n) =  (fv(2*i+1,2*j+1,2*k,n) + fv(2*i,2*j+1,2*k,n) + fv(2*i+1,2*j,2*k,n) + fv(2*i,2*j,2*k,n))*0.125;
+      cv(i,j,k,n) += (fv(2*i+1,2*j+1,2*k+1,n) + fv(2*i,2*j+1,2*k+1,n) + fv(2*i+1,2*j,2*k+1,n) + fv(2*i,2*j,2*k+1,n))*0.125;
     }
 
     void fill(){
-        cv.syncD2H();
+      cv.syncD2H();
     }
 private:
     ViewFab<Real> cv, fv;
 };
 
-
-
 //Average Kernel
 void C_AVERAGE(
-    const Box& bx,
-const int nc,
-FArrayBox& c,
-const FArrayBox& f){
-
+  const Box& bx,
+  const int nc,
+  FArrayBox& c,
+  const FArrayBox& f)
+{
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
     const int* cb = bx.cbVect();
@@ -158,7 +57,12 @@ const FArrayBox& f){
 //Interpolation Functor
 struct C_INTERP_FUNCTOR{
 public:
-    C_INTERP_FUNCTOR(const FArrayBox& f_, const FArrayBox& c_) : fv(f_,"fv"), cv(c_,"cv"){}
+    C_INTERP_FUNCTOR(const FArrayBox& f_, const FArrayBox& c_)
+      : fv(f_.view_fab), cv(c_.view_fab)
+    {
+      fv.syncH2D();
+      cv.syncH2D();
+    }
 
     KOKKOS_FORCEINLINE_FUNCTION
     void operator()(const int i, const int j, const int k, const int n) const{
@@ -253,30 +157,47 @@ public:
     const FArrayBox& f5_,
     const Mask& m5_,
     const Real* h) :
-    phiv(phi_,"phiv"), rhsv(rhs_,"rhsv"), av(a_,"av"), bXv(bX_,"bXv"), bYv(bY_,"bYv"), bZv(bZ_,"bZv"),
-    f0v(f0_,"f0v"), f1v(f1_,"f1v"), f2v(f2_,"f2v"), f3v(f3_,"f3v"), f4v(f4_,"f4v"), f5v(f5_,"f5v"),
-    m0v(m0_,"m0v"), m1v(m1_,"m1v"), m2v(m2_,"m2v"), m3v(m3_,"m3v"), m4v(m4_,"m4v"), m5v(m5_,"m5v"),
-    rb(rb_), comp(0), bx(bx_), bbx(bbx_), alpha(alpha_), beta(beta_) {
-        
-        //DEBUG
-        //std::cout << "Box dims (" << phi_.length()[0] << "," << phi_.length()[1] << "," << phi_.length()[2] << ")" << std::endl;
-        //std::cout << "Lower end (" << phi_.smallEnd()[0] << "," << phi_.smallEnd()[1] << "," << phi_.smallEnd()[2] << ")" << std::endl;
-        //DEBUG
-        
-        //some parameters
-        omega= 1.15;
-        dhx = beta/(h[0]*h[0]);
-        dhy = beta/(h[1]*h[1]);
-        dhz = beta/(h[2]*h[2]);
+    phiv(phi_.view_fab),
+    rhsv(rhs_.view_fab),
+    av(a_.view_fab),
+    bXv(bX_.view_fab),
+    bYv(bY_.view_fab),
+    bZv(bZ_.view_fab),
+    f0v(f0_.view_fab),
+    f1v(f1_.view_fab),
+    f2v(f2_.view_fab),
+    f3v(f3_.view_fab),
+    f4v(f4_.view_fab),
+    f5v(f5_.view_fab),
+    m0v(m0_.view_fab),
+    m1v(m1_.view_fab),
+    m2v(m2_.view_fab),
+    m3v(m3_.view_fab),
+    m4v(m4_.view_fab),
+    m5v(m5_.view_fab),
+    rb(rb_),
+    comp(0),
+    bx(bx_),
+    bbx(bbx_),
+    alpha(alpha_),
+    beta(beta_)
+  {
+    phiv.syncH2D();
+      
+    //some parameters
+    omega= 1.15;
+    dhx = beta/(h[0]*h[0]);
+    dhy = beta/(h[1]*h[1]);
+    dhz = beta/(h[2]*h[2]);
 
-        lo0=bx.loVect()[0];
-        hi0=bx.hiVect()[0];
+    lo0=bx.loVect()[0];
+    hi0=bx.hiVect()[0];
 
-        for(unsigned int d=0; d<3; d++){
-            blo[d]=bbx.smallEnd()[d];
-            bhi[d]=bbx.bigEnd()[d];
-        }
+    for(unsigned int d=0; d<3; d++){
+        blo[d]=bbx.smallEnd()[d];
+        bhi[d]=bbx.bigEnd()[d];
     }
+  }
 
     KOKKOS_FORCEINLINE_FUNCTION
     void operator()(const int ii, const int j, const int k, const int n) const{
@@ -317,6 +238,7 @@ public:
     KOKKOS_FORCEINLINE_FUNCTION
     void operator()(const int j, const int k, const int n) const{
         int ioff = (lo0 + j + k + rb) % 2;
+
         for(int i=ioff; i<=hi0; i+=2){
 
             //BC terms
@@ -404,21 +326,22 @@ const Real* h)
     C_GSRB_FUNCTOR cgsrbfunc(bx, bbx, rb, alpha, beta, phi, rhs, a, bX, bY, bZ, f0, m0, f1, m1, f2, m2, f3, m3, f4, m4, f5, m5, h);
 
 #if 1
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left> > t_policy;
     //execute
     Kokkos::fence();
     double start_time = omp_get_wtime();
-    int length0 = std::floor( (hi[0]-lo[0]+1) / 2 );
-    int up0 = lo[0] + length0;
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {up0+1, hi[1]+1, hi[2]+1, nc}, {length0, cb[1], cb[2], nc}), cgsrbfunc);
+  //int length0 = std::floor( (hi[0]-lo[0]+1) / 2 );
+  //int up0 = lo[0] + length0;
+  //printf("tile would have been %d %d %d %d\n", length0, cb[1], cb[2], nc);
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {up0+1, hi[1]+1, hi[2]+1, nc}, {32, 1, 1, 1}), cgsrbfunc);
     Kokkos::fence();
     double end_time =  omp_get_wtime();
 #else
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, outer_iter_policy, inner_iter_policy> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left> > t_policy;
     //execute
     Kokkos::fence();
     double start_time = omp_get_wtime();
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, nc}, {cb[1], cb[2], nc}), cgsrbfunc);
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, nc}, {32, 1, 1}), cgsrbfunc);
     Kokkos::fence();
     double end_time =  omp_get_wtime();
 #endif
@@ -446,20 +369,34 @@ public:
     const FArrayBox& bX_,
     const FArrayBox& bY_,
     const FArrayBox& bZ_,
-    const Real* h) :
-    yv(y_,"yv"), xv(x_,"xv"), av(a_,"av"), bXv(bX_,"bXv"), bYv(bY_,"bYv"), bZv(bZ_,"bZv"), alpha(alpha_), beta(beta_) {
+    const Real* h,
+    const int wbegin_in,
+    const int wend_in) :
+    yv(y_.view_fab),
+    xv(x_.view_fab),
+    av(a_.view_fab),
+    bXv(bX_.view_fab),
+    bYv(bY_.view_fab),
+    bZv(bZ_.view_fab),
+    alpha(alpha_),
+    beta(beta_) {
+
+        xv.syncH2D();
+
         //helpers
         dhx = beta/(h[0]*h[0]);
         dhy = beta/(h[1]*h[1]);
         dhz = beta/(h[2]*h[2]);
+        wbegin = wbegin_in;
+        wend = wend_in;
     }
 
     KOKKOS_FORCEINLINE_FUNCTION
     void operator()(const int i, const int j, const int k, const int n) const{
-        yv(i,j,k,n) = alpha * av(i,j,k) * xv(i,j,k,n)
-            - dhx * (   bXv(i+1,j,  k  ) * ( xv(i+1,j,  k,  n) - xv(i,  j,  k  ,n) ) - bXv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i-1,j,  k  ,n) ) )
-            - dhy * (   bYv(i,  j+1,k  ) * ( xv(i,  j+1,k,  n) - xv(i,  j  ,k  ,n) ) - bYv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i,  j-1,k  ,n) ) )
-            - dhz * (   bZv(i,  j,  k+1) * ( xv(i,  j,  k+1,n) - xv(i,  j  ,k  ,n) ) - bZv(i,  j,  k  ) * ( xv(i,  j,  k,  n) - xv(i,  j,  k-1,n) ) );
+      yv(i,j,k,n) = alpha * av(i,j,k) * xv(i,j,k,n)
+            - dhx * ( bXv(i+1,j  ,k  ) * ( xv(i+1,j  ,k  ,n) - xv(i,  j,  k,  n) ) - bXv(i,  j,  k  ) * ( xv (i,  j,  k, n) - xv(i-1,j  ,k  ,n) ) )
+            - dhy * ( bYv(i,  j+1,k  ) * ( xv(i  ,j+1,k  ,n) - xv(i,  j,  k,  n) ) - bYv(i,  j,  k  ) * ( xv (i,  j,  k, n) - xv(i  ,j-1,k  ,n) ) )
+            - dhz * ( bZv(i,  j  ,k+1) * ( xv(i  ,j  ,k+1,n) - xv(i,  j,  k,  n) ) - bZv(i,  j,  k  ) * ( xv (i,  j,  k, n) - xv(i  ,j  ,k-1,n) ) );
     }
 
     void fill(){
@@ -471,6 +408,8 @@ private:
     Box bx;
     int nc;
     Real alpha, beta, dhx, dhy, dhz;
+    int wbegin;
+    int wend;
 };
 
 void C_ADOTX(
@@ -493,13 +432,13 @@ const Real* h)
     const int *cb = bx.cbVect();
 
     //create functor
-    C_ADOTX_FUNCTOR cadxfunc(y,x,alpha,beta,a,bX,bY,bZ,h);
+    C_ADOTX_FUNCTOR cadxfunc(y,x,alpha,beta,a,bX,bY,bZ,h,lo[2],hi[2]+1);
 
     //create policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left>> t_policy;
 
     //execute
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cadxfunc);
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {32, 1, 1, 1}), cadxfunc);
 
     //write back result
     cadxfunc.fill();
