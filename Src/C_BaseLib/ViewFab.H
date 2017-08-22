@@ -28,25 +28,29 @@
 template<typename T>
 using hostview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 #ifdef KOKKOS_ENABLE_CUDA
+//device space
+using devspace = Kokkos::CudaSpace;
 //device view
 template<typename T>
 using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::CudaSpace>;
 //iteration policies
 static constexpr Kokkos::Experimental::Iterate outer_iter_policy = Kokkos::Experimental::Iterate::Right;
 static constexpr Kokkos::Experimental::Iterate inner_iter_policy = Kokkos::Experimental::Iterate::Left;
-//subview class
-template <typename T>
-using devsubview = Kokkos::View<T*, Kokkos::LayoutStride, Kokkos::CudaSpace, Kokkos::MemoryTraits< Kokkos::Restrict | Kokkos::Unmanaged > >;
+////subview class
+//template <typename T>
+//using devsubview = Kokkos::View<T*, Kokkos::LayoutStride, Kokkos::CudaSpace, Kokkos::MemoryTraits< Kokkos::Restrict | Kokkos::Unmanaged > >;
 #else
+//device space
+using devspace = Kokkos::HostSpace;
 //device view
 template<typename T>
 using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace>;
 //iteration policies
 static constexpr Kokkos::Experimental::Iterate outer_iter_policy = Kokkos::Experimental::Iterate::Left;
 static constexpr Kokkos::Experimental::Iterate inner_iter_policy = Kokkos::Experimental::Iterate::Left;
-//subview class
-template <typename T>
-using devsubview = Kokkos::View<T*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryTraits< Kokkos::Restrict | Kokkos::Unmanaged > >;
+////subview class
+//template <typename T>
+//using devsubview = Kokkos::View<T*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryTraits< Kokkos::Restrict | Kokkos::Unmanaged > >;
 #endif
 #endif
 

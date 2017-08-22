@@ -12,7 +12,6 @@ public:
     C_AVERAGE_FUNCTOR(const FArrayBox& c_, const FArrayBox& f_) :
       cv(c_.view_fab), fv(f_.view_fab)
     {
-      cv.syncH2D();
       fv.syncH2D();
     }
 
@@ -60,8 +59,8 @@ public:
     C_INTERP_FUNCTOR(const FArrayBox& f_, const FArrayBox& c_)
       : fv(f_.view_fab), cv(c_.view_fab)
     {
-      fv.syncH2D();
-      cv.syncH2D();
+        fv.syncH2D();
+        cv.syncH2D();
     }
 
     KOKKOS_FORCEINLINE_FUNCTION
@@ -397,8 +396,12 @@ public:
     bZv(bZ_.view_fab),
     alpha(alpha_),
     beta(beta_) {
-
+        
+        av.syncH2D();
         xv.syncH2D();
+        bXv.syncH2D();
+        bYv.syncH2D();
+        bZv.syncH2D();
 
         //helpers
         dhx = beta/(h[0]*h[0]);
