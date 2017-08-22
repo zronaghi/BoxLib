@@ -449,6 +449,7 @@ enum bc_t {Periodic = 0,
             bx.loVect(),bx.hiVect(),dx, sigma, w);
             
             //upload
+            alpha[mfi].view_fab.syncH2D();
             beta[mfi].view_fab.syncH2D();
         }
 
