@@ -154,7 +154,7 @@ const FArrayBox& f){
     C_AVERAGE_FUNCTOR cavfunc(c,f);
 
     //define policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iteration_policy, inner_iteration_policy> > t_policy;
 
     //execute
     Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cavfunc);
