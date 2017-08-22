@@ -22,8 +22,6 @@
 
 #include <Kokkos_Core.hpp>
 
-namespace BoxLib
-{
 
 #if BL_SPACEDIM == 3
 //ND
@@ -53,7 +51,7 @@ using devsubview = Kokkos::View<T*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokko
 #endif
 
 //a small class for wrapping kokkos views nicely
-template<typename T>
+template <typename T>
 class ViewFab {
 public:
 
@@ -100,12 +98,7 @@ public:
         Kokkos::deep_copy(h_data,d_data);
     }
 
-    ViewFab(const FArrayBox& rhs_, const std::string& name_){
-        init(rhs_,name_);
-    }
-
 };
 
-}
 
 #endif

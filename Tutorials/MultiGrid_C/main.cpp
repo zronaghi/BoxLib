@@ -381,7 +381,7 @@ enum bc_t {Periodic = 0,
             bx.loVect(),bx.hiVect(),dx, ibnd, offset.dataPtr());
             
             //upload
-            anaSoln[mfi].syncH2D();
+            anaSoln[mfi].view_fab.syncH2D();
         }
     }
 
@@ -416,8 +416,8 @@ enum bc_t {Periodic = 0,
         
         //upload data:
         for ( MFIter mfi(alpha,false); mfi.isValid(); ++mfi ) {
-            alpha[mfi].syncH2D();
-            cc_coef[mfi].syncH2D();
+            alpha[mfi].view_fab.syncH2D();
+            cc_coef[mfi].view_fab.syncH2D();
         }
 
         if (plot_beta == 1) {
@@ -449,7 +449,7 @@ enum bc_t {Periodic = 0,
             bx.loVect(),bx.hiVect(),dx, sigma, w);
             
             //upload
-            beta[mfi].syncH2D();
+            beta[mfi].view_fab.syncH2D();
         }
 
         if (plot_beta == 1) {
@@ -650,6 +650,10 @@ enum bc_t {Periodic = 0,
         std::string ss;
 
         soln.setVal(0.0);
+        //upload, i.e. init to zero
+         for ( MFIter mfi(soln,false); mfi.isValid(); ++mfi ) {
+             soln[mfi].view_fab.syncH2D();
+         }
 
         const Real run_strt = ParallelDescriptor::second();
 
