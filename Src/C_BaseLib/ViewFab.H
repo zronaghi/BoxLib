@@ -67,28 +67,6 @@ public:
 #error "ViewFab only supports 3D!";
 #endif
     int smallend[BL_SPACEDIM + 1];
-    
-    //constructor
-  //void init(const FArrayBox& rhs_, const std::string& name){
-  //    //start profiling
-  //    Kokkos::Profiling::pushRegion("Init ViewFab "+name);
-  //    
-  //    //copy offset
-  //    for(unsigned int d=0; d<3; d++){
-  //        smallend[d]=rhs_.smallEnd()[d];
-  //    }
-  //    smallend[3]=0;
-  //        
-  //    //create host view
-  //    h_data=hostview<Real****>(const_cast<Real*>(rhs_.dataPtr()), rhs_.length()[0], rhs_.length()[1], rhs_.length()[2], rhs_.nComp());
-  //    d_data=devview<Real****>(name,rhs_.length()[0],rhs_.length()[1],rhs_.length()[2],rhs_.nComp());
-  //    
-  //    //upload
-  //    syncH2D();
-  //    
-  //    //end profiling
-  //    Kokkos::Profiling::popRegion();
-  //}
 
     void syncH2D(){
         Kokkos::deep_copy(d_data,h_data);
