@@ -6,14 +6,6 @@
 #include <ArrayLim.H>
 #include <iostream>
 
-//typedef Kokkos::Device<Kokkos::OpenMP,Kokkos::CudaUVMSpace>::memory_space  hostspace;
-typedef Kokkos::HostSpace hostspace;
-#ifdef KOKKOS_ENABLE_CUDA
-typedef Kokkos::CudaSpace devspace;
-#else
-typedef Kokkos::HostSpace devspace;
-#endif
-
 
 //a small class for wrapping kokkos views nicely
 template<>
@@ -153,7 +145,7 @@ const FArrayBox& f){
     C_AVERAGE_FUNCTOR cavfunc(c,f);
 
     //define policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iteration_policy, inner_iteration_policy> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
 
     //execute
     Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cavfunc);
@@ -200,7 +192,7 @@ const FArrayBox& c){
     C_INTERP_FUNCTOR cintfunc(f,c);
 
     //define policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
 
     // Execute functor
     Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc},{cb[0], cb[1], cb[2], nc}), cintfunc);
@@ -267,8 +259,8 @@ public:
     rb(rb_), comp(0), bx(bx_), bbx(bbx_), alpha(alpha_), beta(beta_) {
         
         //DEBUG
-        std::cout << "Box dims (" << phi_.length()[0] << "," << phi_.length()[1] << "," << phi_.length()[2] << ")" << std::endl;
-        std::cout << "Lower end (" << phi_.smallEnd()[0] << "," << phi_.smallEnd()[1] << "," << phi_.smallEnd()[2] << ")" << std::endl;
+        //std::cout << "Box dims (" << phi_.length()[0] << "," << phi_.length()[1] << "," << phi_.length()[2] << ")" << std::endl;
+        //std::cout << "Lower end (" << phi_.smallEnd()[0] << "," << phi_.smallEnd()[1] << "," << phi_.smallEnd()[2] << ")" << std::endl;
         //DEBUG
         
         //some parameters
@@ -422,7 +414,7 @@ const Real* h)
     Kokkos::fence();
     double end_time =  omp_get_wtime();
 #else
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, outer_iter_policy, inner_iter_policy> > t_policy;
     //execute
     Kokkos::fence();
     double start_time = omp_get_wtime();
@@ -507,7 +499,7 @@ const Real* h)
     C_ADOTX_FUNCTOR cadxfunc(y,x,alpha,beta,a,bX,bY,bZ,h);
 
     //create policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
 
     //execute
     Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cadxfunc);

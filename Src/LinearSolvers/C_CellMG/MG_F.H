@@ -131,9 +131,13 @@ void C_FLUX(const Box& xbx,
 #ifdef KOKKOS_ENABLE_CUDA
         template<typename T>
         using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::CudaSpace>;
+        static constexpr Kokkos::Experimental::Iterate outer_iter_policy = Kokkos::Experimental::Iterate::Right;
+        static constexpr Kokkos::Experimental::Iterate inner_iter_policy = Kokkos::Experimental::Iterate::Left;
 #else
         template<typename T>
         using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace>;
+        static constexpr Kokkos::Experimental::Iterate outer_iter_policy = Kokkos::Experimental::Iterate::Left;
+        static constexpr Kokkos::Experimental::Iterate inner_iter_policy = Kokkos::Experimental::Iterate::Left;
 #endif
 
         ////4D
