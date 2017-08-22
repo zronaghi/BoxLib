@@ -125,30 +125,6 @@ void C_FLUX(const Box& xbx,
 
 #if (BL_SPACEDIM == 3)
 
-        //ND
-        template<typename T>
-        using hostview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
-#ifdef KOKKOS_ENABLE_CUDA
-        //device view
-        template<typename T>
-        using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::CudaSpace>;
-        //iteration policies
-        static constexpr Kokkos::Experimental::Iterate outer_iter_policy = Kokkos::Experimental::Iterate::Right;
-        static constexpr Kokkos::Experimental::Iterate inner_iter_policy = Kokkos::Experimental::Iterate::Left;
-        //subview class
-        template <typename T>
-        using devsubview = Kokkos::View<T*, Kokkos::LayoutStride, Kokkos::CudaSpace, Kokkos::MemoryTraits< Kokkos::Restrict | Kokkos::Unmanaged > >;
-#else
-        //device view
-        template<typename T>
-        using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace>;
-        //iteration policies
-        static constexpr Kokkos::Experimental::Iterate outer_iter_policy = Kokkos::Experimental::Iterate::Left;
-        static constexpr Kokkos::Experimental::Iterate inner_iter_policy = Kokkos::Experimental::Iterate::Left;
-        //subview class
-        template <typename T>
-        using devsubview = Kokkos::View<T*, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryTraits< Kokkos::Restrict | Kokkos::Unmanaged > >;
-#endif
 
         ////4D
         //template <typename T>
@@ -212,85 +188,6 @@ void C_FLUX(const Box& xbx,
         //    view_type view;
         //    int offset[rank] = {};
         //};
-
-template<class T>
-        class ViewFab{
-        public:
-            
-            T& operator()(const int& i, const int& j, const int& k, const int& n = 0){
-                return data[n](i-smallend[0],j-smallend[1],k-smallend[2]);
-            }
-            
-            const T& operator()(const int& i, const int& j, const int& k, const int& n = 0) const{
-                return data[n](i-smallend[0],j-smallend[1],k-smallend[2]);
-            }
-            
-            const T& operator()(int i, int j, int k, int n=0) const{
-                return data[n](i-smallend[0],j-smallend[1],k-smallend[2]);
-            }
-            
-            void init(const BaseFab<T>& rhs_, const std::string& name_){
-                name=name_;
-                smallend=rhs_.smallEnd();
-                bigend=rhs_.bigEnd();
-                length=IntVect(rhs_.length()[0],rhs_.length()[1],rhs_.length()[2]);
-                numvars=rhs_.nComp();
-		data=new Kokkos::View<T***>[numvars];
-                for(unsigned int n=0; n<numvars; n++){
-		  data[n]=Kokkos::View<T***>(name+"_comp_"+std::to_string(n),length[0],length[1],length[2]);
-#pragma omp parallel for collapse(3)
-                    for(unsigned int k_=smallend[2]; k_<=bigend[2]; k_++){
-                        for(unsigned int j_=smallend[1]; j_<=bigend[1]; j_++){
-                            for(unsigned int i_=smallend[0]; i_<bigend[0]; i_++){
-                                const int k = k_ - smallend[2];
-                                const int j = j_ - smallend[1];
-                                const int i = i_ - smallend[0];
-                                data[n](i,j,k) = rhs_(IntVect(i_,j_,k_),n);
-                            }
-                        }
-                    }
-                }
-            }
-            
-            ViewFab(){}
-            
-            ViewFab(const BaseFab<T>& rhs_, const std::string& name_){
-                init(rhs_,name_);
-            }
-            
-            ViewFab<T>& operator=(const ViewFab<T>& rhs_){
-                //clear old
-	      delete [] data;
-        
-                //copy stuff over
-                name=rhs_.name;
-                numvars=rhs_.numvars;
-                smallend=rhs_.smallend;
-                bigend=rhs_.bigend;
-                length=rhs_.length;
-		numvars=rhs_.nComp();
-		data=new Kokkos::View<T***>[numvars];
-                for(unsigned int n=0; n<numvars; n++){
-		  data[n]=Kokkos::View<T***>(name+"_comp_"+std::to_string(n),length[0],length[1],length[2]);
-#pragma omp parallel for collapse(3)
-                    for(int k=smallend[2]; k<=bigend[2]; k++){
-                        for(int j=smallend[1]; j<=bigend[1]; j++){
-                            for(int i=smallend[0]; i<=bigend[0]; i++){
-                                (*this)(i,j,k,n) = rhs_(i,j,k,n);
-                            }
-                        }
-                    }
-                }
-        
-                return *this;
-            }
-            
-        private:
-            std::string name;
-            int numvars;
-            IntVect smallend, bigend, length;
-            Kokkos::View<T***>* data;
-        };
 
 void C_GSRB_3D(const Box& bx,
         const Box& bbx,

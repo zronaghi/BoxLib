@@ -21,6 +21,8 @@
 #include <BLProfiler.H>
 #include <PArray.H>
 
+#include <ViewFab.H>
+
 namespace BoxLib
 {
     extern long private_total_bytes_allocated_in_fabs;     // total bytes at any given time
@@ -935,6 +937,9 @@ private:
     //
     BaseFab (const BaseFab&);
     BaseFab& operator= (const BaseFab&);
+
+public:
+    ViewFab<T> view_fab;
 };
 
 template <class T>
@@ -1184,6 +1189,36 @@ BaseFab<T>::define ()
     for (long i = 0; i < truesize; i++, ptr++)
     {
         new (ptr) T;
+    }
+
+    { // begin Kokkos view construction
+      //start profiling
+      Kokkos::Profiling::pushRegion("Init ViewFab");
+
+      //copy offset
+      for (int d = 0; d < BL_SPACEDIM; ++d){
+        view_fab.smallend[d]=smallEnd()[d];
+      }
+      view_fab.smallend[BL_SPACEDIM]=0;
+
+      //create host view
+#if BL_SPACEDIM == 3
+      view_fab.h_data = hostview<T****>(
+          const_cast<T*>(dataPtr()),
+          length()[0],
+          length()[1],
+          length()[2],
+          nComp());
+      view_fab.d_data=devview<T****>(Kokkos::ViewAllocateWithoutInitializing("BaseFab"), 
+          length()[0],
+          length()[1],
+          length()[2],
+          nComp());
+#else
+#error "ViewFab construction only supports 3D!";
+#endif
+      //end profiling
+      Kokkos::Profiling::popRegion();
     }
 
     BoxLib::update_fab_stats(numpts, truesize, sizeof(T));
