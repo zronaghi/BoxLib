@@ -403,7 +403,7 @@ const Real* h)
     //create functors
     C_GSRB_FUNCTOR cgsrbfunc(bx, bbx, rb, alpha, beta, phi, rhs, a, bX, bY, bZ, f0, m0, f1, m1, f2, m2, f3, m3, f4, m4, f5, m5, h);
 
-#if 0
+#if 1
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4> > t_policy;
     //execute
     Kokkos::fence();

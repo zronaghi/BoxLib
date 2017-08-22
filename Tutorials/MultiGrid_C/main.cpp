@@ -207,10 +207,10 @@ enum bc_t {Periodic = 0,
             IntVect dom_lo(D_DECL(0,0,0));
             IntVect dom_hi(D_DECL(n_cell-1,n_cell-1,n_cell-1));
             Box domain(dom_lo,dom_hi);
+            domain.setCacheBlock(IntVect(iblock,jblock,kblock));
 
             // Initialize the boxarray "bs" from the single box "bx"
             BoxArray bs(domain);
-            domain.setCacheBlock(IntVect(iblock,jblock,kblock));
 
             // Break up boxarray "bs" into chunks no larger than "max_grid_size" along a direction
             bs.maxSize(max_grid_size);
@@ -379,6 +379,9 @@ enum bc_t {Periodic = 0,
 
             comp_asol(anaSoln[mfi].dataPtr(), ARLIM(alo), ARLIM(ahi),
             bx.loVect(),bx.hiVect(),dx, ibnd, offset.dataPtr());
+            
+            //upload
+            anaSoln[mfi].syncH2D();
         }
     }
 
@@ -392,10 +395,10 @@ enum bc_t {Periodic = 0,
         pp.get("sigma", sigma);
         pp.get("w", w);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-        for ( MFIter mfi(alpha,true); mfi.isValid(); ++mfi ) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+        for ( MFIter mfi(alpha,false); mfi.isValid(); ++mfi ) {
             const Box& bx = mfi.tilebox();
 
             const int* alo = alpha[mfi].loVect();
@@ -410,6 +413,12 @@ enum bc_t {Periodic = 0,
         }
 
         BoxLib::average_cellcenter_to_face(beta, cc_coef, geom);
+        
+        //upload data:
+        for ( MFIter mfi(alpha,false); mfi.isValid(); ++mfi ) {
+            alpha[mfi].syncH2D();
+            cc_coef[mfi].syncH2D();
+        }
 
         if (plot_beta == 1) {
             writePlotFile("BETA", cc_coef, geom);
@@ -438,6 +447,9 @@ enum bc_t {Periodic = 0,
 
             set_cc_coef(beta[mfi].dataPtr(),ARLIM(clo),ARLIM(chi),
             bx.loVect(),bx.hiVect(),dx, sigma, w);
+            
+            //upload
+            beta[mfi].syncH2D();
         }
 
         if (plot_beta == 1) {
@@ -473,6 +485,9 @@ enum bc_t {Periodic = 0,
 
             set_rhs(rhs[mfi].dataPtr(),ARLIM(rlo),ARLIM(rhi),
             tbx.loVect(),tbx.hiVect(),dx, a, b, sigma, w, ibnd);
+            
+            //sync data to device
+            rhs[mfi].view_fab.syncH2D();
         }
 
         // MultiFab::sum() does a tiled MFIter loop internally, so we don't want to
