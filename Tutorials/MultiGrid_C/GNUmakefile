@@ -29,7 +29,7 @@ DIM	= 3
 
 #COMP = intel
 #FCOMP = ifort
-COMP = Kokkos
+COMP = GNU
 FCOMP = gfortran
 
 USE_HYPRE = FALSE
