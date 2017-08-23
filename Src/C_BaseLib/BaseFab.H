@@ -1869,8 +1869,6 @@ BaseFab<T>::norm (const Box& subbox,
     BL_ASSERT(p >= 0);
 
     Real  nrm    = 0;
-    Real* tmp    = 0;
-    int   tmplen = 0;
 
     if (p == 0)
     {
@@ -1906,10 +1904,10 @@ BaseFab<T>::norm (const Box& subbox,
         
         ViewFab<T> fab = this->view_fab; 
         
-        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], comp+numcomp}), 
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
             tmpnrm = std::max(tmpnrm, static_cast<Real>(std::abs(fab(i,j,k,n))));
-        },nrm);
+        }, nrm);
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
 #endif
@@ -1945,10 +1943,10 @@ BaseFab<T>::norm (const Box& subbox,
         
         ViewFab<T> fab = this->view_fab; 
         
-        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], comp+numcomp}), 
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
             tmpnrm += static_cast<Real>(std::abs(fab(i,j,k,n)));
-        },nrm);
+        }, nrm);
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
 #endif
@@ -1957,8 +1955,6 @@ BaseFab<T>::norm (const Box& subbox,
     {
       BoxLib::Error("BaseFab::norm(): only p == 0 or p == 1 are supported");
     }
-
-    delete [] tmp;
 
     return nrm;
 }
@@ -2341,10 +2337,10 @@ BaseFab<T>::sum (const Box& subbox,
         
     ViewFab<T> fab = this->view_fab; 
         
-    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], comp+numcomp}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpsum){
         tmpsum += fab(i,j,k,n);
-    },sum);
+    }, _sum);
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
 #endif

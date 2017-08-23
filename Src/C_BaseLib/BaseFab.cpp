@@ -179,10 +179,29 @@ BaseFab<Real>::performCopy (const BaseFab<Real>& src,
     BL_ASSERT(srccomp >= 0 && srccomp+numcomp <= src.nComp());
     BL_ASSERT(destcomp >= 0 && destcomp+numcomp <= nComp());
 
-    fort_fab_copy(ARLIM_3D(destbox.loVect()), ARLIM_3D(destbox.hiVect()),
-		  BL_TO_FORTRAN_N_3D(*this,destcomp),
-		  BL_TO_FORTRAN_N_3D(src,srccomp), ARLIM_3D(srcbox.loVect()),
-		  &numcomp);
+    //fort_fab_copy(ARLIM_3D(destbox.loVect()), ARLIM_3D(destbox.hiVect()),
+	//	  BL_TO_FORTRAN_N_3D(*this,destcomp),
+	//	  BL_TO_FORTRAN_N_3D(src,srccomp), ARLIM_3D(srcbox.loVect()),
+	//	  &numcomp);
+#if (BL_SPACEDIM == 3)
+    //define policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+    const int *destbox_lo = destbox.loVect();
+    const int *srcbox_lo = srcbox.loVect();
+    const int *cb = destbox.cbVect();
+        
+        
+    ViewFab<Real> fab = this->view_fab; 
+    ViewFab<Real> srcfab = src.view_fab; 
+    
+    Kokkos::Experimental::md_parallel_for(t_policy({0, 0, 0, 0}, {destbox.length(0), destbox.length(1), destbox.length(2), numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+        fab(i+destbox_lo[0], j+destbox_lo[1], k+destbox_lo[2], n+destcomp) = srcfab(i+srcbox_lo[0], j+srcbox_lo[1], k+srcbox_lo[2], n+srccomp);
+    });
+#else
+#error "BaseFab<Real>::performCopy not implemented!"
+#endif
 }
 
 template <>
@@ -232,9 +251,32 @@ BaseFab<Real>::performSetVal (Real       val,
     BL_ASSERT(domain.contains(bx));
     BL_ASSERT(comp >= 0 && comp + ncomp <= nvar);
 
-    fort_fab_setval(ARLIM_3D(bx.loVect()), ARLIM_3D(bx.hiVect()),
-		    BL_TO_FORTRAN_N_3D(*this,comp), &ncomp,
-		    &val);
+#if BL_SPACEDIM == 3
+    //the asserts are not sufficient, check length
+    for(unsigned int d=0; d<3; d++){
+        if(bx.length(d)<=0) return;
+    }
+    
+    //define policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+    const int *lo = bx.loVect();
+    const int *hi = bx.hiVect();
+    const int *cb = bx.cbVect();
+        
+    ViewFab<Real> fab = this->view_fab; 
+    
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
+    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+        fab(i,j,k,n) = val;
+    });
+#else
+#error "BaseFab::performSetVal needs to be implemented for other spacedims"
+#endif
+
+    //fort_fab_setval(ARLIM_3D(bx.loVect()), ARLIM_3D(bx.hiVect()),
+	//	    BL_TO_FORTRAN_N_3D(*this,comp), &ncomp,
+	//	    &val);
 }
 
 template<>
@@ -263,18 +305,55 @@ BaseFab<Real>::norm (const Box& bx,
     BL_ASSERT(domain.contains(bx));
     BL_ASSERT(comp >= 0 && comp + ncomp <= nvar);
 
-    Real nrm;
+    const int *lo = bx.loVect();
+    const int *hi = bx.hiVect();
+    const int *cb = bx.cbVect();
 
-    if (p == 0 || p == 1)
+    Real nrm = 0.;
+
+    if (p == 0)
     {
-	nrm = fort_fab_norm(ARLIM_3D(bx.loVect()), ARLIM_3D(bx.hiVect()),
-			    BL_TO_FORTRAN_N_3D(*this,comp), &ncomp,
-			    &p);
+#if BL_SPACEDIM == 3
+        //define policy
+        typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+        ViewFab<Real> fab = this->view_fab; 
+        
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
+        KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
+            tmpnrm = std::max(tmpnrm, static_cast<Real>(std::abs(fab(i,j,k,n))));
+        }, nrm);
+#else
+#error "BaseFab::norm needs to be implemented for other spacedims"
+#endif
     }
-    else
+    else if (p == 1)
     {
-        BoxLib::Error("BaseFab<Real>::norm(): only p == 0 or p == 1 are supported");
+#if BL_SPACEDIM == 3
+        //define policy
+        typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+        ViewFab<Real> fab = this->view_fab; 
+        
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
+        KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
+            tmpnrm += static_cast<Real>(std::abs(fab(i,j,k,n)));
+        }, nrm);
+#else
+#error "BaseFab::norm needs to be implemented for other spacedims"
+#endif
     }
+
+//    if (p == 0 || p == 1)
+//    {
+//	nrm = fort_fab_norm(ARLIM_3D(bx.loVect()), ARLIM_3D(bx.hiVect()),
+   //			    BL_TO_FORTRAN_N_3D(*this,comp), &ncomp,
+   //			    &p);
+//    }
+//    else
+//    {
+//        BoxLib::Error("BaseFab<Real>::norm(): only p == 0 or p == 1 are supported");
+//    }
 
     return nrm;
 }
@@ -288,8 +367,30 @@ BaseFab<Real>::sum (const Box& bx,
     BL_ASSERT(domain.contains(bx));
     BL_ASSERT(comp >= 0 && comp + ncomp <= nvar);
 
-    return fort_fab_sum(ARLIM_3D(bx.loVect()), ARLIM_3D(bx.hiVect()),
-			BL_TO_FORTRAN_N_3D(*this,comp), &ncomp);
+    Real sum = 0;
+
+#if BL_SPACEDIM == 3
+    //define policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+    const int *lo = bx.loVect();
+    const int *hi = bx.hiVect();
+    const int *cb = bx.cbVect();
+        
+    ViewFab<Real> fab = this->view_fab; 
+        
+    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
+    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpsum){
+        tmpsum += fab(i,j,k,n);
+    },sum);
+#else
+#error "BaseFab::norm needs to be implemented for other spacedims"
+#endif
+    
+    return sum;
+
+    //return fort_fab_sum(ARLIM_3D(bx.loVect()), ARLIM_3D(bx.hiVect()),
+	//		BL_TO_FORTRAN_N_3D(*this,comp), &ncomp);
 }
 
 template<>
