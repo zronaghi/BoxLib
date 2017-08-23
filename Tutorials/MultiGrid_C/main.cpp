@@ -736,17 +736,6 @@ enum bc_t {Periodic = 0,
         BndryData bd(bs, 1, geom);
         set_boundary(bd, rhs, 0);
         
-        //DEBUG
-        //print all relevant norms:
-        std::cout << "soln: " << soln.norm1() << std::endl;
-        std::cout << "gphi: " << gphi.norm1() << std::endl;
-        std::cout << "alpha: " << alpha.norm1() << std::endl;
-        std::cout << "rhs: " << rhs.norm1() << std::endl;
-        for(unsigned int d=0; d<3; d++){
-            std::cout << "beta(" << d << "): " << beta.get(d).norm1() << std::endl;
-        }
-        //DEBUG
-        
         ABecLaplacian abec_operator(bd, dx, use_C_kernels);
         abec_operator.setScalars(a, b);
         abec_operator.setCoefficients(alpha, beta);

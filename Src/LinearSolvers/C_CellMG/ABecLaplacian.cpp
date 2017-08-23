@@ -478,17 +478,6 @@ int             redBlackFlag)
 	const MultiMask& mm5 = maskvals[level][oitr()]; oitr++;
 #endif
 
-    //DEBUG
-    //print all relevant norms:
-    std::cout << "PRE-GSRB" << std::endl;
-    std::cout << "a: " << a.norm1() << std::endl;
-    std::cout << "bX: " << bX.norm1() << std::endl;
-    std::cout << "bY: " << bY.norm1() << std::endl;
-    std::cout << "bZ: " << bZ.norm1() << std::endl;
-    std::cout << "rhsL: " << rhsL.norm1() << std::endl;
-    std::cout << "solnL: " << solnL.norm1() << std::endl;
-    //DEBUG
-
 	//const int nc = solnL.nComp(); // FIXME: This LinOp only really supports single-component
 	const int nc = 1;
 
