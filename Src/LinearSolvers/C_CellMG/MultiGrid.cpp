@@ -618,6 +618,7 @@ Real&          cg_time)
 
 		prepareForLevel(level+1);
 		average(*rhs[level+1], *res[level]);
+        
 		cor[level+1]->setVal(0.0);
 		for (int i = cntRelax(); i > 0 ; i--)
 		{

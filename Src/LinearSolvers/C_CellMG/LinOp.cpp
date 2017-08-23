@@ -7,6 +7,7 @@
 #include <LO_BCTYPES.H>
 #include <LO_F.H>
 #include <LinOp.H>
+#include <MG_F.H>
 
 namespace
 {
@@ -459,11 +460,16 @@ LinOp::makeCoefficients (MultiFab&       cs,
             const Box& tbx = csmfi.tilebox();
             FArrayBox&       csfab = cs[csmfi];
             const FArrayBox& fnfab = fn[csmfi];
-
-            FORT_AVERAGECC(csfab.dataPtr(), ARLIM(csfab.loVect()),
+            
+            if(use_C_kernels){
+                C_AVERAGECC(tbx,nc,csfab,fnfab);
+            }
+            else{
+                FORT_AVERAGECC(csfab.dataPtr(), ARLIM(csfab.loVect()),
                            ARLIM(csfab.hiVect()),fnfab.dataPtr(),
                            ARLIM(fnfab.loVect()),ARLIM(fnfab.hiVect()),
                            tbx.loVect(),tbx.hiVect(), &nc);
+            }
         }
       }
         break;
@@ -480,8 +486,12 @@ LinOp::makeCoefficients (MultiFab&       cs,
 	        const Box& tbx = csmfi.tilebox();
                 FArrayBox&       csfab = cs[csmfi];
                 const FArrayBox& fnfab = fn[csmfi];
-
-                FORT_HARMONIC_AVERAGEEC(csfab.dataPtr(),
+                
+                if(use_C_kernels){
+                    C_HARMONIC_AVERAGEEC(tbx,nc,cdir,csfab,fnfab);
+                }
+                else{
+                    FORT_HARMONIC_AVERAGEEC(csfab.dataPtr(),
                                         ARLIM(csfab.loVect()),
                                         ARLIM(csfab.hiVect()),
                                         fnfab.dataPtr(),
@@ -489,24 +499,30 @@ LinOp::makeCoefficients (MultiFab&       cs,
                                         ARLIM(fnfab.hiVect()),
                                         tbx.loVect(),tbx.hiVect(),
                                         &nc,&cdir);
+                }
             }
         }
         else
         {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
             for (MFIter csmfi(cs,tiling); csmfi.isValid(); ++csmfi)
             {
                 const Box& tbx = csmfi.tilebox();
                 FArrayBox&       csfab = cs[csmfi];
                 const FArrayBox& fnfab = fn[csmfi];
-
-                FORT_AVERAGEEC(csfab.dataPtr(),ARLIM(csfab.loVect()),
+                
+                if(use_C_kernels){
+                    C_AVERAGEEC(tbx,nc,cdir,csfab,fnfab);
+                }
+                else{
+                    FORT_AVERAGEEC(csfab.dataPtr(),ARLIM(csfab.loVect()),
                                ARLIM(csfab.hiVect()),fnfab.dataPtr(), 
                                ARLIM(fnfab.loVect()),ARLIM(fnfab.hiVect()),
-	                       tbx.loVect(),tbx.hiVect(),
+                               tbx.loVect(),tbx.hiVect(),
                                &nc, &cdir);
+                }
             }
         }
         break;

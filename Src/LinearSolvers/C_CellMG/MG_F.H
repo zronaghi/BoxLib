@@ -266,6 +266,27 @@ void C_GSRB_3D(const Box& bx,
             FArrayBox& den,
         const Real* h);
 
+        //coeff routines
+        void C_AVERAGECC (
+            const Box& bx,
+            const int nc,
+        FArrayBox& c,
+        const FArrayBox& f);
+        
+        void C_HARMONIC_AVERAGEEC (
+            const Box& bx,
+            const int nc,
+            const int cdir,
+        FArrayBox& c,
+        const FArrayBox& f);
+        
+        void C_AVERAGEEC (
+            const Box& bx,
+            const int nc,
+            const int cdir,
+        FArrayBox& c,
+        const FArrayBox& f);
+        
 extern "C"
 {
     void FORT_AVERAGE (
