@@ -2911,9 +2911,9 @@ template <class FAB>
 void
 FabArray<FAB>::setVal (value_type val)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter fai(*this,true); fai.isValid(); ++fai)
     {
 	const Box& bx = fai.growntilebox();
