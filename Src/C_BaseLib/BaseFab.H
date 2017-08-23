@@ -1210,7 +1210,13 @@ BaseFab<T>::define ()
           length()[2],
           nComp());
       //TODO: change to create_mirror_view !
-      view_fab.d_data=Kokkos::create_mirror( devspace(), view_fab.h_data);
+    //view_fab.d_data=Kokkos::create_mirror( devspace(), view_fab.h_data);
+  view_fab.d_data = devview<T****>(
+          Kokkos::ViewAllocateWithoutInitializing("BoxLib"),
+          length()[0],
+          length()[1],
+          length()[2],
+          nComp());
 #else
 #error "ViewFab construction only supports 3D!";
 #endif
