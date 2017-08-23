@@ -909,3 +909,143 @@ const Real* h)
         }
     }
 }
+
+
+void C_AVERAGECC (
+    const Box& bx,
+    const int nc,
+FArrayBox& c,
+const FArrayBox& f){
+    
+    //box extends:
+    const int *lo = bx.loVect();
+    const int *hi = bx.hiVect();
+    const int *cb = bx.cbVect();
+    
+    //create policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy>> t_policy;
+
+    //get fabs
+    ViewFab<Real> cv = c.view_fab;
+    ViewFab<Real> fv = f.view_fab;
+
+    //execute
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+             cv(i,j,k,n) =  0.125 * (  fv(2*i+1,2*j+1,2*k  ,n)
+                                     + fv(2*i  ,2*j+1,2*k  ,n)
+                                     + fv(2*i+1,2*j  ,2*k  ,n)
+                                     + fv(2*i  ,2*j  ,2*k  ,n)
+                                     + fv(2*i+1,2*j+1,2*k+1,n)
+                                     + fv(2*i  ,2*j+1,2*k+1,n)
+                                     + fv(2*i+1,2*j  ,2*k+1,n)
+                                     + fv(2*i  ,2*j  ,2*k+1,n) );
+    });
+}
+
+
+void C_HARMONIC_AVERAGEEC (
+    const Box& bx,
+    const int nc,
+    const int cdir,
+FArrayBox& c,
+const FArrayBox& f){
+    
+    //box extends:
+    const int *lo = bx.loVect();
+    const int *hi = bx.hiVect();
+    const int *cb = bx.cbVect();
+    
+    //create policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy>> t_policy;
+
+    //get fabs
+    ViewFab<Real> cv = c.view_fab;
+    ViewFab<Real> fv = f.view_fab;
+
+    //execute
+    switch(cdir){
+        case 0:
+        Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+                cv(i,j,k,n) =  4./(
+                            + 1./fv(2*i,2*j  ,2*k  ,n)
+                            + 1./fv(2*i,2*j+1,2*k  ,n)
+                            + 1./fv(2*i,2*j  ,2*k+1,n)
+                            + 1./fv(2*i,2*j+1,2*k+1,n) );
+         });
+         break;
+         
+         case 1:
+         Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+                cv(i,j,k,n) = 4./(
+                            + 1./fv(2*i  ,2*j,2*k  ,n)
+                            + 1./fv(2*i+1,2*j,2*k  ,n)
+                            + 1./fv(2*i  ,2*j,2*k+1,n)
+                            + 1./fv(2*i+1,2*j,2*k+1,n) );
+          });
+         break;
+         
+         case 2:
+         Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+                cv(i,j,k,n) = 4./(
+                           + 1./fv(2*i  ,2*j  ,2*k,n)
+                           + 1./fv(2*i+1,2*j  ,2*k,n)
+                           + 1./fv(2*i  ,2*j+1,2*k,n)
+                           + 1./fv(2*i+1,2*j+1,2*k,n) );
+         });
+         break;
+     }
+}
+
+
+void C_AVERAGEEC (
+    const Box& bx,
+    const int nc,
+    const int cdir,
+FArrayBox& c,
+const FArrayBox& f){
+    
+    //box extends:
+    const int *lo = bx.loVect();
+    const int *hi = bx.hiVect();
+    const int *cb = bx.cbVect();
+    
+    //create policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy>> t_policy;
+
+    //get fabs
+    ViewFab<Real> cv = c.view_fab;
+    ViewFab<Real> fv = f.view_fab;
+
+    //execute
+    switch(cdir){
+        case 0:
+        Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+                cv(i,j,k,n) = 0.25*(
+                            + fv(2*i,2*j  ,2*k  ,n)
+                            + fv(2*i,2*j+1,2*k  ,n)
+                            + fv(2*i,2*j  ,2*k+1,n)
+                            + fv(2*i,2*j+1,2*k+1,n) );
+         });
+         break;
+         
+         case 1:
+         Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+                cv(i,j,k,n) = 0.25*(
+                            + fv(2*i  ,2*j,2*k  ,n)
+                            + fv(2*i+1,2*j,2*k  ,n)
+                            + fv(2*i  ,2*j,2*k+1,n)
+                            + fv(2*i+1,2*j,2*k+1,n) );
+          });
+         break;
+         
+         case 2:
+         Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+                cv(i,j,k,n) = 0.25*(
+                            + fv(2*i  ,2*j  ,2*k,n)
+                            + fv(2*i+1,2*j  ,2*k,n)
+                            + fv(2*i  ,2*j+1,2*k,n)
+                            + fv(2*i+1,2*j+1,2*k,n) );
+         });
+         break;
+     }
+}

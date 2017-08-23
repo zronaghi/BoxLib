@@ -266,7 +266,7 @@ BaseFab<Real>::performSetVal (Real       val,
         
     ViewFab<Real> fab = this->view_fab; 
     
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], ncomp}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
         fab(i,j,k,n) = val;
     });
