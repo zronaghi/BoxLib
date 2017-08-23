@@ -72,13 +72,13 @@
 #include <Kokkos_Core.hpp>
 
 template <typename T>
-struct oarray{
+class oarray {
     
 public:
     //the ranges are inclusive!
     oarray(int lo_, int hi_){
         lo = lo_;
-        size = hi_ - lo_ + 1;
+        size = (hi_+1) - lo_;
         data = new T[size];
     }
     
@@ -88,6 +88,14 @@ public:
     
     T& operator[](int index){
         return data[index-lo];
+    }
+    
+    const T& operator[](int index) const{
+        return data[index-lo];
+    }
+    
+    const int getOffset() const{
+        return lo;
     }
     
 private:

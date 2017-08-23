@@ -176,6 +176,10 @@ LinOp::apply (MultiFab&      out,
 	      int            bndry_comp)
 {
     applyBC(in,src_comp,num_comp,level,bc_mode,local,bndry_comp);
+    
+    std::cout << "AFTER BC: " << in.norm1() << std::endl;
+    exit(1);
+    
     Fapply(out,dst_comp,in,src_comp,num_comp,level);
 }
 
@@ -263,7 +267,7 @@ LinOp::applyBC (MultiFab&      inout,
                     cdr, 
                     bct, 
                     bcl,
-                    fsfab,
+                    const_cast<FArrayBox&>(fsfab),
                     m,
                     ffab,
                     h[level]);
@@ -445,15 +449,15 @@ LinOp::makeCoefficients (MultiFab&       cs,
     const int nGrow=0;
     cs.define(d, nComp, nGrow, fn.DistributionMap(), Fab_allocate);
 
-    const bool tiling = true;
+    const bool tiling = false;
 
     switch (cdir)
     {
     case -1:
       {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
         for (MFIter csmfi(cs,tiling); csmfi.isValid(); ++csmfi)
         {
             const Box& tbx = csmfi.tilebox();
@@ -472,9 +476,9 @@ LinOp::makeCoefficients (MultiFab&       cs,
     case 2:
         if (harmavg)
         {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
   	    for (MFIter csmfi(cs,tiling); csmfi.isValid(); ++csmfi)
             {
 	        const Box& tbx = csmfi.tilebox();
