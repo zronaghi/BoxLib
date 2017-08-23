@@ -506,7 +506,29 @@ public:
                  + std::abs( dhz * bZv(i,j,k+1) ) + std::abs( dhz * bZv(i,j,k) );
 
         //max:
-        tmpres = std::max(tmpres,tmpval);
+        tmpres = Kokkos::max2(tmpres, tmpval);
+    }
+
+    using value_type = Real;
+    using execution_space = devspace;
+
+    //Required
+    KOKKOS_INLINE_FUNCTION
+    void join(value_type& dest, const value_type& src)  const {
+      if ( src > dest )
+        dest = src;
+    }
+  
+    KOKKOS_INLINE_FUNCTION
+    void join(volatile value_type& dest, const volatile value_type& src) const {
+      if ( src > dest )
+        dest = src;
+    }
+
+    //Required
+    KOKKOS_INLINE_FUNCTION
+    void init( value_type& val)  const {
+      val = 0.0;
     }
 
 private:    
@@ -545,7 +567,9 @@ const Real* h)
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left>> t_policy;
 
     //execute
-    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cnormafunc, res);
+    Kokkos::parallel_reduce(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}),
+        cnormafunc,
+        res);
 }
 
 //-----------------------------------------------------------------------

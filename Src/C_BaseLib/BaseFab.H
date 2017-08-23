@@ -899,7 +899,7 @@ public:
     // Change the Box type without change the length
     void SetBoxType(const IndexType& typ) { domain.setType(typ); }
     
-protected:
+public:
     //
     // Allocates memory for the BaseFab<T>.
     //
@@ -1209,17 +1209,12 @@ BaseFab<T>::define ()
           length()[1],
           length()[2],
           nComp());
+      //TODO: change to create_mirror_view !
       view_fab.d_data=Kokkos::create_mirror( devspace(), view_fab.h_data);
-
-//          
-//          devview<T****>(Kokkos::ViewAllocateWithoutInitializing("BaseFab"), 
-//          length()[0],
-//          length()[1],
-//          length()[2],
-//          nComp());
 #else
 #error "ViewFab construction only supports 3D!";
 #endif
+      view_fab.dptr_ptr = &(this->dptr);
       //end profiling
       Kokkos::Profiling::popRegion();
     }
@@ -1448,7 +1443,7 @@ BaseFab<T>::performCopy (const BaseFab<T>& src,
         ViewFab<T> fab = this->view_fab; 
         ViewFab<T> srcfab = src.view_fab; 
     
-        Kokkos::Experimental::md_parallel_for(t_policy({0, 0, 0, 0}, {_subbox_.length(0), _subbox_.length(1), _subbox_.length(2), numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+        Kokkos::parallel_for(t_policy({0, 0, 0, 0}, {_subbox_.length(0), _subbox_.length(1), _subbox_.length(2), numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
             fab(i+_subbox_lo[0], j+_subbox_lo[1], k+_subbox_lo[2], n) = srcfab(i+_srcbox_lo[0], j+_srcbox_lo[1], k+_srcbox_lo[2], n);
         });
@@ -1540,7 +1535,7 @@ BaseFab<T>::performSetVal (T          val,
         
     ViewFab<T> fab = this->view_fab; 
     
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], ns}, {hi[0]+1, hi[1]+1, hi[2]+1, ns+num}, {cb[0], cb[1], cb[2], ns+num}), 
+    Kokkos::parallel_for(t_policy({lo[0], lo[1], lo[2], ns}, {hi[0]+1, hi[1]+1, hi[2]+1, ns+num}, {cb[0], cb[1], cb[2], ns+num}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
         fab(i,j,k,n) = val;
     });
@@ -1859,6 +1854,72 @@ BaseFab<T>::norm (int p,
 }
 
 template <class T>
+struct P0NormFunctor {
+  using value_type = Real;
+  using execution_space = devspace;
+
+  ViewFab<T> fab;
+
+  P0NormFunctor(ViewFab<T> infab):fab(infab) {}
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  void operator()(const int i, const int j, const int k, const int n, Real& tmpnrm) const {
+    tmpnrm = Kokkos::max2(tmpnrm, static_cast<Real>(std::abs(fab(i,j,k,n))));
+  }
+
+  //Required
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type& dest, const value_type& src)  const {
+    if ( src > dest )
+      dest = src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& dest, const volatile value_type& src) const {
+    if ( src > dest )
+      dest = src;
+  }
+
+  //Required
+  KOKKOS_INLINE_FUNCTION
+  void init( value_type& val)  const {
+    val = 0.0;
+  }
+};
+
+template <class T>
+struct P1NormFunctor {
+  using value_type = Real;
+  using execution_space = devspace;
+
+  ViewFab<T> fab;
+
+  P1NormFunctor(ViewFab<T> infab):fab(infab) {}
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  void operator()(const int i, const int j, const int k, const int n, Real& tmpnrm) const {
+    tmpnrm += static_cast<Real>(std::abs(fab(i,j,k,n)));
+  }
+
+  //Required
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type& dest, const value_type& src)  const {
+    dest += src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& dest, const volatile value_type& src) const {
+    dest += src;
+  }
+
+  //Required
+  KOKKOS_INLINE_FUNCTION
+  void init( value_type& val)  const {
+    val = 0.0;
+  }
+};
+
+template <class T>
 Real
 BaseFab<T>::norm (const Box& subbox,
                   int        p,
@@ -1904,12 +1965,8 @@ BaseFab<T>::norm (const Box& subbox,
         const int *hi = subbox.hiVect();
         const int *cb = subbox.cbVect();
         
-        ViewFab<T> fab = this->view_fab; 
-        
-        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
-        KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
-            tmpnrm = std::max(tmpnrm, static_cast<Real>(std::abs(fab(i,j,k,n))));
-        },nrm);
+        Kokkos::parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+            P0NormFunctor<T>(this->view_fab), nrm);
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
 #endif
@@ -1943,12 +2000,8 @@ BaseFab<T>::norm (const Box& subbox,
         const int *hi = subbox.hiVect();
         const int *cb = subbox.cbVect();
         
-        ViewFab<T> fab = this->view_fab; 
-        
-        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
-        KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
-            tmpnrm += static_cast<Real>(std::abs(fab(i,j,k,n)));
-        },nrm);
+        Kokkos::parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+            P1NormFunctor<T>(this->view_fab),nrm);
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
 #endif
@@ -2341,7 +2394,7 @@ BaseFab<T>::sum (const Box& subbox,
         
     ViewFab<T> fab = this->view_fab; 
         
-    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+    Kokkos::parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpsum){
         tmpsum += fab(i,j,k,n);
     },sum);
