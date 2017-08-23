@@ -319,7 +319,7 @@ BaseFab<Real>::norm (const Box& bx,
         
         ViewFab<Real> fab = this->view_fab; 
         
-        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], ncomp}), 
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
             tmpnrm = std::max(tmpnrm, static_cast<Real>(std::abs(fab(i,j,k,n))));
         }, nrm);
@@ -335,7 +335,7 @@ BaseFab<Real>::norm (const Box& bx,
         
         ViewFab<Real> fab = this->view_fab; 
         
-        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], ncomp}), 
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
             tmpnrm += static_cast<Real>(std::abs(fab(i,j,k,n)));
         }, nrm);
@@ -379,7 +379,7 @@ BaseFab<Real>::sum (const Box& bx,
         
     ViewFab<Real> fab = this->view_fab; 
         
-    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
+    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], ncomp}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpsum){
         tmpsum += fab(i,j,k,n);
     },sum);
@@ -409,10 +409,33 @@ BaseFab<Real>::plus (const BaseFab<Real>& src,
     BL_ASSERT(srccomp >= 0 && srccomp+numcomp <= src.nComp());
     BL_ASSERT(destcomp >= 0 && destcomp+numcomp <= nComp());
 
-    fort_fab_plus(ARLIM_3D(destbox.loVect()), ARLIM_3D(destbox.hiVect()),
-		  BL_TO_FORTRAN_N_3D(*this,destcomp),
-		  BL_TO_FORTRAN_N_3D(src,srccomp), ARLIM_3D(srcbox.loVect()),
-		  &numcomp);
+    //fort_fab_plus(ARLIM_3D(destbox.loVect()), ARLIM_3D(destbox.hiVect()),
+	//	  BL_TO_FORTRAN_N_3D(*this,destcomp),
+	//	  BL_TO_FORTRAN_N_3D(src,srccomp), ARLIM_3D(srcbox.loVect()),
+	//	  &numcomp);
+    
+#if BL_SPACEDIM == 3    
+    //define policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+    const int *lo = destbox.loVect();
+    const int *hi = destbox.hiVect();
+    const int *cb = destbox.cbVect();
+    const int *sblo = srcbox.loVect();
+        
+    ViewFab<Real> destfab = this->view_fab; 
+    ViewFab<Real> srcfab = src.view_fab; 
+    
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+        const int ioff = sblo[0] - lo[0];
+        const int joff = sblo[1] - lo[1];
+        const int koff = sblo[2] - lo[2];
+        destfab(i,j,k,n+destcomp) += srcfab(i+ioff,j+joff,k+koff,n+srccomp);
+    });
+#else
+#error "BaseFab::performSetVal needs to be implemented for other spacedims"
+#endif
 
     return *this;
 }
@@ -633,11 +656,40 @@ BaseFab<Real>::linComb (const BaseFab<Real>& f1,
     BL_ASSERT(comp2 >= 0 && comp2+numcomp <= f2.nComp());
     BL_ASSERT(comp  >= 0 && comp +numcomp <=    nComp());
 
-    fort_fab_lincomb(ARLIM_3D(b.loVect()), ARLIM_3D(b.hiVect()),
-		     BL_TO_FORTRAN_N_3D(*this,comp),
-		     &alpha, BL_TO_FORTRAN_N_3D(f1,comp1), ARLIM_3D(b1.loVect()),
-		     &beta,  BL_TO_FORTRAN_N_3D(f2,comp2), ARLIM_3D(b2.loVect()),
-		     &numcomp);
+    //fort_fab_lincomb(ARLIM_3D(b.loVect()), ARLIM_3D(b.hiVect()),
+	//	     BL_TO_FORTRAN_N_3D(*this,comp),
+	//	     &alpha, BL_TO_FORTRAN_N_3D(f1,comp1), ARLIM_3D(b1.loVect()),
+	//	     &beta,  BL_TO_FORTRAN_N_3D(f2,comp2), ARLIM_3D(b2.loVect()),
+	//	     &numcomp);
+    
+#if BL_SPACEDIM == 3    
+    //define policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+    const int *lo = b.loVect();
+    const int *hi = b.hiVect();
+    const int *cb = b.cbVect();
+    const int *f1lo = b1.loVect();
+    const int *f2lo = b2.loVect();
+        
+    ViewFab<Real> destv = this->view_fab; 
+    ViewFab<Real> f1v = f1.view_fab; 
+    ViewFab<Real> f2v = f2.view_fab; 
+    
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+        const int ioff1 = f1lo[0] - lo[0];
+        const int joff1 = f1lo[1] - lo[1];
+        const int koff1 = f1lo[2] - lo[2];
+        const int ioff2 = f2lo[0] - lo[0];
+        const int joff2 = f2lo[1] - lo[1];
+        const int koff2 = f2lo[2] - lo[2];
+        destv(i,j,k,n+comp) = alpha*f1v(i+ioff1,j+joff1,k+koff1,n+comp1) + beta*f2v(i+ioff2,j+joff2,k+koff2,n+comp2);
+    });
+#else
+#error "BaseFab::performSetVal needs to be implemented for other spacedims"
+#endif
+    
     return *this;
 }
 
@@ -654,10 +706,35 @@ BaseFab<Real>::dot (const Box& xbx, int xcomp,
     BL_ASSERT(xcomp >= 0 && xcomp+numcomp <=   nComp());
     BL_ASSERT(ycomp >= 0 && ycomp+numcomp <= y.nComp());
 
-    return fort_fab_dot(ARLIM_3D(xbx.loVect()), ARLIM_3D(xbx.hiVect()),
-			BL_TO_FORTRAN_N_3D(*this,xcomp),
-			BL_TO_FORTRAN_N_3D(y,ycomp), ARLIM_3D(ybx.loVect()),
-			&numcomp);
+    //return fort_fab_dot(ARLIM_3D(xbx.loVect()), ARLIM_3D(xbx.hiVect()),
+	//		BL_TO_FORTRAN_N_3D(*this,xcomp),
+	//		BL_TO_FORTRAN_N_3D(y,ycomp), ARLIM_3D(ybx.loVect()),
+	//		&numcomp);
+    Real res = 0.;
+    
+#if BL_SPACEDIM == 3
+    //define policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+    
+    const int *lo = xbx.loVect();
+    const int *hi = xbx.hiVect();
+    const int *cb = xbx.cbVect();
+    const int *ylo = ybx.loVect();
+        
+    ViewFab<Real> xv = this->view_fab;
+    ViewFab<Real> yv = y.view_fab;
+    
+    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpres){
+        const int ioff = ylo[0] - lo[0];
+        const int joff = ylo[1] - lo[1];
+        const int koff = ylo[2] - lo[2];
+        tmpres += xv(i,j,k,n+xcomp)*yv(i+ioff,j+joff,k+koff,n+ycomp);
+    }, res);
+#else
+#error "BaseFab::norm needs to be implemented for other spacedims"
+#endif
+    return res;
 }
 
 #endif
