@@ -1214,7 +1214,6 @@ BaseFab<T>::define ()
 #else
 #error "ViewFab construction only supports 3D!";
 #endif
-      view_fab.dptr_ptr = &(this->dptr);
       //end profiling
       Kokkos::Profiling::popRegion();
     }

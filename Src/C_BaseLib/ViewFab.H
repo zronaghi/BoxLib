@@ -79,15 +79,11 @@ public:
 
     void syncH2D(){
         Kokkos::deep_copy(d_data,h_data);
-        *dptr_ptr = nullptr;
     }
 
     void syncD2H(){
         Kokkos::deep_copy(h_data,d_data);
-        *dptr_ptr = h_data.data();
     }
-
-    T** dptr_ptr;
 
 };
 
