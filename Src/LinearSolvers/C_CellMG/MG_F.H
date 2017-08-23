@@ -79,7 +79,7 @@ public:
     oarray(int lo_, int hi_){
         lo = lo_;
         size = hi_ - lo_ + 1;
-        data = new data[size]
+        data = new T[size];
     }
     
     ~oarray(){
@@ -240,6 +240,23 @@ void C_GSRB_3D(const Box& bx,
         const Mask& m5,
         const Real* h);
 #endif
+        
+        void C_APPLYBC (
+            const Box& bx,
+            const int numcomp,
+            const int src_comp,
+            const int bndry_comp,
+            int flagden, 
+            int flagbc, 
+            int maxorder,
+            FArrayBox& phi,
+            int cdir, 
+            int bct, 
+            int bcl,
+            FArrayBox& bcval,
+            const Mask& mask,
+            FArrayBox& den,
+        const Real* h);
 
 extern "C"
 {

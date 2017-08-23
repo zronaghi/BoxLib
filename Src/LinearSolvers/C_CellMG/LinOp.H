@@ -9,6 +9,7 @@
 #include <BoxArray.H>
 #include <MultiFab.H>
 #include <BndryData.H>
+#include <MG_F.H>
 
 /*
         A LinOp is a virtual base class for general linear operators capable

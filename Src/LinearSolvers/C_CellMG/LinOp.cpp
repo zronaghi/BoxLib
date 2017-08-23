@@ -252,7 +252,7 @@ LinOp::applyBC (MultiFab&      inout,
 
             if(use_C_kernels){
                 C_APPLYBC (
-                    bx,
+                    vbx,
                     num_comp,
                     src_comp,
                     bndry_comp,
