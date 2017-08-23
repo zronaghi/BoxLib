@@ -1434,10 +1434,14 @@ BaseFab<T>::performCopy (const BaseFab<T>& src,
     if (_subbox_.ok()){
         //define policy
         
-        const int *_subbox_lo = _subbox_.loVect();
-        const int *_srcbox_lo = srcbox.loVect();
-        const int *cb = _subbox_.cbVect();
-        
+        Kokkos::Array<int, 3> _subbox_lo;
+        Kokkos::Array<int, 3> _srcbox_lo;
+        Kokkos::Array<int, 3> cb;
+        for (int i = 0; i < 3; ++i) {
+          _subbox_lo[i] = _subbox_.loVect()[i];
+          _srcbox_lo[i] = srcbox.loVect()[i];
+          cb[i] = _subbox_.cbVect()[i];
+        }
         
         ViewFab<T> fab = this->view_fab; 
         ViewFab<T> srcfab = src.view_fab; 

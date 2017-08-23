@@ -186,17 +186,28 @@ BaseFab<Real>::performCopy (const BaseFab<Real>& src,
 #if (BL_SPACEDIM == 3)
     //define policy
         
-    const int *destbox_lo = destbox.loVect();
-    const int *srcbox_lo = srcbox.loVect();
-    const int *cb = destbox.cbVect();
-        
+    // cw stands for "CUDA workaround", because CUDA (8.0) lambdas
+    // can't capture arrays
+    Kokkos::Array<int, 3> destbox_lo;
+    Kokkos::Array<int, 3> srcbox_lo;
+    Kokkos::Array<int, 3> cb;
+    for (int i = 0; i < 3; ++i) {
+      destbox_lo[i] = destbox.loVect()[i];
+      srcbox_lo[i] = srcbox.loVect()[i];
+      cb[i] = destbox.cbVect()[i];
+    }
         
     ViewFab<Real> fab = this->view_fab; 
     ViewFab<Real> srcfab = src.view_fab; 
     
-    Kokkos::Experimental::md_parallel_for(mdpolicy<4>({0, 0, 0, 0}, {destbox.length(0), destbox.length(1), destbox.length(2), numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+    Kokkos::parallel_for(
+        mdpolicy<4>(
+          {0, 0, 0, 0},
+          {destbox.length(0), destbox.length(1), destbox.length(2), numcomp},
+          {cb[0], cb[1], cb[2], numcomp}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
-        fab(i+destbox_lo[0], j+destbox_lo[1], k+destbox_lo[2], n+destcomp) = srcfab(i+srcbox_lo[0], j+srcbox_lo[1], k+srcbox_lo[2], n+srccomp);
+        auto tmp = srcfab(i+srcbox_lo[0], j+srcbox_lo[1], k+srcbox_lo[2], n+srccomp);
+        fab(i+destbox_lo[0], j+destbox_lo[1], k+destbox_lo[2], n+destcomp) = tmp;
     });
 #else
 #error "BaseFab<Real>::performCopy not implemented!"
@@ -264,7 +275,7 @@ BaseFab<Real>::performSetVal (Real       val,
         
     ViewFab<Real> fab = this->view_fab; 
     
-    Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
+    Kokkos::parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], comp+ncomp}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
         fab(i,j,k,n) = val;
     });
