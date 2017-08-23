@@ -769,23 +769,23 @@ BuildGramMatrix (Real*           Gg,
     //
     // First fill the upper triangle into tmp
     //
-#ifdef _OPENMP
-    const int nthreads = omp_get_max_threads();
-#else 
+//#ifdef _OPENMP
+//    const int nthreads = omp_get_max_threads();
+//#else 
     const int nthreads = 1;
-#endif
+    //#endif
     const int Ntmp = (Nrows*(Nrows+3))/2;
     PArray<Array<Real> > tmp(nthreads, PArrayManage);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     {
-#ifdef _OPENMP
-	int tid = omp_get_thread_num();
-#else
+//#ifdef _OPENMP
+//	int tid = omp_get_thread_num();
+//#else
 	int tid = 0;
-#endif
+    //#endif
 	tmp.set(tid, new Array<Real>(Ntmp,0.0));
 
 	for (MFIter mfi(PR,true); mfi.isValid(); ++mfi)
@@ -802,15 +802,15 @@ BuildGramMatrix (Real*           Gg,
 		tmp[tid][cnt++] = tfab.dot(bx,0,rfab,bx,mm);
 	    }
 	}
-#ifdef _OPENMP
-#pragma omp barrier
-#pragma omp for
+//#ifdef _OPENMP
+//#pragma omp barrier
+//#pragma omp for
 	for (int i = 0; i < Ntmp; ++i) {
 	    for (int j = 1; j < nthreads; ++j) {
 		tmp[0][i] += tmp[j][i];
 	    }
 	}
-#endif
+    //#endif
     }
 
     ParallelDescriptor::ReduceRealSum(&tmp[0][0], Ntmp, PR.color());

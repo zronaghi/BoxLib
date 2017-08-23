@@ -9,10 +9,10 @@ namespace BoxLib
 	BL_ASSERT(cc.nComp() >= dcomp + BL_SPACEDIM);
 	BL_ASSERT(edge.size() == BL_SPACEDIM);
 	BL_ASSERT(edge[0]->nComp() == 1);
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(cc,false); mfi.isValid(); ++mfi) 
 	{
 	    const Box& bx = mfi.tilebox();
 
@@ -35,10 +35,10 @@ namespace BoxLib
 	Real problo[3] = {0.,0.,0.};
 	int coord_type = 0;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(cc,false); mfi.isValid(); ++mfi) 
 	{
 	    const Box& bx = mfi.tilebox();
 
@@ -62,10 +62,10 @@ namespace BoxLib
 	const Real* problo = geom.ProbLo();
 	int coord_type = Geometry::Coord();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(cc,false); mfi.isValid(); ++mfi) 
 	{
 	    const Box& bx = mfi.tilebox();
 
@@ -90,10 +90,10 @@ namespace BoxLib
 	const Real* problo = geom.ProbLo();
 	int coord_type = Geometry::Coord();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(cc,false); mfi.isValid(); ++mfi) 
 	{
 	    const Box& xbx = mfi.nodaltilebox(0);
 #if (BL_SPACEDIM > 1)
@@ -158,10 +158,10 @@ namespace BoxLib
 	MultiFab fvolume;
 	fgeom.GetVolume(fvolume, fine_BA, 0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-        for (MFIter mfi(crse_S_fine,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+        for (MFIter mfi(crse_S_fine,false); mfi.isValid(); ++mfi)
         {
             //  NOTE: The tilebox is defined at the coarse level.
             const Box& tbx = mfi.tilebox();
@@ -203,10 +203,10 @@ namespace BoxLib
 
         MultiFab crse_S_fine(crse_S_fine_BA,ncomp,0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-        for (MFIter mfi(crse_S_fine,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+        for (MFIter mfi(crse_S_fine,false); mfi.isValid(); ++mfi)
         {
             //  NOTE: The tilebox is defined at the coarse level.
             const Box& tbx = mfi.tilebox();
@@ -237,11 +237,11 @@ namespace BoxLib
 
 	int ncomp = crse[0].nComp();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
         for (int n=0; n<BL_SPACEDIM; ++n) {
-            for (MFIter mfi(crse[n],true); mfi.isValid(); ++mfi)
+            for (MFIter mfi(crse[n],false); mfi.isValid(); ++mfi)
             {
                 const Box& tbx = mfi.tilebox();
 

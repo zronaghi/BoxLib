@@ -319,10 +319,7 @@ BaseFab<Real>::norm (const Box& bx,
         
         ViewFab<Real> fab = this->view_fab; 
         
-        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], ncomp}), 
-        KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
-            tmpnrm = std::max(tmpnrm, static_cast<Real>(std::abs(fab(i,j,k,n))));
-        }, nrm);
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], ncomp}),P0NormFunctor<Real>(fab),nrm); 
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
 #endif

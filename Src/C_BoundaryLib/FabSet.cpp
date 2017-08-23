@@ -4,9 +4,9 @@
 #include <BLProfiler.H>
 #include <VisMF.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 FabSet::FabSet () {}
 
@@ -33,9 +33,9 @@ FabSet&
 FabSet::copyFrom (const FabSet& src, int scomp, int dcomp, int ncomp)
 {
     if (boxArray() == src.boxArray() && DistributionMap() == src.DistributionMap()) {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (FabSetIter fsi(*this); fsi.isValid(); ++fsi) {
 	    (*this)[fsi].copy(src[fsi], scomp, dcomp, ncomp);
 	}
@@ -57,9 +57,9 @@ FabSet&
 FabSet::plusFrom (const FabSet& src, int scomp, int dcomp, int ncomp)
 {
     if (boxArray() == src.boxArray() && DistributionMap() == src.DistributionMap()) {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (FabSetIter fsi(*this); fsi.isValid(); ++fsi) {
 	    (*this)[fsi].plus(src[fsi], scomp, dcomp, ncomp);
 	}
@@ -97,9 +97,9 @@ FabSet::plusTo (MultiFab& dest, int ngrow, int scomp, int dcomp, int ncomp,
 void
 FabSet::setVal (Real val)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (FabSetIter fsi(*this); fsi.isValid(); ++fsi) {
 	(this->m_mf)[fsi].setVal(val);
     }
@@ -108,9 +108,9 @@ FabSet::setVal (Real val)
 void
 FabSet::setVal (Real val, int comp, int num_comp)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (FabSetIter fsi(*this); fsi.isValid(); ++fsi) {
 	FArrayBox& fab = (this->m_mf)[fsi];
 	fab.setVal(val, fab.box(), comp, num_comp);
@@ -124,9 +124,9 @@ FabSet::linComb (Real a, Real b, const FabSet& src, int scomp, int dcomp, int nc
 {
     BL_ASSERT(size() == src.size());
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (FabSetIter fsi(*this); fsi.isValid(); ++fsi)
     {
 	const FArrayBox& srcfab = src[fsi];
@@ -157,9 +157,9 @@ FabSet::linComb (Real a, const MultiFab& mfa, int a_comp,
     bdrya.copy(mfa,a_comp,0,ncomp,ngrow,0);
     bdryb.copy(mfb,b_comp,0,ncomp,ngrow,0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (FabSetIter fsi(*this); fsi.isValid(); ++fsi)
     {
 	const FArrayBox& afab = bdrya[fsi];
@@ -191,9 +191,9 @@ FabSet::Copy (FabSet& dst, const FabSet& src)
     BL_ASSERT(BoxLib::match(dst.boxArray(), src.boxArray()));
     BL_ASSERT(dst.DistributionMap() == src.DistributionMap());
     int ncomp = dst.nComp();
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (FabSetIter fsi(dst); fsi.isValid(); ++fsi) {
 	dst[fsi].copy(src[fsi], 0, 0, ncomp);
     }

@@ -1859,6 +1859,35 @@ BaseFab<T>::norm (int p,
 }
 
 template <class T>
+struct P0NormFunctor {
+    using value_type = Real;
+    using execution_space = devspace;
+    ViewFab<T> fab;
+    P0NormFunctor(ViewFab<T> infab):fab(infab) {}
+    KOKKOS_FORCEINLINE_FUNCTION
+    void operator()(const int i, const int j, const int k, const int n, Real& tmpnrm) const {
+        const T tmpval = static_cast<Real>(std::abs(fab(i,j,k,n)));
+        tmpnrm = (tmpnrm > tmpval ? tmpnrm : tmpval);
+    }
+    //Required
+    KOKKOS_INLINE_FUNCTION
+    void join(value_type& dest, const value_type& src)  const {
+        if ( src > dest )
+            dest = src;
+    }
+    KOKKOS_INLINE_FUNCTION
+    void join(volatile value_type& dest, const volatile value_type& src) const {
+        if ( src > dest )
+            dest = src;
+    }
+    //Required
+    KOKKOS_INLINE_FUNCTION
+    void init( value_type& val)  const {
+        val = 0.0;
+    }
+};
+
+template <class T>
 Real
 BaseFab<T>::norm (const Box& subbox,
                   int        p,
@@ -1904,10 +1933,10 @@ BaseFab<T>::norm (const Box& subbox,
         
         ViewFab<T> fab = this->view_fab; 
         
-        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], comp+numcomp}), 
-        KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
-            tmpnrm = std::max(tmpnrm, static_cast<Real>(std::abs(fab(i,j,k,n))));
-        }, nrm);
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], numcomp}),P0NormFunctor<T>(fab),nrm); 
+        //KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
+        //    tmpnrm = std::max(tmpnrm, static_cast<Real>(std::abs(fab(i,j,k,n))));
+        //}, Kokkos::Experimental::Max<Real,devspace>(nrm));
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
 #endif

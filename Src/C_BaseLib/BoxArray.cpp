@@ -322,9 +322,9 @@ BoxArray::numPts () const
 {
     long result = 0;
     const int N = size();
-#ifdef _OPENMP
-#pragma omp parallel for reduction(+:result)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for reduction(+:result)
+//#endif
     for (int i = 0; i < N; ++i)
     {
         result += get(i).numPts();
@@ -337,9 +337,9 @@ BoxArray::d_numPts () const
 {
     double result = 0;
     const int N = size();
-#ifdef _OPENMP
-#pragma omp parallel for reduction(+:result)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for reduction(+:result)
+//#endif
     for (int i = 0; i < N; ++i)
     {
         result += get(i).d_numPts();
@@ -432,9 +432,9 @@ BoxArray::refine (const IntVect& iv)
         uniqify();
     }
     const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
     for (int i = 0; i < N; i++) {
 	BL_ASSERT(m_ref->m_abox[i].ok());
         m_ref->m_abox[i].refine(iv);
@@ -469,9 +469,9 @@ BoxArray::coarsen (const IntVect& iv)
 	uniqify();
 
 	const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
 	for (int i = 0; i < N; i++) {
 	    BL_ASSERT(m_ref->m_abox[i].ok());
 	    m_ref->m_abox[i].coarsen(iv);
@@ -493,9 +493,9 @@ BoxArray::growcoarsen (int n, const IntVect& iv)
         uniqify();
     }
     const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
     for (int i = 0; i < N; i++)
         m_ref->m_abox[i].grow(n).coarsen(iv);
     return *this;
@@ -510,9 +510,9 @@ BoxArray::grow (int n)
         uniqify();
     }
     const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
     for (int i = 0; i < N; i++)
         m_ref->m_abox[i].grow(n);
     return *this;
@@ -527,9 +527,9 @@ BoxArray::grow (const IntVect& iv)
         uniqify();
     }
     const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
     for (int i = 0; i < N; i++)
         m_ref->m_abox[i].grow(iv);
     return *this;
@@ -545,9 +545,9 @@ BoxArray::grow (int dir,
         uniqify();
     }
     const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
     for (int i = 0; i < N; i++)
         m_ref->m_abox[i].grow(dir, n_cell);
     return *this;
@@ -615,9 +615,9 @@ BoxArray::shift (int dir,
         uniqify();
     }
     const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
     for (int i = 0; i < N; i++)
         m_ref->m_abox[i].shift(dir, nzones);
     return *this;
@@ -632,9 +632,9 @@ BoxArray::shift (const IntVect& iv)
         uniqify();
     }
     const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
     for (int i = 0; i < N; i++)
         m_ref->m_abox[i].shift(iv);
     return *this;
@@ -650,9 +650,9 @@ BoxArray::shiftHalf (int dir,
         uniqify();
     }
     const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
     for (int i = 0; i < N; i++)
         m_ref->m_abox[i].shiftHalf(dir, num_halfs);
     return *this;
@@ -667,9 +667,9 @@ BoxArray::shiftHalf (const IntVect& iv)
         uniqify();
     }
     const int N = m_ref->m_abox.size();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
     for (int i = 0; i < N; i++)
         m_ref->m_abox[i].shiftHalf(iv);
     return *this;
@@ -1130,9 +1130,9 @@ BoxArray::getHashMap () const
 {
     BARef::HashType& BoxHashMap = m_ref->hash;
 
-#ifdef _OPENMP
-    #pragma omp critical(intersections_lock)
-#endif
+//#ifdef _OPENMP
+//    #pragma omp critical(intersections_lock)
+//#endif
     {
         if (BoxHashMap.empty() && size() > 0)
         {
