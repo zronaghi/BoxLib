@@ -71,6 +71,39 @@
 #include <Mask.H>
 #include <Kokkos_Core.hpp>
 
+template <typename T>
+class oarray {
+    
+public:
+    //the ranges are inclusive!
+    oarray(int lo_, int hi_){
+        lo = lo_;
+        size = (hi_+1) - lo_;
+        data = new T[size];
+    }
+    
+    ~oarray(){
+        delete [] data;
+    }
+    
+    T& operator[](int index){
+        return data[index-lo];
+    }
+    
+    const T& operator[](int index) const{
+        return data[index-lo];
+    }
+    
+    const int getOffset() const{
+        return lo;
+    }
+    
+private:
+    int lo;
+    int size;
+    T* data;
+};
+
 void C_AVERAGE(
 		const Box& bx,
         const int nc,
@@ -215,6 +248,23 @@ void C_GSRB_3D(const Box& bx,
         const Mask& m5,
         const Real* h);
 #endif
+        
+        void C_APPLYBC (
+            const Box& bx,
+            const int numcomp,
+            const int src_comp,
+            const int bndry_comp,
+            int flagden, 
+            int flagbc, 
+            int maxorder,
+            FArrayBox& phi,
+            int cdir, 
+            int bct, 
+            int bcl,
+            FArrayBox& bcval,
+            const Mask& mask,
+            FArrayBox& den,
+        const Real* h);
 
 extern "C"
 {

@@ -487,7 +487,6 @@ int             redBlackFlag)
     std::cout << "bZ: " << bZ.norm1() << std::endl;
     std::cout << "rhsL: " << rhsL.norm1() << std::endl;
     std::cout << "solnL: " << solnL.norm1() << std::endl;
-    exit(1);
     //DEBUG
 
 	//const int nc = solnL.nComp(); // FIXME: This LinOp only really supports single-component

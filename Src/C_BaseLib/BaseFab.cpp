@@ -476,11 +476,35 @@ BaseFab<Real>::xpay (Real a, const BaseFab<Real>& src,
     BL_ASSERT( srccomp >= 0 &&  srccomp+numcomp <= src.nComp());
     BL_ASSERT(destcomp >= 0 && destcomp+numcomp <=     nComp());
 
-    fort_fab_xpay(ARLIM_3D(destbox.loVect()), ARLIM_3D(destbox.hiVect()),
-		  BL_TO_FORTRAN_N_3D(*this,destcomp),
-		  &a,
-		  BL_TO_FORTRAN_N_3D(src,srccomp), ARLIM_3D(srcbox.loVect()),
-		  &numcomp);
+    //fort_fab_xpay(ARLIM_3D(destbox.loVect()), ARLIM_3D(destbox.hiVect()),
+	//	  BL_TO_FORTRAN_N_3D(*this,destcomp),
+	//	  &a,
+	//	  BL_TO_FORTRAN_N_3D(src,srccomp), ARLIM_3D(srcbox.loVect()),
+	//	  &numcomp);
+    
+#if BL_SPACEDIM == 3    
+    //define policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+    const int *lo = destbox.loVect();
+    const int *hi = destbox.hiVect();
+    const int *cb = destbox.cbVect();
+    const int *sblo = srcbox.loVect();
+        
+    ViewFab<Real> destfab = this->view_fab; 
+    ViewFab<Real> srcfab = src.view_fab; 
+    
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+        const int ioff = sblo[0] - lo[0];
+        const int joff = sblo[1] - lo[1];
+        const int koff = sblo[2] - lo[2];
+        destfab(i,j,k,n+destcomp) = a * destfab(i,j,k,n+destcomp) + srcfab(i+ioff,j+joff,k+koff,n+srccomp);
+    });
+#else
+#error "BaseFab::performSetVal needs to be implemented for other spacedims"
+#endif
+    
     return *this;
 }
 

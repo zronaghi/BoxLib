@@ -176,6 +176,10 @@ LinOp::apply (MultiFab&      out,
 	      int            bndry_comp)
 {
     applyBC(in,src_comp,num_comp,level,bc_mode,local,bndry_comp);
+    
+    std::cout << "AFTER BC: " << in.norm1() << std::endl;
+    exit(1);
+    
     Fapply(out,dst_comp,in,src_comp,num_comp,level);
 }
 
@@ -217,10 +221,10 @@ LinOp::applyBC (MultiFab&      inout,
     // Fill boundary cells.
     //
     // OMP over boxes
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(inout); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(inout,false); mfi.isValid(); ++mfi)
     {
         const int gn = mfi.index();
 
@@ -250,18 +254,38 @@ LinOp::applyBC (MultiFab&      inout,
             FArrayBox&       ffab  = f[mfi];
             const FArrayBox& fsfab = fs[mfi];
 
-            FORT_APPLYBC(&flagden, &flagbc, &maxorder,
-                         iofab.dataPtr(src_comp),
-                         ARLIM(iofab.loVect()), ARLIM(iofab.hiVect()),
-                         &cdr, &bct, &bcl,
-                         fsfab.dataPtr(bndry_comp), 
-                         ARLIM(fsfab.loVect()), ARLIM(fsfab.hiVect()),
-                         m.dataPtr(),
-                         ARLIM(m.loVect()), ARLIM(m.hiVect()),
-                         ffab.dataPtr(),
-                         ARLIM(ffab.loVect()), ARLIM(ffab.hiVect()),
-                         vbx.loVect(),
-                         vbx.hiVect(), &num_comp, h[level]);
+            if(use_C_kernels){
+                C_APPLYBC (
+                    vbx,
+                    num_comp,
+                    src_comp,
+                    bndry_comp,
+                    flagden, 
+                    flagbc, 
+                    maxorder,
+                    iofab,
+                    cdr, 
+                    bct, 
+                    bcl,
+                    const_cast<FArrayBox&>(fsfab),
+                    m,
+                    ffab,
+                    h[level]);
+            }
+            else{
+                FORT_APPLYBC(&flagden, &flagbc, &maxorder,
+                             iofab.dataPtr(src_comp),
+                             ARLIM(iofab.loVect()), ARLIM(iofab.hiVect()),
+                             &cdr, &bct, &bcl,
+                             fsfab.dataPtr(bndry_comp), 
+                             ARLIM(fsfab.loVect()), ARLIM(fsfab.hiVect()),
+                             m.dataPtr(),
+                             ARLIM(m.loVect()), ARLIM(m.hiVect()),
+                             ffab.dataPtr(),
+                             ARLIM(ffab.loVect()), ARLIM(ffab.hiVect()),
+                             vbx.loVect(),
+                             vbx.hiVect(), &num_comp, h[level]);
+            }
         }
     }
 }
@@ -276,10 +300,6 @@ LinOp::residual (MultiFab&       residL,
 {
     BL_PROFILE("LinOp::residual()");
     apply(residL, solnL, level, bc_mode, local);
-    
-    //DEBUG
-    std::cout << "residual: residL: " << residL.norm1() << std::endl;
-    //DEBUG
     
     MultiFab::Xpay(residL, -1.0, rhsL, 0, 0, residL.nComp(), 0);
 }
@@ -429,15 +449,15 @@ LinOp::makeCoefficients (MultiFab&       cs,
     const int nGrow=0;
     cs.define(d, nComp, nGrow, fn.DistributionMap(), Fab_allocate);
 
-    const bool tiling = true;
+    const bool tiling = false;
 
     switch (cdir)
     {
     case -1:
       {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
         for (MFIter csmfi(cs,tiling); csmfi.isValid(); ++csmfi)
         {
             const Box& tbx = csmfi.tilebox();
@@ -456,9 +476,9 @@ LinOp::makeCoefficients (MultiFab&       cs,
     case 2:
         if (harmavg)
         {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
   	    for (MFIter csmfi(cs,tiling); csmfi.isValid(); ++csmfi)
             {
 	        const Box& tbx = csmfi.tilebox();

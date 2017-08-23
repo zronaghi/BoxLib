@@ -5,6 +5,7 @@
 #include "MG_F.H"
 #include <ArrayLim.H>
 #include <iostream>
+#include <LO_BCTYPES.H>
 
 //Average Functor
 struct C_AVERAGE_FUNCTOR{
@@ -632,6 +633,303 @@ const Real* h)
                     zflux(IntVect(i,j,k),n) = - dhz * bZ(IntVect(i,j,k))*( x(IntVect(i,j,k),n) - x(IntVect(i,j,k-1),n) );
                 }
             }
+        }
+    }
+}
+
+static bool is_dirichlet(int i){ return (i == LO_DIRICHLET); }
+static bool is_neumann(int i){ return (i == LO_NEUMANN); }
+
+void polyInterpCoeff(const Real& xInt, const oarray<Real>& x, const int N, oarray<Real>& c){
+    Real num, den;
+    //correct offset in order to correct w/ respect to fortran
+    int off = x.getOffset()-1;
+    
+    //std::cout << "N: " << N <<std::endl;
+    
+    for(int j=1; j<=N; j++){
+        num = 1.;
+        den = 1.;
+        for(int i=1; i<=j-1; i++){
+            num *= (xInt - x[i+off]);
+            den *= (x[j+off] - x[i+off]);
+            
+            //std::cout << "num upper: " << i+1 << " " << j+1 << " " << num << std::endl;
+            //std::cout << "den upper: " << i+1 << " " << j+1 << " " << den << std::endl;
+        }
+        for(int i=j+1; i<=N; i++){
+            num *= (xInt - x[i+off]);
+            den *= (x[j+off] - x[i+off]);
+            
+            //std::cout << "num lower: " << i+1 << " " << j+1 << " " << num << std::endl;
+            //std::cout << "den lower: " << i+1 << " " << j+1 << " " << den << std::endl;
+        }
+        c[j+off] = num/den;
+    }
+    return;
+}
+
+void C_APPLYBC (
+    const Box& bx,
+    const int numcomp,
+    const int src_comp,
+    const int bndry_comp,
+    int flagden, 
+    int flagbc, 
+    int maxorder,
+    FArrayBox& phi,
+    int cdir, 
+    int bct, 
+    int bcl,
+    FArrayBox& bcval,
+    const Mask& mask,
+    FArrayBox& den,
+const Real* h)
+{
+    const int *lo = bx.loVect();
+    const int *hi = bx.hiVect();
+    const int* cb = bx.cbVect();
+    
+    //iteration policies
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<2, outer_iter_policy, inner_iter_policy> > t_policy2;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, outer_iter_policy, inner_iter_policy> > t_policy3;
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy4;
+     
+    const int maxmaxorder=4;
+    const Real xInt = -0.5;
+    int Lmaxorder;
+    oarray<Real> x(-1,maxmaxorder-2);
+    oarray<Real> coef(-1,maxmaxorder-2);
+    
+    if ( maxorder == -1 ){
+        Lmaxorder = maxmaxorder;
+    }
+    else{
+        Lmaxorder = std::min(maxorder,maxmaxorder);
+    }
+    int lenx = std::min(hi[0]-lo[0], Lmaxorder-2);
+    int leny = std::min(hi[1]-lo[1], Lmaxorder-2);
+    int lenz = std::min(hi[2]-lo[2], Lmaxorder-2);
+    
+    for(int m=0; m<=maxmaxorder-2; m++){
+       x[m] = Real(m) + 0.5;
+    }
+    
+    ViewFab<Real> phiv = phi.view_fab;
+    ViewFab<Real> bcvalv = bcval.view_fab;
+    ViewFab<Real> denv = den.view_fab;
+    ViewFab<int> maskv = mask.view_fab;
+    
+    //+/- X
+    if (cdir==0 || cdir == 3){
+        int comp = (cdir==0 ? lo[0] : hi[0]);
+        int comps = (cdir==0 ? lo[0]-1 : hi[0]+1);
+        int sign = (cdir==0 ? +1 : -1);
+        
+        if (is_neumann(bct)){
+            Kokkos::Experimental::md_parallel_for(t_policy3({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, numcomp}, {cb[1], cb[2], numcomp}),
+            KOKKOS_LAMBDA(const int j, const int k, const int n){
+                const int nsrc=n+src_comp;
+                phiv(comps,j,k,nsrc) = (maskv(comps,j,k) > 0 ? phiv(comp,j,k,nsrc) : phiv(comps,j,k,nsrc));
+            });
+           if ( flagden == 1){
+               Kokkos::Experimental::md_parallel_for(t_policy2({lo[1], lo[2]}, {hi[1]+1, hi[2]+1}, {cb[1], cb[2]}),
+               KOKKOS_LAMBDA(const int j, const int k){
+                   denv(comp,j,k) = 1.;
+               });
+            }
+        }
+        else if(is_dirichlet(bct)){
+            x[-1] = - bcl/h[0];
+            polyInterpCoeff(xInt, x, lenx+2, coef);
+            if ( flagbc == 1 ){
+                const Real cf = coef[-1];
+                Kokkos::Experimental::md_parallel_for(t_policy3({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, numcomp}, {cb[1], cb[2], numcomp}),
+                KOKKOS_LAMBDA(const int j, const int k, const int n){
+                    const int nsrc=n+src_comp;
+                    phiv(comps, j, k, nsrc) = (maskv(comps,j,k) > 0 ? bcvalv(comps,j,k,n+bndry_comp)*cf : phiv(comps, j, k, nsrc));
+                });
+            }
+            else{
+                Kokkos::Experimental::md_parallel_for(t_policy3({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, numcomp}, {cb[1], cb[2], numcomp}),
+                KOKKOS_LAMBDA(const int j, const int k, const int n){
+                    const int nsrc=n+src_comp;
+                    phiv(comps, j, k, nsrc) = (maskv(comps,j,k) > 0 ? 0. : phiv(comps, j, k, nsrc));
+                });
+            }
+            for(int m = 0; m<=lenx; m++){
+                const Real cf = coef[m];
+                Kokkos::Experimental::md_parallel_for(t_policy3({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, numcomp}, {cb[1], cb[2], numcomp}),
+                KOKKOS_LAMBDA(const int j, const int k, const int n){
+                    const int nsrc=n+src_comp;
+                    phiv(comps, j, k, nsrc) = (maskv(comps,j,k) > 0 ? phiv(comps,j,k,nsrc) + phiv(comp+sign*m, j, k, nsrc)*cf : phiv(comps, j, k, nsrc));
+                });
+            }
+            if ( flagden == 1){
+                const Real cf = coef[0];
+                Kokkos::Experimental::md_parallel_for(t_policy2({lo[1], lo[2]}, {hi[1]+1, hi[2]+1}, {cb[1], cb[2]}),
+                KOKKOS_LAMBDA(const int j, const int k){
+                    denv(comp,j,k) = (maskv(comps,j,k)>0 ? cf : 0.);
+                });
+             }
+        }
+        else if ( bct == LO_REFLECT_ODD ){
+            Kokkos::Experimental::md_parallel_for(t_policy3({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, numcomp}, {cb[1], cb[2], numcomp}),
+            KOKKOS_LAMBDA(const int j, const int k, const int n){
+                const int nsrc = n+src_comp;
+                phiv(comps, j, k, nsrc) = (maskv(comps,j,k) > 0 ? -phiv(comp, j, k, nsrc) : phiv(comps, j, k, nsrc) );
+            });
+            if ( flagden == 1){
+                Kokkos::Experimental::md_parallel_for(t_policy2({lo[1], lo[2]}, {hi[1]+1, hi[2]+1}, {cb[1], cb[2]}),
+                KOKKOS_LAMBDA(const int j, const int k){
+                    denv(comp,j,k) = (maskv(comps,j,k)>0 ? -1. : 0.);
+                });
+             }
+        }
+        else{
+            BoxLib::Error("UNKNOWN BC ON LEFT FACE IN APPLYBC");
+        }
+    }
+    
+    //+/- Y
+    if (cdir==1 || cdir == 4){
+        int comp = (cdir==0 ? lo[1] : hi[1]);
+        int comps = (cdir==0 ? lo[1]-1 : hi[1]+1);
+        int sign = (cdir==0 ? +1 : -1);
+        
+        if (is_neumann(bct)){
+            Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[2], 0}, {hi[0]+1, hi[2]+1, numcomp}, {cb[0], cb[2], numcomp}),
+            KOKKOS_LAMBDA(const int i, const int k, const int n){
+                const int nsrc=n+src_comp;
+                phiv(i,comp,k,nsrc) = (maskv(i,comps,k) > 0 ? phiv(i,comp,k,nsrc) : phiv(i,comps,k,nsrc));
+            });
+           if ( flagden == 1){
+               Kokkos::Experimental::md_parallel_for(t_policy2({lo[0], lo[2]}, {hi[0]+1, hi[2]+1}, {cb[0], cb[2]}),
+               KOKKOS_LAMBDA(const int i, const int k){
+                   denv(i,comp,k) = 1.;
+               });
+            }
+        }
+        else if(is_dirichlet(bct)){
+            x[-1] = - bcl/h[1];
+            polyInterpCoeff(xInt, x, leny+2, coef);
+            if ( flagbc == 1 ){
+                const Real cf = coef[-1];
+                Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[2], 0}, {hi[0]+1, hi[2]+1, numcomp}, {cb[0], cb[2], numcomp}),
+                KOKKOS_LAMBDA(const int i, const int k, const int n){
+                    const int nsrc=n+src_comp;
+                    phiv(i,comps,k,nsrc) = (maskv(i,comps,k) > 0 ? bcvalv(i,comps,k,n+bndry_comp)*cf : phiv(i,comps,k,nsrc));
+                });
+            }
+            else{
+                Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[2], 0}, {hi[0]+1, hi[2]+1, numcomp}, {cb[0], cb[2], numcomp}),
+                KOKKOS_LAMBDA(const int i, const int k, const int n){
+                    const int nsrc=n+src_comp;
+                    phiv(i,comps,k,nsrc) = (maskv(i,comps,k) > 0 ? 0. : phiv(i,comps,k,nsrc));
+                });
+            }
+            for(int m = 0; m<=leny; m++){
+                const double cf = coef[m];
+                Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[2], 0}, {hi[0]+1, hi[2]+1, numcomp}, {cb[0], cb[2], numcomp}),
+                KOKKOS_LAMBDA(const int i, const int k, const int n){
+                    const int nsrc=n+src_comp;
+                    phiv(i,comps,k,nsrc) = (maskv(i,comps,k) > 0 ? phiv(i,comps,k,nsrc) + phiv(i,comp+sign*m,k,nsrc)*cf : phiv(i,comps,k,nsrc));
+                });
+            }
+            if ( flagden == 1){
+                const Real cf = coef[0];
+                Kokkos::Experimental::md_parallel_for(t_policy2({lo[0], lo[2]}, {hi[0]+1, hi[2]+1}, {cb[0], cb[2]}),
+                KOKKOS_LAMBDA(const int i, const int k){
+                    denv(i,comp,k) = (maskv(i,comps,k)>0 ? cf : 0.);
+                });
+             }
+        }
+        else if ( bct == LO_REFLECT_ODD ){
+            Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[2], 0}, {hi[0]+1, hi[2]+1, numcomp}, {cb[0], cb[2], numcomp}),
+            KOKKOS_LAMBDA(const int i, const int k, const int n){
+                const int nsrc = n+src_comp;
+                phiv(i,comps,k,nsrc) = (maskv(i,comps,k) > 0 ? -phiv(i,comp,k,nsrc) : phiv(i,comps,k,nsrc) );
+            });
+            if ( flagden == 1){
+                Kokkos::Experimental::md_parallel_for(t_policy2({lo[0], lo[2]}, {hi[0]+1, hi[2]+1}, {cb[0], cb[2]}),
+                KOKKOS_LAMBDA(const int i, const int k){
+                    denv(i,comp,k) = (maskv(i,comps,k)>0 ? -1. : 0.);
+                });
+             }
+        }
+        else{
+            BoxLib::Error("UNKNOWN BC ON LEFT FACE IN APPLYBC");
+        }
+    }
+    
+    //+/- Z
+    if (cdir==2 || cdir == 5){
+        int comp = (cdir==0 ? lo[2] : hi[2]);
+        int comps = (cdir==0 ? lo[2]-1 : hi[2]+1);
+        int sign = (cdir==0 ? +1 : -1);
+        
+        if (is_neumann(bct)){
+            Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, numcomp}, {cb[0], cb[1], numcomp}),
+            KOKKOS_LAMBDA(const int i, const int j, const int n){
+                const int nsrc=n+src_comp;
+                phiv(i,j,comp,nsrc) = (maskv(i,j,comps) > 0 ? phiv(i,j,comp,nsrc) : phiv(i,j,comps,nsrc));
+            });
+           if ( flagden == 1){
+               Kokkos::Experimental::md_parallel_for(t_policy2({lo[0], lo[1]}, {hi[0]+1, hi[1]+1}, {cb[0], cb[1]}),
+               KOKKOS_LAMBDA(const int i, const int j){
+                   denv(i,j,comp) = 1.;
+               });
+            }
+        }
+        else if(is_dirichlet(bct)){
+            x[-1] = - bcl/h[2];
+            polyInterpCoeff(xInt, x, lenz+2, coef);
+            if ( flagbc == 1 ){
+                const Real cf = coef[-1];
+                Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, numcomp}, {cb[0], cb[1], numcomp}),
+                KOKKOS_LAMBDA(const int i, const int j, const int n){
+                    const int nsrc=n+src_comp;
+                    phiv(i,j,comps,nsrc) = (maskv(i,j,comps) > 0 ? bcvalv(i,j,comps,n+bndry_comp)*cf : phiv(i,j,comps,nsrc));
+                });
+            }
+            else{
+                Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, numcomp}, {cb[0], cb[1], numcomp}),
+                KOKKOS_LAMBDA(const int i, const int j, const int n){
+                    const int nsrc=n+src_comp;
+                    phiv(i,j,comps,nsrc) = (maskv(i,j,comps) > 0 ? 0. : phiv(i,j,comps,nsrc));
+                });
+            }
+            for(int m = 0; m<=lenz; m++){
+                const Real cf = coef[m];
+                Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, numcomp}, {cb[0], cb[1], numcomp}),
+                KOKKOS_LAMBDA(const int i, const int j, const int n){
+                    const int nsrc=n+src_comp;
+                    phiv(i,j,comps,nsrc) = (maskv(i,j,comps) > 0 ? phiv(i,j,comps,nsrc) + phiv(i,j,comp+sign*m,nsrc)*cf : phiv(i,j,comps,nsrc));
+                });
+            }
+            if ( flagden == 1){
+                const Real cf = coef[0];
+                Kokkos::Experimental::md_parallel_for(t_policy2({lo[0], lo[1]}, {hi[0]+1, hi[1]+1}, {cb[0], cb[1]}),
+                KOKKOS_LAMBDA(const int i, const int j){
+                    denv(i,j,comp) = (maskv(i,j,comps)>0 ? cf : 0.);
+                });
+             }
+        }
+        else if ( bct == LO_REFLECT_ODD ){
+            Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, numcomp}, {cb[0], cb[1], numcomp}),
+            KOKKOS_LAMBDA(const int i, const int j, const int n){
+                const int nsrc = n+src_comp;
+                phiv(i,j,comps,nsrc) = (maskv(i,j,comps) > 0 ? -phiv(i,j,comp,nsrc) : phiv(i,j,comps,nsrc) );
+            });
+            if ( flagden == 1){
+                Kokkos::Experimental::md_parallel_for(t_policy2({lo[0], lo[1]}, {hi[0]+1, hi[1]+1}, {cb[0], cb[1]}),
+                KOKKOS_LAMBDA(const int i, const int j){
+                    denv(i,j,comp) = (maskv(i,j,comps)>0 ? -1. : 0.);
+                });
+             }
+        }
+        else{
+            BoxLib::Error("UNKNOWN BC ON LEFT FACE IN APPLYBC");
         }
     }
 }
