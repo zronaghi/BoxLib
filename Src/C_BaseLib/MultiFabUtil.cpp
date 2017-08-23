@@ -9,9 +9,9 @@ namespace BoxLib
 	BL_ASSERT(cc.nComp() >= dcomp + BL_SPACEDIM);
 	BL_ASSERT(edge.size() == BL_SPACEDIM);
 	BL_ASSERT(edge[0]->nComp() == 1);
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
 	{
 	    const Box& bx = mfi.tilebox();
@@ -35,9 +35,9 @@ namespace BoxLib
 	Real problo[3] = {0.,0.,0.};
 	int coord_type = 0;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
 	{
 	    const Box& bx = mfi.tilebox();
@@ -62,9 +62,9 @@ namespace BoxLib
 	const Real* problo = geom.ProbLo();
 	int coord_type = Geometry::Coord();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
 	{
 	    const Box& bx = mfi.tilebox();
@@ -90,9 +90,9 @@ namespace BoxLib
 	const Real* problo = geom.ProbLo();
 	int coord_type = Geometry::Coord();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
 	{
 	    const Box& xbx = mfi.nodaltilebox(0);
