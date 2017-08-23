@@ -176,10 +176,6 @@ LinOp::apply (MultiFab&      out,
 	      int            bndry_comp)
 {
     applyBC(in,src_comp,num_comp,level,bc_mode,local,bndry_comp);
-    
-    std::cout << "AFTER BC: " << in.norm1() << std::endl;
-    exit(1);
-    
     Fapply(out,dst_comp,in,src_comp,num_comp,level);
 }
 

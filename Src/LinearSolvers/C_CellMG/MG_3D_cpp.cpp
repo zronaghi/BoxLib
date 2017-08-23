@@ -769,9 +769,9 @@ const Real* h)
     
     //+/- Y
     if (cdir==1 || cdir == 4){
-        int comp = (cdir==0 ? lo[1] : hi[1]);
-        int comps = (cdir==0 ? lo[1]-1 : hi[1]+1);
-        int sign = (cdir==0 ? +1 : -1);
+        int comp = (cdir==1 ? lo[1] : hi[1]);
+        int comps = (cdir==1 ? lo[1]-1 : hi[1]+1);
+        int sign = (cdir==1 ? +1 : -1);
         
         if (is_neumann(bct)){
             Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[2], 0}, {hi[0]+1, hi[2]+1, numcomp}, {cb[0], cb[2], numcomp}),
@@ -840,9 +840,9 @@ const Real* h)
     
     //+/- Z
     if (cdir==2 || cdir == 5){
-        int comp = (cdir==0 ? lo[2] : hi[2]);
-        int comps = (cdir==0 ? lo[2]-1 : hi[2]+1);
-        int sign = (cdir==0 ? +1 : -1);
+        int comp = (cdir==2 ? lo[2] : hi[2]);
+        int comps = (cdir==2 ? lo[2]-1 : hi[2]+1);
+        int sign = (cdir==2 ? +1 : -1);
         
         if (is_neumann(bct)){
             Kokkos::Experimental::md_parallel_for(t_policy3({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, numcomp}, {cb[0], cb[1], numcomp}),
