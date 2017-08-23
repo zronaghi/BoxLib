@@ -1433,7 +1433,6 @@ BaseFab<T>::performCopy (const BaseFab<T>& src,
     BL_ASSERT((srcbox).sameSize(_subbox_)); 
     if (_subbox_.ok()){
         //define policy
-        typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
         
         const int *_subbox_lo = _subbox_.loVect();
         const int *_srcbox_lo = srcbox.loVect();
@@ -1443,7 +1442,7 @@ BaseFab<T>::performCopy (const BaseFab<T>& src,
         ViewFab<T> fab = this->view_fab; 
         ViewFab<T> srcfab = src.view_fab; 
     
-        Kokkos::parallel_for(t_policy({0, 0, 0, 0}, {_subbox_.length(0), _subbox_.length(1), _subbox_.length(2), numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+        Kokkos::parallel_for(mdpolicy<4>({0, 0, 0, 0}, {_subbox_.length(0), _subbox_.length(1), _subbox_.length(2), numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
             fab(i+_subbox_lo[0], j+_subbox_lo[1], k+_subbox_lo[2], n) = srcfab(i+_srcbox_lo[0], j+_srcbox_lo[1], k+_srcbox_lo[2], n);
         });
@@ -1527,7 +1526,6 @@ BaseFab<T>::performSetVal (T          val,
     }
     
     //define policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
         
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
@@ -1535,7 +1533,7 @@ BaseFab<T>::performSetVal (T          val,
         
     ViewFab<T> fab = this->view_fab; 
     
-    Kokkos::parallel_for(t_policy({lo[0], lo[1], lo[2], ns}, {hi[0]+1, hi[1]+1, hi[2]+1, ns+num}, {cb[0], cb[1], cb[2], ns+num}), 
+    Kokkos::parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], ns}, {hi[0]+1, hi[1]+1, hi[2]+1, ns+num}, {cb[0], cb[1], cb[2], ns+num}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
         fab(i,j,k,n) = val;
     });
@@ -1930,8 +1928,6 @@ BaseFab<T>::norm (const Box& subbox,
     BL_ASSERT(p >= 0);
 
     Real  nrm    = 0;
-    Real* tmp    = 0;
-    int   tmplen = 0;
 
     if (p == 0)
     {
@@ -1959,13 +1955,12 @@ BaseFab<T>::norm (const Box& subbox,
         //    nrm = std::max(nrm, tmp[i]);
 #if BL_SPACEDIM == 3
         //define policy
-        typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
         
         const int *lo = subbox.loVect();
         const int *hi = subbox.hiVect();
         const int *cb = subbox.cbVect();
         
-        Kokkos::parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+        Kokkos::parallel_reduce(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], comp+numcomp}), 
             P0NormFunctor<T>(this->view_fab), nrm);
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
@@ -1994,13 +1989,12 @@ BaseFab<T>::norm (const Box& subbox,
         //    nrm += tmp[i];
 #if BL_SPACEDIM == 3
         //define policy
-        typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
         
         const int *lo = subbox.loVect();
         const int *hi = subbox.hiVect();
         const int *cb = subbox.cbVect();
         
-        Kokkos::parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+        Kokkos::parallel_reduce(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], comp+numcomp}), 
             P1NormFunctor<T>(this->view_fab),nrm);
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
@@ -2010,8 +2004,6 @@ BaseFab<T>::norm (const Box& subbox,
     {
       BoxLib::Error("BaseFab::norm(): only p == 0 or p == 1 are supported");
     }
-
-    delete [] tmp;
 
     return nrm;
 }
@@ -2377,6 +2369,38 @@ BaseFab<T>::sum (int comp,
 }
 
 template <class T>
+struct SumFunctor {
+  using value_type = T;
+  using execution_space = devspace;
+
+  ViewFab<T> fab;
+
+  SumFunctor(ViewFab<T> infab):fab(infab) {}
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  void operator()(const int i, const int j, const int k, const int n, T& tmpsum) const {
+    tmpsum += fab(i,j,k,n);
+  }
+
+  //Required
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type& dest, const value_type& src)  const {
+    dest += src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& dest, const volatile value_type& src) const {
+    dest += src;
+  }
+
+  //Required
+  KOKKOS_INLINE_FUNCTION
+  void init( value_type& val)  const {
+    val = 0;
+  }
+};
+
+template <class T>
 T
 BaseFab<T>::sum (const Box& subbox,
                  int        comp,
@@ -2386,20 +2410,15 @@ BaseFab<T>::sum (const Box& subbox,
     
 #if BL_SPACEDIM == 3
     //define policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
         
     const int *lo = subbox.loVect();
     const int *hi = subbox.hiVect();
     const int *cb = subbox.cbVect();
         
-    ViewFab<T> fab = this->view_fab; 
-        
-    Kokkos::parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
-    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpsum){
-        tmpsum += fab(i,j,k,n);
-    },sum);
+    Kokkos::parallel_reduce(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], comp+numcomp}), 
+        SumFunctor<T>(this->view_fab), _sum);
 #else
-#error "BaseFab::norm needs to be implemented for other spacedims"
+#error "BaseFab::sum needs to be implemented for other spacedims"
 #endif
     
     //T*  _sum_row = 0;

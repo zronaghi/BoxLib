@@ -275,6 +275,7 @@ LinOp::BC_Mode  bc_mode)
 	cor[level]->copy(_sol);
     
     //DEBUG
+    std::cout << "initialsolution: " << initialsolution->norm1() << std::endl;
     std::cout << "cor[" << level << "]: " << cor[level]->norm1() << std::endl;
     //DEBUG
     

@@ -54,6 +54,11 @@ static constexpr Kokkos::Experimental::Iterate inner_iter_policy = Kokkos::Exper
 #endif
 #endif
 
+template <int dim>
+using mdpolicy = Kokkos::Experimental::MDRangePolicy<
+    Kokkos::Experimental::Rank<dim, outer_iter_policy, inner_iter_policy>,
+    Kokkos::IndexType<int> >;
+
 //a small class for wrapping kokkos views nicely
 template <typename T>
 class ViewFab {

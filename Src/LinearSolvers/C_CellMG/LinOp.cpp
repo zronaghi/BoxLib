@@ -276,6 +276,11 @@ LinOp::residual (MultiFab&       residL,
 {
     BL_PROFILE("LinOp::residual()");
     apply(residL, solnL, level, bc_mode, local);
+    
+    //DEBUG
+    std::cout << "residual: residL: " << residL.norm1() << std::endl;
+    //DEBUG
+    
     MultiFab::Xpay(residL, -1.0, rhsL, 0, 0, residL.nComp(), 0);
 }
 
