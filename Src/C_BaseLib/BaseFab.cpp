@@ -485,12 +485,18 @@ BaseFab<Real>::xpay (Real a, const BaseFab<Real>& src,
 #if BL_SPACEDIM == 3    
     //define policy
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
-        
-    const int *lo = destbox.loVect();
-    const int *hi = destbox.hiVect();
-    const int *cb = destbox.cbVect();
-    const int *sblo = srcbox.loVect();
-        
+
+    Kokkos::Array<int, 3> lo;
+    Kokkos::Array<int, 3> hi;
+    Kokkos::Array<int, 3> cb;
+    Kokkos::Array<int, 3> sblo;
+    for (int i = 0; i < 3; ++i) {
+      lo[i] = destbox.loVect()[i];
+      hi[i] = destbox.hiVect()[i];
+      cb[i] = destbox.cbVect()[i];
+      sblo[i] = srcbox.loVect()[i];
+    }
+
     ViewFab<Real> destfab = this->view_fab; 
     ViewFab<Real> srcfab = src.view_fab; 
     
