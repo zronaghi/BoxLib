@@ -267,12 +267,6 @@ enum bc_t {Periodic = 0,
             for ( int n=0; n<BL_SPACEDIM; ++n ) {
                 BoxArray bx(bs);
                 beta.set(n, new MultiFab(bx.surroundingNodes(n), Ncomp, 0, Fab_allocate));
-                
-                //upload
-                MultiFab& tmpbeta = beta.get(n);
-                for (MFIter mfi(tmpbeta,false); mfi.isValid(); ++mfi) {
-                    tmpbeta[mfi].view_fab.syncH2D();
-                }
             }
 
             // The way HPGMG stores face-centered data is completely different than the
@@ -285,6 +279,15 @@ enum bc_t {Periodic = 0,
 
             MultiFab beta_cc(bs,Ncomp,1); // cell-centered beta
             setup_coeffs(bs, alpha, beta, geom, beta_cc);
+            
+            //upload
+            for ( int n=0; n<BL_SPACEDIM; ++n ) {
+                //upload
+                MultiFab& tmpbeta = beta.get(n);
+                for (MFIter mfi(tmpbeta,false); mfi.isValid(); ++mfi) {
+                    tmpbeta[mfi].view_fab.syncH2D();
+                }
+            }
 
             MultiFab alpha4, beta4;
             if (do_4th) {

@@ -614,9 +614,14 @@ Real&          cg_time)
 		}
 		for (int i = preSmooth() ; i > 0 ; i--)
 		{
+            //DEBUG
+            std::cout << "solL BEFORE(" << i << "): " << solL.norm1() << std::endl;
+            std::cout << "rhsL BEFORE(" << i << "): " << rhsL.norm1() << std::endl;
+            //DEBUG
 			Lp.smooth(solL, rhsL, level, bc_mode);
             //DEBUG
-            std::cout << "solL(" << i << "): " << solL.norm1() << std::endl;
+            std::cout << "solL AFTER(" << i << "): " << solL.norm1() << std::endl;
+            std::cout << "rhsL AFTER(" << i << "): " << rhsL.norm1() << std::endl;
             //DEBUG
 		}
         //DEBUG

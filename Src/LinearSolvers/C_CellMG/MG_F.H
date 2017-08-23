@@ -71,6 +71,31 @@
 #include <Mask.H>
 #include <Kokkos_Core.hpp>
 
+template <typename T>
+struct oarray{
+    
+public:
+    //the ranges are inclusive!
+    oarray(int lo_, int hi_){
+        lo = lo_;
+        size = hi_ - lo_ + 1;
+        data = new data[size]
+    }
+    
+    ~oarray(){
+        delete [] data;
+    }
+    
+    T& operator[](int index){
+        return data[index-lo];
+    }
+    
+private:
+    int lo;
+    int size;
+    T* data;
+};
+
 void C_AVERAGE(
 		const Box& bx,
         const int nc,
