@@ -12,7 +12,7 @@ public:
     C_AVERAGE_FUNCTOR(const FArrayBox& c_, const FArrayBox& f_) :
       cv(c_.view_fab), fv(f_.view_fab)
     {
-      fv.syncH2D();
+      //fv.syncH2D();
     }
 
     KOKKOS_FORCEINLINE_FUNCTION
@@ -22,7 +22,7 @@ public:
     }
 
     void fill(){
-      cv.syncD2H();
+      //cv.syncD2H();
     }
 private:
     ViewFab<Real> cv, fv;
@@ -59,8 +59,8 @@ public:
     C_INTERP_FUNCTOR(const FArrayBox& f_, const FArrayBox& c_)
       : fv(f_.view_fab), cv(c_.view_fab)
     {
-        fv.syncH2D();
-        cv.syncH2D();
+        //fv.syncH2D();
+        //cv.syncH2D();
     }
 
     KOKKOS_FORCEINLINE_FUNCTION
@@ -76,7 +76,7 @@ public:
     }
 
     void fill(){
-        fv.syncD2H();
+        //fv.syncD2H();
     }
 private:
     ViewFab<Real> fv, cv;
@@ -181,25 +181,25 @@ public:
     alpha(alpha_),
     beta(beta_)
   {
-    phiv.syncH2D();
-    //these should not be needed:
-    rhsv.syncH2D();
-    av.syncH2D();
-    bXv.syncH2D();
-    bYv.syncH2D();
-    bZv.syncH2D();
-    f0v.syncH2D();
-    f1v.syncH2D();
-    f2v.syncH2D();
-    f3v.syncH2D();
-    f4v.syncH2D();
-    f5v.syncH2D();
-    m0v.syncH2D();
-    m1v.syncH2D();
-    m2v.syncH2D();
-    m3v.syncH2D();
-    m4v.syncH2D();
-    m5v.syncH2D();
+    //phiv.syncH2D();
+    ////these should not be needed:
+    //rhsv.syncH2D();
+    //av.syncH2D();
+    //bXv.syncH2D();
+    //bYv.syncH2D();
+    //bZv.syncH2D();
+    //f0v.syncH2D();
+    //f1v.syncH2D();
+    //f2v.syncH2D();
+    //f3v.syncH2D();
+    //f4v.syncH2D();
+    //f5v.syncH2D();
+    //m0v.syncH2D();
+    //m1v.syncH2D();
+    //m2v.syncH2D();
+    //m3v.syncH2D();
+    //m4v.syncH2D();
+    //m5v.syncH2D();
       
     //some parameters
     omega= 1.15;
@@ -287,7 +287,7 @@ public:
     }
 
     void fill(){
-        phiv.syncD2H();
+        //phiv.syncD2H();
     }
 
 private:
@@ -385,9 +385,7 @@ public:
     const FArrayBox& bX_,
     const FArrayBox& bY_,
     const FArrayBox& bZ_,
-    const Real* h,
-    const int wbegin_in,
-    const int wend_in) :
+    const Real* h) :
     yv(y_.view_fab),
     xv(x_.view_fab),
     av(a_.view_fab),
@@ -397,18 +395,16 @@ public:
     alpha(alpha_),
     beta(beta_) {
         
-        av.syncH2D();
-        xv.syncH2D();
-        bXv.syncH2D();
-        bYv.syncH2D();
-        bZv.syncH2D();
+        //av.syncH2D();
+        //xv.syncH2D();
+        //bXv.syncH2D();
+        //bYv.syncH2D();
+        //bZv.syncH2D();
 
         //helpers
         dhx = beta/(h[0]*h[0]);
         dhy = beta/(h[1]*h[1]);
         dhz = beta/(h[2]*h[2]);
-        wbegin = wbegin_in;
-        wend = wend_in;
     }
 
     KOKKOS_FORCEINLINE_FUNCTION
@@ -420,7 +416,7 @@ public:
     }
 
     void fill(){
-        yv.syncD2H();
+        //yv.syncD2H();
     }
 
 private:
@@ -428,8 +424,6 @@ private:
     Box bx;
     int nc;
     Real alpha, beta, dhx, dhy, dhz;
-    int wbegin;
-    int wend;
 };
 
 void C_ADOTX(
@@ -452,13 +446,13 @@ const Real* h)
     const int *cb = bx.cbVect();
 
     //create functor
-    C_ADOTX_FUNCTOR cadxfunc(y,x,alpha,beta,a,bX,bY,bZ,h,lo[2],hi[2]+1);
+    C_ADOTX_FUNCTOR cadxfunc(y,x,alpha,beta,a,bX,bY,bZ,h);
 
     //create policy
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left>> t_policy;
 
     //execute
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {32, 1, 1, 1}), cadxfunc);
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cadxfunc);
 
     //write back result
     cadxfunc.fill();
@@ -468,6 +462,61 @@ const Real* h)
 //
 //     Fill in a matrix x vector operator here
 //
+//ADOTX Functor
+struct C_NORMA_FUNCTOR{
+    
+public:
+
+    C_NORMA_FUNCTOR(const Real& alpha_,
+    const Real& beta_,
+    const FArrayBox& a_,
+    const FArrayBox& bX_,
+    const FArrayBox& bY_,
+    const FArrayBox& bZ_,
+    const Real* h) :
+    av(a_.view_fab),
+    bXv(bX_.view_fab),
+    bYv(bY_.view_fab),
+    bZv(bZ_.view_fab),
+    alpha(alpha_),
+    beta(beta_) {
+        
+        //av.syncH2D();
+        //bXv.syncH2D();
+        //bYv.syncH2D();
+        //bZv.syncH2D();
+
+        //helpers
+        dhx = beta/(h[0]*h[0]);
+        dhy = beta/(h[1]*h[1]);
+        dhz = beta/(h[2]*h[2]);
+    }
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    void operator()(const int i, const int j, const int k, const int n, Real& tmpres) const{
+        //first part:
+        Real tmpval = std::abs( alpha*av(i,j,k)
+                    + dhx * ( bXv(i+1,j,k) + bXv(i,j,k) )
+                    + dhy * ( bYv(i,j+1,k) + bYv(i,j,k) )
+                    + dhz * ( bZv(i,j,k+1) + bZv(i,j,k) ) );
+
+        //add the rest
+        tmpval +=  std::abs( dhx * bXv(i+1,j,k) ) + std::abs( dhx * bXv(i,j,k) )
+                 + std::abs( dhy * bYv(i,j+1,k) ) + std::abs( dhy * bYv(i,j,k) )
+                 + std::abs( dhz * bZv(i,j,k+1) ) + std::abs( dhz * bZv(i,j,k) );
+
+        //max:
+        tmpres = std::max(tmpres,tmpval);
+    }
+
+private:    
+    ViewFab<Real> av, bXv, bYv, bZv;
+    Box bx;
+    int nc;
+    Real alpha, beta, dhx, dhy, dhz;
+};
+
+    //NORMA kernel
 void C_NORMA(
     const Box& bx,
 const int nc,
@@ -484,37 +533,19 @@ const Real* h)
     //box extends:
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
-
-    //some parameters
-    Real dhx = beta/(h[0]*h[0]);
-    Real dhy = beta/(h[1]*h[1]);
-    Real dhz = beta/(h[2]*h[2]);
+    const int *cb = bx.cbVect();
 
     //initialize to zero
     res = 0.0;
 
-    for (int n = 0; n<nc; n++){
-        for (int k = lo[2]; k <= hi[2]; ++k) {
-            for (int j = lo[1]; j <= hi[1]; ++j) {
-                for (int i = lo[0]; i <= hi[0]; ++i) {
+    //create functor
+    C_NORMA_FUNCTOR cnormafunc(alpha,beta,a,bX,bY,bZ,h);
 
-                    //first part:
-                    Real tmpval = alpha*a(IntVect(i,j,k))
-                                + dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )
-                                + dhy * ( bY(IntVect(i,j+1,k)) + bY(IntVect(i,j,k)) )
-                                + dhz * ( bZ(IntVect(i,j,k+1)) + bZ(IntVect(i,j,k)) );
+    //create policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left>> t_policy;
 
-                    //add the rest
-                    tmpval +=  std::abs( dhx * bX(IntVect(i+1,j,k)) ) + std::abs( dhx * bX(IntVect(i,j,k)) )
-                             + std::abs( dhy * bY(IntVect(i,j+1,k)) ) + std::abs( dhy * bY(IntVect(i,j,k)) )
-                             + std::abs( dhz * bZ(IntVect(i,j,k+1)) ) + std::abs( dhz * bZ(IntVect(i,j,k)) );
-
-                    //max:
-                    res = std::max(res,tmpval);
-                }
-            }
-        }
-    }
+    //execute
+    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cnormafunc, res);
 }
 
 //-----------------------------------------------------------------------

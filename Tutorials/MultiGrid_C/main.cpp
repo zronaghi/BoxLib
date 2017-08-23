@@ -267,6 +267,12 @@ enum bc_t {Periodic = 0,
             for ( int n=0; n<BL_SPACEDIM; ++n ) {
                 BoxArray bx(bs);
                 beta.set(n, new MultiFab(bx.surroundingNodes(n), Ncomp, 0, Fab_allocate));
+                
+                //upload
+                MultiFab& tmpbeta = beta.get(n);
+                for (MFIter mfi(tmpbeta,false); mfi.isValid(); ++mfi) {
+                    tmpbeta[mfi].view_fab.syncH2D();
+                }
             }
 
             // The way HPGMG stores face-centered data is completely different than the
@@ -379,9 +385,6 @@ enum bc_t {Periodic = 0,
 
             comp_asol(anaSoln[mfi].dataPtr(), ARLIM(alo), ARLIM(ahi),
             bx.loVect(),bx.hiVect(),dx, ibnd, offset.dataPtr());
-            
-            //upload
-            anaSoln[mfi].view_fab.syncH2D();
         }
     }
 
@@ -414,7 +417,7 @@ enum bc_t {Periodic = 0,
 
         BoxLib::average_cellcenter_to_face(beta, cc_coef, geom);
         
-        //upload data:
+        //upload
         for ( MFIter mfi(alpha,false); mfi.isValid(); ++mfi ) {
             alpha[mfi].view_fab.syncH2D();
             cc_coef[mfi].view_fab.syncH2D();
@@ -433,7 +436,7 @@ enum bc_t {Periodic = 0,
         pp.get("sigma", sigma);
         pp.get("w", w);
 
-        for ( MFIter mfi(alpha); mfi.isValid(); ++mfi ) {
+        for ( MFIter mfi(alpha,false); mfi.isValid(); ++mfi ) {
             const Box& bx = mfi.validbox();
 
             const int* alo = alpha[mfi].loVect();
@@ -487,14 +490,14 @@ enum bc_t {Periodic = 0,
             set_rhs(rhs[mfi].dataPtr(),ARLIM(rlo),ARLIM(rhi),
             tbx.loVect(),tbx.hiVect(),dx, a, b, sigma, w, ibnd);
             
-            //sync data to device
+            //upload
             rhs[mfi].view_fab.syncH2D();
         }
 
         // MultiFab::sum() does a tiled MFIter loop internally, so we don't want to
         // put this summation into the above tiled MFIter loop or else we get nested
         // loops over tiles, and, more importantly, the wrong answer.
-        for ( MFIter mfi(rhs); mfi.isValid(); ++mfi ) {
+        for ( MFIter mfi(rhs,false); mfi.isValid(); ++mfi ) {
             sum_rhs += rhs[mfi].sum(0,1);
         }
 
@@ -519,7 +522,7 @@ enum bc_t {Periodic = 0,
         Real bc_value = 0.0;
 
         for (int n=0; n<BL_SPACEDIM; ++n) {
-            for (MFIter mfi(rhs); mfi.isValid(); ++mfi ) {
+            for (MFIter mfi(rhs,false); mfi.isValid(); ++mfi ) {
                 int i = mfi.index(); 
       
                 const Box& bx = mfi.validbox();
@@ -601,7 +604,7 @@ enum bc_t {Periodic = 0,
 
         MultiFab solnca(bs,1,2);
         solnca.setVal(0);
-
+        
         MultiGrid mg(abec_operator);
 
         mg.setVerbose(verbose);
@@ -651,10 +654,6 @@ enum bc_t {Periodic = 0,
         std::string ss;
 
         soln.setVal(0.0);
-        //upload, i.e. init to zero
-         for ( MFIter mfi(soln,false); mfi.isValid(); ++mfi ) {
-             soln[mfi].view_fab.syncH2D();
-         }
 
         const Real run_strt = ParallelDescriptor::second();
 
@@ -733,7 +732,18 @@ enum bc_t {Periodic = 0,
 
         BndryData bd(bs, 1, geom);
         set_boundary(bd, rhs, 0);
-
+        
+        //DEBUG
+        //print all relevant norms:
+        std::cout << "soln: " << soln.norm1() << std::endl;
+        std::cout << "gphi: " << gphi.norm1() << std::endl;
+        std::cout << "alpha: " << alpha.norm1() << std::endl;
+        std::cout << "rhs: " << rhs.norm1() << std::endl;
+        for(unsigned int d=0; d<3; d++){
+            std::cout << "beta(" << d << "): " << beta.get(d).norm1() << std::endl;
+        }
+        //DEBUG
+        
         ABecLaplacian abec_operator(bd, dx, use_C_kernels);
         abec_operator.setScalars(a, b);
         abec_operator.setCoefficients(alpha, beta);

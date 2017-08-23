@@ -823,19 +823,19 @@ MultiFab::norm0 (int comp, const BoxArray& ba, int nghost, bool local) const
 {
     Real nm0 = -std::numeric_limits<Real>::max();
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:nm0)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(max:nm0)
+//#endif
     {
 	std::vector< std::pair<int,Box> > isects;
 
-	for (MFIter mfi(*this); mfi.isValid(); ++mfi)
+	for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
 	{
 	    ba.intersections(BoxLib::grow(mfi.validbox(),nghost),isects);
 
 	    for (int i = 0, N = isects.size(); i < N; i++)
 	    {
-		nm0 = std::max(nm0, get(mfi).norm(isects[i].second, 0, comp, 1));
+		    nm0 = std::max(nm0, get(mfi).norm(isects[i].second, 0, comp, 1));
 	    }
 	}
     }

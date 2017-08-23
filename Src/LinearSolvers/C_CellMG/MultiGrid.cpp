@@ -273,13 +273,21 @@ LinOp::BC_Mode  bc_mode)
 	//
 	initialsolution->copy(_sol);
 	cor[level]->copy(_sol);
-
+    
+    //DEBUG
+    std::cout << "cor[" << level << "]: " << cor[level]->norm1() << std::endl;
+    //DEBUG
+    
 	//
 	// Put the problem in residual-correction form: we will now use "rhs[level
 	// the initial residual (rhs[0]) rather than the initial RHS (_rhs)
 	// to begin the solve.
 	//
 	Lp.residual(*rhs[level],_rhs,*cor[level],level,bc_mode);
+
+    //DEBUG
+    std::cout << "rhs[" << level << "]: " << rhs[level]->norm1() << std::endl;
+    //DEBUG
 
 	//
 	// Now initialize correction to zero at this level (auto-filled at levels below)
@@ -606,7 +614,13 @@ Real&          cg_time)
 		for (int i = preSmooth() ; i > 0 ; i--)
 		{
 			Lp.smooth(solL, rhsL, level, bc_mode);
+            //DEBUG
+            std::cout << "solL(" << i << "): " << solL.norm1() << std::endl;
+            //DEBUG
 		}
+        //DEBUG
+        exit(1);
+        //DEBUG
 		Lp.residual(*res[level], rhsL, solL, level, bc_mode);
 
 		if ( verbose > 2 )

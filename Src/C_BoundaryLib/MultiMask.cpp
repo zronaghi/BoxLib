@@ -13,15 +13,15 @@ MultiMask::MultiMask (const BoxArray& regba, const DistributionMapping& dm, cons
     BoxArray mskba(regba, bbatrans);
     m_fa.define(mskba, ncomp, 0, dm, Fab_allocate);
     
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     if (initval)
     {
 	Array<IntVect> pshifts(26);
 	std::vector< std::pair<int,Box> > isects;
 
-	for (MFIter mfi(m_fa); mfi.isValid(); ++mfi)
+	for (MFIter mfi(m_fa, false); mfi.isValid(); ++mfi)
 	{
 	    Mask& m = m_fa[mfi];
 	    const Box& face_box = m.box();
@@ -85,9 +85,9 @@ MultiMask::Copy (MultiMask& dst, const MultiMask& src)
     BL_ASSERT(dst.nComp() == src.nComp());
     BL_ASSERT(dst.boxArray() == src.boxArray());
     BL_ASSERT(dst.DistributionMap() == src.DistributionMap());
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter mfi(dst.m_fa); mfi.isValid(); ++mfi) {
 	dst.m_fa[mfi].copy(src.m_fa[mfi]);
     }

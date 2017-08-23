@@ -1210,7 +1210,7 @@ BaseFab<T>::define ()
           length()[2],
           nComp());
       view_fab.d_data=Kokkos::create_mirror( devspace(), view_fab.h_data);
-          
+
 //          
 //          devview<T****>(Kokkos::ViewAllocateWithoutInitializing("BaseFab"), 
 //          length()[0],
@@ -1384,6 +1384,11 @@ BaseFab<T>::performCopy (const BaseFab<T>& src,
                 int iR = _i + _subbox_lo[0]; iR += 0; 
                 int ixR = _i + _bx_lo[0]; ixR += 0; 
                 T &thisR = * _th_pp; const T & srcR = _x_pp[_i];
+                thisR = srcR;
+            }
+        }
+    }
+}
 #elif (BL_SPACEDIM == 2)
 {                                                                       
     BL_ASSERT((destcomp) >= 0 && (destcomp) + (numcomp) <= nComp()); 
@@ -1417,7 +1422,13 @@ BaseFab<T>::performCopy (const BaseFab<T>& src,
                                                        + _n * _x_plen[1])); 
                 for (int _i = 0; _i < _subbox_len[0]; ++_i, ++_th_pp)
                 {  
-                    T &thisR = * _th_pp; const T & srcR = _x_pp[_i]; 
+                    T &thisR = * _th_pp; const T & srcR = _x_pp[_i];
+                    thisR = srcR;
+                }
+            }
+        }
+    }
+}
 #elif (BL_SPACEDIM == 3)
 { 
     BL_ASSERT((destcomp) >= 0 && (destcomp) + (numcomp) <= nComp()); 
@@ -1425,51 +1436,66 @@ BaseFab<T>::performCopy (const BaseFab<T>& src,
     Box _subbox_(box()); 
     _subbox_ &= destbox; 
     BL_ASSERT((srcbox).sameSize(_subbox_)); 
-    if (_subbox_.ok())
-    { 
-        const int *_th_plo = loVect(); 
-        const int *_th_plen = length(); 
-        const int *_x_plo = (src).loVect(); 
-        const int *_x_plen = (src).length(); 
+    if (_subbox_.ok()){
+        //define policy
+        typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
         const int *_subbox_lo = _subbox_.loVect();
-        IntVect _subbox_length = _subbox_.size();
-        const int *_subbox_len = _subbox_length.getVect(); 
-        const int *_bx_lo = (srcbox).loVect(); 
-        T* _th_p = dataPtr(destcomp); 
-        const T* _x_p  = (src).dataPtr(srccomp); 
-        for (int _n = 0; _n < (numcomp); ++_n)
-        { 
-            for (int _k = 0; _k < _subbox_len[2]; ++_k)
-            { 
-                const int kR = _k + _subbox_lo[2]; 
-                const int kxR = _k + _bx_lo[2]; 
-                for(int _j = 0; _j < _subbox_len[1]; ++_j)
-                { 
-                    const int jR = _j + _subbox_lo[1]; 
-                    const int jxR = _j + _bx_lo[1]; 
-                    T *_th_pp = _th_p + ((_subbox_lo[0] - _th_plo[0]) 
-                                         + _th_plen[0]*((jR - _th_plo[1]) 
-                                                        + _th_plen[1]*(
-                                                            (kR - _th_plo[2]) 
-                                                        + _n * _th_plen[2]))); 
-                    const T *_x_pp = _x_p + ((_bx_lo[0] - _x_plo[0]) 
-                                             + _x_plen[0]*((jxR - _x_plo[1]) 
-                                                           + _x_plen[1]*( 
-                                                            (kxR - _x_plo[2])
-                                                         + _n * _x_plen[2])));
-                    for (int _i = 0; _i < _subbox_len[0]; ++_i, ++_th_pp)
-                    {
-                        T &thisR = * _th_pp; const T & srcR = _x_pp[_i]; 
-#endif
-    {
-        thisR = srcR;
+        const int *_srcbox_lo = srcbox.loVect();
+        const int *cb = _subbox_.cbVect();
+        
+        
+        ViewFab<T> fab = this->view_fab; 
+        ViewFab<T> srcfab = src.view_fab; 
+    
+        Kokkos::Experimental::md_parallel_for(t_policy({0, 0, 0, 0}, {_subbox_.length(0), _subbox_.length(1), _subbox_.length(2), numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+        KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+            fab(i+_subbox_lo[0], j+_subbox_lo[1], k+_subbox_lo[2], n) = srcfab(i+_srcbox_lo[0], j+_srcbox_lo[1], k+_srcbox_lo[2], n);
+        });
     }
-#if (BL_SPACEDIM == 1)
-     }}}}
-#elif (BL_SPACEDIM == 2)
-     }}}}}
-#elif (BL_SPACEDIM == 3)
-     }}}}}}
+    //{ 
+    //    const int *_th_plo = loVect(); 
+    //    const int *_th_plen = length(); 
+    //    const int *_x_plo = (src).loVect(); 
+    //    const int *_x_plen = (src).length(); 
+    //    const int *_subbox_lo = _subbox_.loVect();
+    //    IntVect _subbox_length = _subbox_.size();
+    //    const int *_subbox_len = _subbox_length.getVect(); 
+    //    const int *_bx_lo = (srcbox).loVect(); 
+    //    T* _th_p = dataPtr(destcomp); 
+    //    const T* _x_p  = (src).dataPtr(srccomp); 
+    //    for (int _n = 0; _n < (numcomp); ++_n)
+    //    { 
+    //        for (int _k = 0; _k < _subbox_len[2]; ++_k)
+    //        { 
+    //            const int kR = _k + _subbox_lo[2]; 
+    //            const int kxR = _k + _bx_lo[2]; 
+    //            for(int _j = 0; _j < _subbox_len[1]; ++_j)
+    //            { 
+    //                const int jR = _j + _subbox_lo[1]; 
+    //                const int jxR = _j + _bx_lo[1]; 
+    //                T *_th_pp = _th_p + ((_subbox_lo[0] - _th_plo[0]) 
+    //                                     + _th_plen[0]*((jR - _th_plo[1]) 
+    //                                                    + _th_plen[1]*(
+    //                                                        (kR - _th_plo[2]) 
+    //                                                    + _n * _th_plen[2]))); 
+    //                const T *_x_pp = _x_p + ((_bx_lo[0] - _x_plo[0]) 
+    //                                         + _x_plen[0]*((jxR - _x_plo[1]) 
+    //                                                       + _x_plen[1]*( 
+    //                                                        (kxR - _x_plo[2])
+    //                                                     + _n * _x_plen[2])));
+    //                for (int _i = 0; _i < _subbox_len[0]; ++_i, ++_th_pp)
+    //                {
+    //                    T &thisR = * _th_pp; const T & srcR = _x_pp[_i];
+    //                    thisR = srcR;
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
+    
+    
+}
 #endif
 }
 
@@ -1483,22 +1509,44 @@ BaseFab<T>::performSetVal (T          val,
     BL_ASSERT(domain.contains(bx));
     BL_ASSERT(ns >= 0 && ns + num <= nvar);
 
-    if (bx == domain)
-    {
-        T* data = &dptr[ns*numpts];
-
-        for (long i = 0, N = num*numpts; i < N; i++)
-        {
-            *data++ = val;
-        }
+    //if (bx == domain)
+    //{
+    //    T* data = &dptr[ns*numpts];
+    //
+    //    for (long i = 0, N = num*numpts; i < N; i++)
+    //    {
+    //        *data++ = val;
+    //    }
+    //}
+    //else
+    //{
+    //    ForAllThisBNN(T,bx,ns,num)
+    //    {
+    //        thisR = val;
+    //    } EndFor
+    //}
+#if BL_SPACEDIM == 3
+    //the asserts are not sufficient, check length
+    for(unsigned int d=0; d<3; d++){
+        if(bx.length(d)<=0) return;
     }
-    else
-    {
-        ForAllThisBNN(T,bx,ns,num)
-        {
-            thisR = val;
-        } EndFor
-    }
+    
+    //define policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+    const int *lo = bx.loVect();
+    const int *hi = bx.hiVect();
+    const int *cb = bx.cbVect();
+        
+    ViewFab<T> fab = this->view_fab; 
+    
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], ns}, {hi[0]+1, hi[1]+1, hi[2]+1, ns+num}, {cb[0], cb[1], cb[2], ns+num}), 
+    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
+        fab(i,j,k,n) = val;
+    });
+#else
+#error "BaseFab::performSetVal needs to be implemented for other spacedims"
+#endif
 }
 
 template <class T>
@@ -1826,50 +1874,84 @@ BaseFab<T>::norm (const Box& subbox,
 
     if (p == 0)
     {
-        ForAllThisCPencil(T,subbox,comp,numcomp)
-        {
-            const T* row = &thisR;
-            if (tmp == 0)
-            {
-                tmp    = new Real[thisLen];
-                tmplen = thisLen;
-                for (int i = 0; i < thisLen; i++)
-                    tmp[i] = std::abs(row[i]);
-            }
-            else
-            {
-                for (int i = 0; i < thisLen; i++) {
-		    // MLW: explicit cast to Real for SX6
-		    Real rw = std::abs(row[i]);
-                    tmp[i] = std::max(tmp[i],rw);
-		}
-            }
-        } EndForPencil
-        nrm = tmp[0];
-        for (int i = 1; i < tmplen; i++)
-            nrm = std::max(nrm, tmp[i]);
+        //ForAllThisCPencil(T,subbox,comp,numcomp)
+        //{
+        //    const T* row = &thisR;
+        //    if (tmp == 0)
+        //    {
+        //        tmp    = new Real[thisLen];
+        //        tmplen = thisLen;
+        //        for (int i = 0; i < thisLen; i++)
+        //            tmp[i] = std::abs(row[i]);
+        //    }
+        //    else
+        //    {
+        //        for (int i = 0; i < thisLen; i++) {
+		//    // MLW: explicit cast to Real for SX6
+		//    Real rw = std::abs(row[i]);
+        //            tmp[i] = std::max(tmp[i],rw);
+		//}
+        //    }
+        //} EndForPencil
+        //nrm = tmp[0];
+        //for (int i = 1; i < tmplen; i++)
+        //    nrm = std::max(nrm, tmp[i]);
+#if BL_SPACEDIM == 3
+        //define policy
+        typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+        const int *lo = subbox.loVect();
+        const int *hi = subbox.hiVect();
+        const int *cb = subbox.cbVect();
+        
+        ViewFab<T> fab = this->view_fab; 
+        
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+        KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
+            tmpnrm = std::max(tmpnrm, static_cast<Real>(std::abs(fab(i,j,k,n))));
+        },nrm);
+#else
+#error "BaseFab::norm needs to be implemented for other spacedims"
+#endif
     }
     else if (p == 1)
     {
-        ForAllThisCPencil(T,subbox,comp,numcomp)
-        {
-            const T* row = &thisR;
-            if (tmp == 0)
-            {
-                tmp    = new Real[thisLen];
-                tmplen = thisLen;
-                for (int i = 0; i < thisLen; i++)
-                    tmp[i] = std::abs(row[i]);
-            }
-            else
-            {
-                for (int i = 0; i < thisLen; i++)
-                    tmp[i] += std::abs(row[i]);
-            }
-        } EndForPencil
-        nrm = tmp[0];
-        for (int i = 1; i < tmplen; i++)
-            nrm += tmp[i];
+        //ForAllThisCPencil(T,subbox,comp,numcomp)
+        //{
+        //    const T* row = &thisR;
+        //    if (tmp == 0)
+        //    {
+        //        tmp    = new Real[thisLen];
+        //        tmplen = thisLen;
+        //        for (int i = 0; i < thisLen; i++)
+        //            tmp[i] = std::abs(row[i]);
+        //    }
+        //    else
+        //    {
+        //        for (int i = 0; i < thisLen; i++)
+        //            tmp[i] += std::abs(row[i]);
+        //    }
+        //} EndForPencil
+        //nrm = tmp[0];
+        //for (int i = 1; i < tmplen; i++)
+        //    nrm += tmp[i];
+#if BL_SPACEDIM == 3
+        //define policy
+        typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+        const int *lo = subbox.loVect();
+        const int *hi = subbox.hiVect();
+        const int *cb = subbox.cbVect();
+        
+        ViewFab<T> fab = this->view_fab; 
+        
+        Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+        KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpnrm){
+            tmpnrm += static_cast<Real>(std::abs(fab(i,j,k,n)));
+        },nrm);
+#else
+#error "BaseFab::norm needs to be implemented for other spacedims"
+#endif
     }
     else
     {
@@ -2247,32 +2329,52 @@ BaseFab<T>::sum (const Box& subbox,
                  int        comp,
                  int        numcomp) const
 {
-    T*  _sum_row = 0;
-    int _sum_len = 0;
-    ForAllThisCPencil(T,subbox,comp,numcomp)
-    {
-        const T* _row = &thisR;
-        if (_sum_row == 0)
-        {
-            _sum_row = new T[thisLen];
-            _sum_len = thisLen;
-            for (int i = 0; i < thisLen; i++)
-                _sum_row[i] = _row[i];
-        }
-        else
-        {
-            for (int i = 0; i < thisLen; i++)
-            {
-                _sum_row[i] += _row[i];
-            }
-        }
-    } EndForPencil;
-
-    T _sum = _sum_row[0];
-    for (int i = 1; i < _sum_len; i++)
-        _sum += _sum_row[i];
-
-    delete [] _sum_row;
+    T _sum = 0.;
+    
+#if BL_SPACEDIM == 3
+    //define policy
+    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
+        
+    const int *lo = subbox.loVect();
+    const int *hi = subbox.hiVect();
+    const int *cb = subbox.cbVect();
+        
+    ViewFab<T> fab = this->view_fab; 
+        
+    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp+1}, {cb[0], cb[1], cb[2], comp+numcomp+1}), 
+    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpsum){
+        tmpsum += fab(i,j,k,n);
+    },sum);
+#else
+#error "BaseFab::norm needs to be implemented for other spacedims"
+#endif
+    
+    //T*  _sum_row = 0;
+    //int _sum_len = 0;
+    //ForAllThisCPencil(T,subbox,comp,numcomp)
+    //{
+    //    const T* _row = &thisR;
+    //    if (_sum_row == 0)
+    //    {
+    //        _sum_row = new T[thisLen];
+    //        _sum_len = thisLen;
+    //        for (int i = 0; i < thisLen; i++)
+    //            _sum_row[i] = _row[i];
+    //    }
+    //    else
+    //    {
+    //        for (int i = 0; i < thisLen; i++)
+    //        {
+    //            _sum_row[i] += _row[i];
+    //        }
+    //    }
+    //} EndForPencil;
+    //
+    //T _sum = _sum_row[0];
+    //for (int i = 1; i < _sum_len; i++)
+    //    _sum += _sum_row[i];
+    //
+    //delete [] _sum_row;
 
     return _sum;
 }

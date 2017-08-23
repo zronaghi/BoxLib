@@ -188,12 +188,10 @@ void
 ABec4::ca2cc(const MultiFab& ca, MultiFab& cc,
              int sComp, int dComp, int nComp)
 {
-  const bool tiling = true;
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(ca,tiling); mfi.isValid(); ++mfi) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+  for (MFIter mfi(ca,false); mfi.isValid(); ++mfi) {
     const FArrayBox& caf = ca[mfi];
     FArrayBox& ccf = cc[mfi];
     const Box& box = mfi.tilebox();
@@ -202,6 +200,9 @@ ABec4::ca2cc(const MultiFab& ca, MultiFab& cc,
                caf.dataPtr(sComp), ARLIM(caf.box().loVect()), ARLIM(caf.box().hiVect()),
                ccf.dataPtr(dComp), ARLIM(ccf.box().loVect()), ARLIM(ccf.box().hiVect()),
                &nComp);
+
+    //upload
+    ccf.view_fab.syncH2D();
   }
 }
 
@@ -209,10 +210,10 @@ void
 ABec4::cc2ca(const MultiFab& cc, MultiFab& ca,
              int sComp, int dComp, int nComp)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(ca,true); mfi.isValid(); ++mfi) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+  for (MFIter mfi(ca,false); mfi.isValid(); ++mfi) {
     const FArrayBox& ccf = cc[mfi];
     FArrayBox& caf = ca[mfi];
     const Box& box = mfi.growntilebox();
@@ -221,6 +222,9 @@ ABec4::cc2ca(const MultiFab& cc, MultiFab& ca,
                ccf.dataPtr(sComp), ARLIM(ccf.box().loVect()), ARLIM(ccf.box().hiVect()),
                caf.dataPtr(dComp), ARLIM(caf.box().loVect()), ARLIM(caf.box().hiVect()),
                &nComp);
+
+    //upload
+    caf.view_fab.syncH2D();
   }
 }
 
@@ -228,10 +232,10 @@ void
 ABec4::lo_cc2ec(const MultiFab& cc, MultiFab& ec,
                 int sComp, int dComp, int nComp, int dir, bool do_harm)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(ec,true); mfi.isValid(); ++mfi) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+  for (MFIter mfi(ec,false); mfi.isValid(); ++mfi) {
     const FArrayBox& ccf = cc[mfi];
     FArrayBox& ecf = ec[mfi];
     const Box& box = mfi.growntilebox();
