@@ -268,11 +268,17 @@ BaseFab<Real>::performSetVal (Real       val,
     }
     
     //define policy
-        
-    const int *lo = bx.loVect();
-    const int *hi = bx.hiVect();
-    const int *cb = bx.cbVect();
-        
+
+    Kokkos::Array<int, 3> lo;
+    Kokkos::Array<int, 3> hi;
+    Kokkos::Array<int, 3> cb;
+
+    for (int i = 0; i < 3; ++i) {
+      lo[i] = bx.loVect()[i];
+      hi[i] = bx.hiVect()[i];
+      cb[i] = bx.cbVect()[i];
+    }
+
     ViewFab<Real> fab = this->view_fab; 
     
     Kokkos::parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], ncomp}), 
@@ -314,9 +320,15 @@ BaseFab<Real>::norm (const Box& bx,
     BL_ASSERT(domain.contains(bx));
     BL_ASSERT(comp >= 0 && comp + numcomp <= nvar);
 
-    const int *lo = bx.loVect();
-    const int *hi = bx.hiVect();
-    const int *cb = bx.cbVect();
+    Kokkos::Array<int, 3> lo;
+    Kokkos::Array<int, 3> hi;
+    Kokkos::Array<int, 3> cb;
+
+    for (int i = 0; i < 3; ++i) {
+      lo[i] = bx.loVect()[i];
+      hi[i] = bx.hiVect()[i];
+      cb[i] = bx.cbVect()[i];
+    }
 
     Real nrm = 0.;
 
@@ -371,9 +383,15 @@ BaseFab<Real>::sum (const Box& bx,
 #if BL_SPACEDIM == 3
     //define policy
 
-    const int *lo = bx.loVect();
-    const int *hi = bx.hiVect();
-    const int *cb = bx.cbVect();
+    Kokkos::Array<int, 3> lo;
+    Kokkos::Array<int, 3> hi;
+    Kokkos::Array<int, 3> cb;
+
+    for (int i = 0; i < 3; ++i) {
+      lo[i] = bx.loVect()[i];
+      hi[i] = bx.hiVect()[i];
+      cb[i] = bx.cbVect()[i];
+    }
 
     Kokkos::parallel_reduce(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], ncomp}), 
         SumFunctor<Real>(this->view_fab), sum);
@@ -411,12 +429,19 @@ BaseFab<Real>::plus (const BaseFab<Real>& src,
 #if BL_SPACEDIM == 3    
     //define policy
     typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
-        
-    const int *lo = destbox.loVect();
-    const int *hi = destbox.hiVect();
-    const int *cb = destbox.cbVect();
-    const int *sblo = srcbox.loVect();
-        
+
+    Kokkos::Array<int, 3> lo;
+    Kokkos::Array<int, 3> hi;
+    Kokkos::Array<int, 3> cb;
+    Kokkos::Array<int, 3> sblo;
+
+    for (int i = 0; i < 3; ++i) {
+      lo[i] = destbox.loVect()[i];
+      hi[i] = destbox.hiVect()[i];
+      cb[i] = destbox.cbVect()[i];
+      sblo[i] = srcbox.loVect()[i];
+    }
+
     ViewFab<Real> destfab = this->view_fab; 
     ViewFab<Real> srcfab = src.view_fab; 
     
