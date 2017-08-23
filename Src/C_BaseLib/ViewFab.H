@@ -27,9 +27,8 @@
 //ND
 template<typename T>
 using hostview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
+using devspace = Kokkos::DefaultExecutionSpace;
 #ifdef KOKKOS_ENABLE_CUDA
-//device space
-using devspace = Kokkos::CudaSpace;
 //device view
 template<typename T>
 using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::CudaSpace>;
@@ -40,8 +39,6 @@ static constexpr Kokkos::Experimental::Iterate inner_iter_policy = Kokkos::Exper
 //template <typename T>
 //using devsubview = Kokkos::View<T*, Kokkos::LayoutStride, Kokkos::CudaSpace, Kokkos::MemoryTraits< Kokkos::Restrict | Kokkos::Unmanaged > >;
 #else
-//device space
-using devspace = Kokkos::HostSpace;
 //device view
 template<typename T>
 using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::HostSpace>;
