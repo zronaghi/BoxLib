@@ -718,6 +718,70 @@ BaseFab<Real>::linComb (const BaseFab<Real>& f1,
     return *this;
 }
 
+template <class T>
+struct DotFunctor {
+  using value_type = T;
+  using execution_space = devspace;
+
+  ViewFab<T> xv;
+  ViewFab<T> yv;
+  Kokkos::Array<int, 3> lo;
+  Kokkos::Array<int, 3> hi;
+  Kokkos::Array<int, 3> cb;
+  Kokkos::Array<int, 3> ylo;
+  int xcomp;
+  int ycomp;
+
+  DotFunctor(
+      ViewFab<T> xv_in,
+      ViewFab<T> yv_in,
+      const int* lo_in,
+      const int* hi_in,
+      const int* cb_in,
+      const int* ylo_in,
+      const int xcomp_in,
+      const int ycomp_in
+      ):
+      xv(xv_in),
+      yv(yv_in)
+  {
+    for (int i = 0; i < 3; ++i) {
+      lo[i] = lo_in[i];
+      hi[i] = hi_in[i];
+      cb[i] = cb_in[i];
+      ylo[i] = ylo_in[i];
+    }
+    xcomp = xcomp_in;
+    ycomp = ycomp_in;
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  void operator()(const int i, const int j, const int k, const int n, T& tmpres) const {
+    const int ioff = ylo[0] - lo[0];
+    const int joff = ylo[1] - lo[1];
+    const int koff = ylo[2] - lo[2];
+    tmpres += xv(i,j,k,n+xcomp)*yv(i+ioff,j+joff,k+koff,n+ycomp);
+  }
+
+  //Required
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type& dest, const value_type& src)  const {
+    dest += src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(volatile value_type& dest, const volatile value_type& src) const {
+    dest += src;
+  }
+
+  //Required
+  KOKKOS_INLINE_FUNCTION
+  void init( value_type& val)  const {
+    val = 0;
+  }
+};
+
+
 template <>
 Real
 BaseFab<Real>::dot (const Box& xbx, int xcomp, 
@@ -739,23 +803,18 @@ BaseFab<Real>::dot (const Box& xbx, int xcomp,
     
 #if BL_SPACEDIM == 3
     //define policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
-    
-    const int *lo = xbx.loVect();
-    const int *hi = xbx.hiVect();
-    const int *cb = xbx.cbVect();
-    const int *ylo = ybx.loVect();
-        
-    ViewFab<Real> xv = this->view_fab;
-    ViewFab<Real> yv = y.view_fab;
-    
-    Kokkos::Experimental::md_parallel_reduce(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
-    KOKKOS_LAMBDA(const int i, const int j, const int k, const int n, Real& tmpres){
-        const int ioff = ylo[0] - lo[0];
-        const int joff = ylo[1] - lo[1];
-        const int koff = ylo[2] - lo[2];
-        tmpres += xv(i,j,k,n+xcomp)*yv(i+ioff,j+joff,k+koff,n+ycomp);
-    }, res);
+    auto f = DotFunctor<Real>(this->view_fab, y.view_fab,
+          xbx.loVect(),
+          xbx.hiVect(),
+          xbx.cbVect(),
+          ybx.loVect(),
+          xcomp,
+          ycomp);
+    auto p = mdpolicy<4>(
+        {f.lo[0], f.lo[1], f.lo[2], 0},
+        {f.hi[0]+1, f.hi[1]+1, f.hi[2]+1, numcomp},
+        {f.cb[0], f.cb[1], f.cb[2], numcomp});
+    Kokkos::parallel_reduce(p, f, res);
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"
 #endif
