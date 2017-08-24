@@ -1,6 +1,6 @@
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #include <iostream>
 #include <limits>

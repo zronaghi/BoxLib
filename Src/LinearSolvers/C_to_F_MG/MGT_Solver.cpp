@@ -930,10 +930,10 @@ void MGT_Solver::fill_sync_resid(MultiFab* sync_resid, const MultiFab& msk,
     mgt_compute_sync_resid_fine();
   }
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(*sync_resid, true); mfi.isValid(); ++mfi) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+  for (MFIter mfi(*sync_resid, false); mfi.isValid(); ++mfi) {
       const int n = mfi.LocalIndex();
       const Box& bx = mfi.tilebox();
       FArrayBox& sfab = (*sync_resid)[mfi];

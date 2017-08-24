@@ -96,10 +96,10 @@ MCCGSolver::norm (const MultiFab& res)
 
     Real restot = 0.0;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:restot)
-#endif
-    for (MFIter mfi(res,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(max:restot)
+//#endif
+    for (MFIter mfi(res,false); mfi.isValid(); ++mfi)
     {
 	restot = std::max(restot, res[mfi].norm(mfi.tilebox(), p, 0, ncomp));
     }

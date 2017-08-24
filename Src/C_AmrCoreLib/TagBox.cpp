@@ -424,10 +424,10 @@ TagBoxArray::buffer (int nbuf)
     {
         BL_ASSERT(nbuf <= n_grow);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(*this); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
 	{
 	    get(mfi).buffer(nbuf, n_grow);
         } 
@@ -449,10 +449,10 @@ TagBoxArray::mapPeriodic (const Geometry& geom)
 
     tmp.copy(*this, geom.periodicity(), FabArrayBase::ADD);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	get(mfi).merge(tmp[mfi]);
     }
@@ -463,10 +463,10 @@ TagBoxArray::numTags () const
 {
     long ntag = 0;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:ntag)
-#endif
-    for (MFIter mfi(*this); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(+:ntag)
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	ntag += get(mfi).numTags();
     }
@@ -483,10 +483,10 @@ TagBoxArray::collate (std::vector<IntVect>& TheGlobalCollateSpace) const
 
     long count = 0;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:count)
-#endif
-    for (MFIter fai(*this); fai.isValid(); ++fai)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(+:count)
+//#endif
+    for (MFIter fai(*this,false); fai.isValid(); ++fai)
     {
         count += get(fai).numTags();
     }
@@ -604,10 +604,10 @@ void
 TagBoxArray::setVal (const BoxArray& ba,
                      TagBox::TagVal  val)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	std::vector< std::pair<int,Box> > isects;
 
@@ -629,9 +629,9 @@ TagBoxArray::coarsen (const IntVect & ratio)
     int teamsize = ParallelDescriptor::TeamSize();
     unsigned char flags = (teamsize == 1) ? 0 : MFIter::AllBoxes;
 
-#if defined(_OPENMP)
-#pragma omp parallel if (teamsize == 1)
-#endif
+//#if defined(_OPENMP)
+//#pragma omp parallel if (teamsize == 1)
+//#endif
     for (MFIter mfi(*this,flags); mfi.isValid(); ++mfi)
     {
 	(*this)[mfi].coarsen(ratio,isOwner(mfi.LocalIndex()));

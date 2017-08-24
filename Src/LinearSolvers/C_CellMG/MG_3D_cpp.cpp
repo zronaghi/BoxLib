@@ -350,7 +350,7 @@ const Real* h)
     double start_time = omp_get_wtime();
     int length0 = std::floor( (hi[0]-lo[0]+1) / 2 );
     int up0 = lo[0] + length0;
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {up0+1, hi[1]+1, hi[2]+1, nc}, {32, 1, 1, 1}), cgsrbfunc);
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {up0+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cgsrbfunc);
     Kokkos::fence();
     double end_time =  omp_get_wtime();
 #else
@@ -358,7 +358,7 @@ const Real* h)
     //execute
     Kokkos::fence();
     double start_time = omp_get_wtime();
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, nc}, {32, 1, 1}), cgsrbfunc);
+    Kokkos::Experimental::md_parallel_for(t_policy({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cgsrbfunc);
     Kokkos::fence();
     double end_time =  omp_get_wtime();
 #endif
