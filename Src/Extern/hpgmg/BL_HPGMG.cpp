@@ -72,15 +72,15 @@ void CreateHPGMGLevel (level_type* level,
 
     int omp_threads = 1;
 
-#ifdef _OPENMP
-#pragma omp parallel
+//#ifdef _OPENMP
+//#pragma omp parallel
     {
-#pragma omp master
+        //#pragma omp master
       {
         omp_threads = omp_get_num_threads ();
       }
     }
-#endif
+    //#endif
 
     int box_ghosts = stencil_get_radius();
 
@@ -328,9 +328,9 @@ void SetupHPGMGCoefficients(const double a,
       const int BL_jStride = fabbox.length(0);
       const int BL_kStride = fabbox.length(0) * fabbox.length(1);
       const int BoxLib_ghosts = alpha.nGrow();
-      #ifdef _OPENMP
-      #pragma omp parallel for private(k,j,i) collapse(3)
-      #endif
+      //#ifdef _OPENMP
+      //#pragma omp parallel for private(k,j,i) collapse(3)
+      //#endif
       for(k=0;k<dim_k;k++){
       for(j=0;j<dim_j;j++){
       for(i=0;i<dim_i;i++){
@@ -378,9 +378,9 @@ void SetupHPGMGCoefficients(const double a,
       const int BL_kStride = fabbox.length(0) * fabbox.length(1);
       const int BoxLib_ghosts = beta_cc.nGrow();
 
-      #ifdef _OPENMP
-      #pragma omp parallel for private(k,j,i) collapse(3)
-      #endif
+      //#ifdef _OPENMP
+      //#pragma omp parallel for private(k,j,i) collapse(3)
+      //#endif
       for(k=0;k<=dim_k;k++){ // include high face
       for(j=0;j<=dim_j;j++){ // include high face
       for(i=0;i<=dim_i;i++){ // include high face
@@ -445,9 +445,9 @@ void ConvertToHPGMGLevel (const MultiFab& mf,
       const int   dim_k = level->my_boxes[box].dim;
       const int BoxLib_ghosts = mf.nGrow();
 
-      #ifdef _OPENMP
-      #pragma omp parallel for private(k,j,i) collapse(3)
-      #endif
+      //#ifdef _OPENMP
+      //#pragma omp parallel for private(k,j,i) collapse(3)
+      //#endif
       for(k=0;k<dim_k;k++){
       for(j=0;j<dim_j;j++){
       for(i=0;i<dim_i;i++){
@@ -497,9 +497,9 @@ void ConvertFromHPGMGLevel(MultiFab& mf,
       const int BoxLib_ghosts = mf.nGrow();
 
       int i, j, k;
-      #ifdef _OPENMP
-      #pragma omp parallel for private(k,j,i) collapse(3)
-      #endif
+      //#ifdef _OPENMP
+      //#pragma omp parallel for private(k,j,i) collapse(3)
+      //#endif
       for(k=0;k<dim_k;k++){
       for(j=0;j<dim_j;j++){
       for(i=0;i<dim_i;i++){

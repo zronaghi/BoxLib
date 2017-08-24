@@ -19,9 +19,9 @@
 #include <atomic>
 #endif
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #ifdef BL_LAZY
 #include <Lazy.H>
@@ -247,12 +247,12 @@ namespace ParallelDescriptor
 
 	void MemoryBarrier () const {
 	    if (m_size > 1) {
-#ifdef _OPENMP
-		if (omp_in_parallel()) {
-                    #pragma omp barrier
-	        }
-                #pragma omp master
-#endif
+//#ifdef _OPENMP
+//		if (omp_in_parallel()) {
+//                    #pragma omp barrier
+//	        }
+//                #pragma omp master
+//#endif
 		{
 #ifdef BL_USE_UPCXX
                     m_upcxx_team.barrier();
@@ -458,22 +458,22 @@ namespace ParallelDescriptor
 	    }
 	}
 
-#ifdef _OPENMP
-	int nthreads = omp_get_num_threads();
-	if (nthreads > 1) {
-	    int tid = omp_get_thread_num();
-	    int ntot = re - rb;
-	    int nr   = ntot / nthreads;
-	    int nlft = ntot - nr * nthreads;
-	    if (tid < nlft) {  // get nr+1 items
-		rb += tid * (nr + 1);
-		re = rb + nr + 1;
-	    } else {           // get nr items
-		rb += tid * nr + nlft;
-		re = rb + nr;
-	    }	    
-	}
-#endif	
+//#ifdef _OPENMP
+//	int nthreads = omp_get_num_threads();
+//	if (nthreads > 1) {
+//	    int tid = omp_get_thread_num();
+//	    int ntot = re - rb;
+//	    int nr   = ntot / nthreads;
+//	    int nlft = ntot - nr * nthreads;
+//	    if (tid < nlft) {  // get nr+1 items
+//		rb += tid * (nr + 1);
+//		re = rb + nr + 1;
+//	    } else {           // get nr items
+//		rb += tid * nr + nlft;
+//		re = rb + nr;
+//	    }	    
+//	}
+//#endif	
 
 	return std::make_pair(rb,re);
     }

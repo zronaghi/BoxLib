@@ -16,9 +16,9 @@
 #include <csignal>
 #include <cfenv>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #ifdef BL_BACKTRACING
 #define BL_PASTE2(x, y) x##y
@@ -38,9 +38,9 @@ struct BLBackTrace
 #ifdef BL_BACKTRACING
     static std::stack<std::pair<std::string, std::string> > bt_stack;
 // threadprivate here doesn't work with Cray and Intel 
-#if defined(_OPENMP) && !defined(_CRAYC) && !defined(__INTEL_COMPILER)
-#pragma omp threadprivate(bt_stack)
-#endif
+//#if defined(_OPENMP) && !defined(_CRAYC) && !defined(__INTEL_COMPILER)
+//#pragma omp threadprivate(bt_stack)
+//#endif
 #endif // BL_BACKTRACING
 };
 

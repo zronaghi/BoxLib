@@ -27,10 +27,10 @@ ABec2::altApplyBC (int  level,
     int bndry_comp = 0;
     const BoxArray& ba = boxArray(level);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(a); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(a,false); mfi.isValid(); ++mfi)
     {
         const int gn = mfi.index();
 
@@ -103,11 +103,11 @@ ABec2::Fsmooth (MultiFab&       solnL,
   Real alpha = get_alpha();
   Real beta = get_beta();
 
-  const bool tiling = true;
+  const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
   for (MFIter solnLmfi(solnL,tiling); solnLmfi.isValid(); ++solnLmfi)
   {
     const Mask& m0 = mm0[solnLmfi];
@@ -199,10 +199,10 @@ ABec2::Fsmooth_jacobi (MultiFab&       solnL,
   Real alpha = get_alpha();
   Real beta = get_beta();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter solnLmfi(solnL); solnLmfi.isValid(); ++solnLmfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+  for (MFIter solnLmfi(solnL,false); solnLmfi.isValid(); ++solnLmfi)
   {
     const Mask& m0 = mm0[solnLmfi];
     const Mask& m1 = mm1[solnLmfi];

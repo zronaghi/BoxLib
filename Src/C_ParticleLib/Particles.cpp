@@ -506,9 +506,9 @@ ParticleBase::NextID ()
 {
     int next;
 
-#ifdef _OPENMP
-#pragma omp atomic capture
-#endif
+//#ifdef _OPENMP
+//#pragma omp atomic capture
+//#endif
     next = the_next_id++;
 
     if (next == std::numeric_limits<int>::max())
@@ -776,9 +776,9 @@ ParticleBase::Reset (ParticleBase& p,
     if (!ok) {
         // invalidate the particle.
 	if (verbose) {
-#ifdef _OPENMP
-#pragma omp critical(reset_lock)
-#endif
+//#ifdef _OPENMP
+//#pragma omp critical(reset_lock)
+//#endif
 	    {
 		std::cout << "Invalidating out-of-domain particle: " << p << '\n';
 	    }

@@ -8,9 +8,9 @@
 #include <algorithm>
 #include <limits>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #include <BLassert.H>
 #include <Box.H>
@@ -29,12 +29,12 @@ namespace BoxLib
     extern long private_total_bytes_allocated_in_fabs_hwm; // high-water-mark over a given interval
     extern long private_total_cells_allocated_in_fabs;     // total cells at any given time
     extern long private_total_cells_allocated_in_fabs_hwm; // high-water-mark over a given interval
-#ifdef _OPENMP
-#pragma omp threadprivate(private_total_bytes_allocated_in_fabs)
-#pragma omp threadprivate(private_total_bytes_allocated_in_fabs_hwm)
-#pragma omp threadprivate(private_total_cells_allocated_in_fabs)
-#pragma omp threadprivate(private_total_cells_allocated_in_fabs_hwm)
-#endif
+//#ifdef _OPENMP
+//#pragma omp threadprivate(private_total_bytes_allocated_in_fabs)
+//#pragma omp threadprivate(private_total_bytes_allocated_in_fabs_hwm)
+//#pragma omp threadprivate(private_total_cells_allocated_in_fabs)
+//#pragma omp threadprivate(private_total_cells_allocated_in_fabs_hwm)
+//#endif
 
     long TotalBytesAllocatedInFabs();
     long TotalBytesAllocatedInFabsHWM();

@@ -2,9 +2,9 @@
 #include <FillPatchUtil.H>
 #include <cmath>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 namespace BoxLib
 {

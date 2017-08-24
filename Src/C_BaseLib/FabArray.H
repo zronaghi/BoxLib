@@ -12,9 +12,9 @@
 #include <set>
 #include <string>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #ifdef BL_USE_UPCXX
 #include <BLPgas.H>

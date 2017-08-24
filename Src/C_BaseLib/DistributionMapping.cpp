@@ -2886,10 +2886,10 @@ DistributionMapping::makeKnapSack (const MultiFab& weight)
 #if BL_USE_MPI
     {
 	Array<Real> rcost(cost.size(), 0.0);
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(weight); mfi.isValid(); ++mfi) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(weight,false); mfi.isValid(); ++mfi) {
 	    int i = mfi.index();
 	    rcost[i] = weight[mfi].sum(mfi.validbox(),0);
 	}

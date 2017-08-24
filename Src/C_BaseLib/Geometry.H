@@ -4,9 +4,9 @@
 #include <iosfwd>
 #include <map>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #ifdef BL_USE_UPCXX
 #include <BLPgas.H>

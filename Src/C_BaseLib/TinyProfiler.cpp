@@ -11,9 +11,9 @@
 #include <ParallelDescriptor.H>
 #include <Utility.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 std::stack<std::pair<Real,Real> >          TinyProfiler::ttstack;
 std::map<std::string, TinyProfiler::Stats> TinyProfiler::statsmap;
@@ -45,9 +45,9 @@ TinyProfiler::~TinyProfiler ()
 void
 TinyProfiler::start ()
 {
-#ifdef _OPENMP
-#pragma omp master
-#endif
+//#ifdef _OPENMP
+//#pragma omp master
+//#endif
     if (!running) {
 	running = true;
 	Real t = ParallelDescriptor::second();
@@ -63,9 +63,9 @@ TinyProfiler::start ()
 void
 TinyProfiler::stop ()
 {
-#ifdef _OPENMP
-#pragma omp master
-#endif
+//#ifdef _OPENMP
+//#pragma omp master
+//#endif
     if (running) 
     {
 	running = false;

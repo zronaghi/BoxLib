@@ -292,9 +292,9 @@ void BLProfiler::PStop() {
 
 
 void BLProfiler::start() {
-#ifdef _OPENMP
-#pragma omp master
-#endif
+//#ifdef _OPENMP
+//#pragma omp master
+//#endif
 {
   bltelapsed = 0.0;
   bltstart = ParallelDescriptor::second();
@@ -327,9 +327,9 @@ void BLProfiler::start() {
 
   
 void BLProfiler::stop() {
-#ifdef _OPENMP
-#pragma omp master
-#endif
+//#ifdef _OPENMP
+//#pragma omp master
+//#endif
 {
   double tDiff(ParallelDescriptor::second() - bltstart);
   double nestedTime(0.0);
