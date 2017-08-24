@@ -340,9 +340,9 @@ namespace BoxLib
         static unsigned long init_seed;
         static unsigned long mt[N];	// the array for the state vector
         static int mti;		// mti==N+1 means mt[N] is not initialized
-#ifdef _OPENMP
-#pragma omp threadprivate(init_seed,mt,mti)
-#endif
+//#ifdef _OPENMP
+//#pragma omp threadprivate(init_seed,mt,mti)
+//#endif
     private:
 	void sgenrand (unsigned long seed);
 	void sgenrand (seed_type seed_array[], int len);

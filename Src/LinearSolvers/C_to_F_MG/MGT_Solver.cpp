@@ -869,9 +869,9 @@ MGT_Solver::nodal_project(MultiFab* p[], MultiFab* vel[], MultiFab* rhcc[], cons
 
   mgt_newu();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
   for ( int lev = 0; lev < m_nlevel; ++lev )
   {
 
@@ -905,10 +905,10 @@ void MGT_Solver::fill_sync_resid(MultiFab* sync_resid, const MultiFab& msk,
 
   const int lev = 0;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(msk, true); mfi.isValid(); ++mfi) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+  for (MFIter mfi(msk, false); mfi.isValid(); ++mfi) {
       const int n = mfi.LocalIndex();
       const Box& bx = mfi.growntilebox(1);
 
@@ -965,10 +965,10 @@ MGT_Solver::set_cfa_const (Real alpha, int lev)
 	return;
     } else {
 	MultiFab cc(m_grids[lev], 1, 0, Fab_noallocate); // cell-centered MF      
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(cc, true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(cc, false); mfi.isValid(); ++mfi)
 	{
 	    int n = mfi.LocalIndex();
 	    const Box& bx = mfi.tilebox();

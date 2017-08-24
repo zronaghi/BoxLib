@@ -63,9 +63,9 @@ TracerParticleContainer::AdvectWithUmac (MultiFab* umac, int lev, Real dt)
                                                    &umac_pointer[1][grid],
                                                    &umac_pointer[2][grid]) };
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
             for (int i = 0; i < n; i++)
             {
                 ParticleType& p = pbox[i];
@@ -173,9 +173,9 @@ TracerParticleContainer::AdvectWithUcc (const MultiFab& Ucc, int lev, Real dt)
 
 	    const FArrayBox& fab = Ucc[grid];
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
             for (int i = 0; i < n; i++)
             {
                 ParticleType& p = pbox[i];

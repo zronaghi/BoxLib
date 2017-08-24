@@ -796,13 +796,13 @@ FAB_CONTAINS_NAN (double dptr[], const int* countp, int* result)
 {
     int i;
     int rr=0;
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:rr)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(+:rr)
+//#endif
     {
-#ifdef _OPENMP
-#pragma omp for private(i)
-#endif
+//#ifdef _OPENMP
+//#pragma omp for private(i)
+//#endif
       for (i = 0; i < *countp; i++) {
 	if (isnan(dptr[i])) {
 	  rr++;
@@ -817,13 +817,13 @@ FAB_CONTAINS_INF (double dptr[], const int* countp, int* result)
 {
     int i;
     int rr=0;
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:rr)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(+:rr)
+//#endif
     {
-#ifdef _OPENMP
-#pragma omp for private(i)
-#endif
+//#ifdef _OPENMP
+//#pragma omp for private(i)
+//#endif
       for (i = 0; i < *countp; i++) {
         if (isinf(dptr[i])) {
 	  rr++;

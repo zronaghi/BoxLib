@@ -79,10 +79,10 @@ PhysBCFunct::FillBoundary (MultiFab& mf, int, int, Real time)
 	}
     }
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(mf); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(mf,false); mfi.isValid(); ++mfi)
     {
 	FArrayBox& dest = mf[mfi];
 	const Box& bx = dest.box();

@@ -12,9 +12,9 @@
 #include <MultiGrid.H>
 #include <VisMF.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 //
 // The largest value allowed for SSS - the "S" in the Communicaton-avoiding BiCGStab.

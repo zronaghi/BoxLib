@@ -437,10 +437,10 @@ BoxLib::Finalize (bool finalize_parallel)
 	if (ParallelDescriptor::NProcs() == 1) {
 	    if (mp_tot > 0) {
 		std::cout << "MemPool: " 
-#ifdef _OPENMP
-			  << "min used in a thread: " << mp_min << " MB, "
-			  << "max used in a thread: " << mp_max << " MB, "
-#endif
+//#ifdef _OPENMP
+//			  << "min used in a thread: " << mp_min << " MB, "
+//			  << "max used in a thread: " << mp_max << " MB, "
+//#endif
 			  << "tot used: " << mp_tot << " MB." << std::endl;
 	    }
 	} else {

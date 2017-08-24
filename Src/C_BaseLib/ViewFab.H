@@ -7,9 +7,9 @@
 #include <algorithm>
 #include <limits>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #include <BLassert.H>
 #include <Box.H>

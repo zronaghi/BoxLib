@@ -302,10 +302,10 @@ DivVis::Fsmooth (MultiFab&       solnL,
 
     int nc = solnL.nComp();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter solnLmfi(solnL); solnLmfi.isValid(); ++solnLmfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter solnLmfi(solnL,false); solnLmfi.isValid(); ++solnLmfi)
     {
 	const Box& vbx = solnLmfi.validbox();
 
@@ -442,10 +442,10 @@ DivVis::compFlux (D_DECL(MultiFab& xflux,
     oitr++;
 #endif
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter xmfi(x); xmfi.isValid(); ++xmfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter xmfi(x,false); xmfi.isValid(); ++xmfi)
     {
 	const Box& vbx = xmfi.validbox();
 
@@ -568,10 +568,10 @@ DivVis::Fapply (MultiFab&       y,
     oitr++;
 #endif
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter xmfi(x); xmfi.isValid(); ++xmfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter xmfi(x,false); xmfi.isValid(); ++xmfi)
     {
 	const Box& vbx = xmfi.validbox();
 

@@ -33,9 +33,9 @@ extern "C" {
 #include <ParmParse.H>
 #endif
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 namespace ParallelDescriptor
 {

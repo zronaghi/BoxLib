@@ -10,9 +10,9 @@
 #include <Utility.H>
 #include <SPACE.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 //
 // The definition of some static data members.
@@ -103,9 +103,9 @@ Geometry::Finalize ()
 void
 Geometry::Setup (const RealBox* rb, int coord, int* isper)
 {
-#ifdef _OPENMP
-    BL_ASSERT(!omp_in_parallel());
-#endif
+//#ifdef _OPENMP
+//    BL_ASSERT(!omp_in_parallel());
+//#endif
 
     static bool first = true;
     if (first) {
