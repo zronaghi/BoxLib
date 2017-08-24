@@ -689,19 +689,26 @@ BaseFab<Real>::linComb (const BaseFab<Real>& f1,
     
 #if BL_SPACEDIM == 3    
     //define policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
-        
-    const int *lo = b.loVect();
-    const int *hi = b.hiVect();
-    const int *cb = b.cbVect();
-    const int *f1lo = b1.loVect();
-    const int *f2lo = b2.loVect();
-        
+
+    Kokkos::Array<int, 3> lo;
+    Kokkos::Array<int, 3> hi;
+    Kokkos::Array<int, 3> cb;
+    Kokkos::Array<int, 3> f1lo;
+    Kokkos::Array<int, 3> f2lo;
+
+    for (int i = 0; i < 3; ++i) {
+      lo[i] = b.loVect()[i];
+      hi[i] = b.hiVect()[i];
+      cb[i] = b.cbVect()[i];
+      f1lo[i] = b1.loVect()[i];
+      f2lo[i] = b2.loVect()[i];
+    }
+
     ViewFab<Real> destv = this->view_fab; 
     ViewFab<Real> f1v = f1.view_fab; 
     ViewFab<Real> f2v = f2.view_fab; 
     
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+    Kokkos::parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
         const int ioff1 = f1lo[0] - lo[0];
         const int joff1 = f1lo[1] - lo[1];
