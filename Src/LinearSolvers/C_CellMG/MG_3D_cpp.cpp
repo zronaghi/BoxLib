@@ -43,7 +43,7 @@ const FArrayBox& c){
 	
 	const int *lo = bx.loVect();
 	const int *hi = bx.hiVect();
-
+	
 	for (int n = 0; n<nc; n++){
 		for (int k = lo[2]; k <= hi[2]; ++k) {
 			int k2 = 2*k;
@@ -64,6 +64,7 @@ const FArrayBox& c){
 			}
 		}
 	}
+		
 }
 
 
@@ -244,15 +245,14 @@ const Real* h)
 	
 	//initialize to zero
     res = 0.0;
-
 	for (int n = 0; n<nc; n++){
 		for (int k = lo[2]; k <= hi[2]; ++k) {
 			for (int j = lo[1]; j <= hi[1]; ++j) {
 				for (int i = lo[0]; i <= hi[0]; ++i) {
-					Real tmpval= alpha*a(IntVect(i,j,k))
+					Real tmpval= std::abs(alpha*a(IntVect(i,j,k))
 								+ dhx * ( bX(IntVect(i+1,j,k)) + bX(IntVect(i,j,k)) )
 								+ dhy * ( bY(IntVect(i,j+1,k)) + bY(IntVect(i,j,k)) )
-								+ dhz * ( bZ(IntVect(i,j,k+1)) + bZ(IntVect(i,j,k)) );
+								+ dhz * ( bZ(IntVect(i,j,k+1)) + bZ(IntVect(i,j,k)) ) );
 					
 					//now add the rest
 					tmpval +=    std::abs( dhx * bX(IntVect(i+1,j,k)) ) + std::abs( dhx * bX(IntVect(i,j,k)) )
@@ -260,7 +260,7 @@ const Real* h)
 							   + std::abs( dhz * bZ(IntVect(i,j,k+1)) ) + std::abs( dhz * bZ(IntVect(i,j,k)) );
                     
                     //now, take the max
-                    res = std::max(res,std::abs(tmpval));
+                    res = std::max(res,tmpval);
 				}
 			}
 		}

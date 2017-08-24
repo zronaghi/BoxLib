@@ -61,7 +61,7 @@ mg.v = 2 shows Initial rhs, Residual at each V-cycle, Final Iter, and Run time
 # mg.v = 2 shows # of iterations and final residual
 
 mg.v = 2 
-mg.use_C_kernels = 1
+mg.use_C_kernels = 0
 
 # These are only relevant for the hypre solver
 hypre.solver_flag = 1      # 0: SMG,  1: PFMG (default)

@@ -8,7 +8,7 @@
 #include <CONSTANTS.H>
 #include "MG_F.H"
 #include "ArrayLim.H"
-
+   
       subroutine FORT_AVERAGE (
      $     c, DIMS(c),
      $     f, DIMS(f),
@@ -44,7 +44,7 @@
             end do
          end do
       end do
-
+      
       end
 
 
@@ -66,16 +66,15 @@
 !     MultiGrid::relax(...) does only V-cycles (not F-cycles), and for V-cycles, 
 !     piecewise-constant interpolation performs better than linear interpolation,
 !     as measured both by run-time and number of V-cycles for convergence.
-
+!$acc parallel loop collapse(4)
       do n = 1, nc
          do k = lo(3), hi(3)
-            k2 = 2*k
-            k2p1 = k2 + 1
 	    do j = lo(2), hi(2)
-               j2 = 2*j
-               j2p1 = j2 + 1
-
                do i = lo(1), hi(1)
+                  k2 = 2*k
+                  k2p1 = k2 + 1
+                  j2 = 2*j
+                  j2p1 = j2 + 1
                   i2 = 2*i
                   i2p1 = i2 + 1
 
@@ -92,5 +91,5 @@
             end do
          end do
       end do
-
+!$acc end parallel loop
       end

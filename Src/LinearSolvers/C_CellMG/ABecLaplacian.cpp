@@ -489,7 +489,7 @@ int             redBlackFlag)
 	//DEBUG
 
     //timer start
-    double start_time = omp_get_wtime();
+    //double start_time = omp_get_wtime();
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -600,8 +600,8 @@ int             redBlackFlag)
 	}
 	
     //timer end
-    double end_time =  omp_get_wtime();
-    std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;
+    //double end_time =  omp_get_wtime();
+    //std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;
     
 	//DEBUG
 	//__itt_pause();

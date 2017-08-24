@@ -29,7 +29,8 @@ FPC::NativeLongDescriptor ()
     defined(__i386__) || \
     defined(__x86_64) || \
     defined(__amd64__) || \
-    defined(powerpc)
+    defined(powerpc) || \
+    defined(__powerpc__)
     static const IntDescriptor nld(sizeof(long), IntDescriptor::ReverseOrder);
 #endif
 
@@ -70,6 +71,7 @@ FPC::NativeRealDescriptor ()
     defined(__ppc64__) || \
     defined(_SX)   || \
     defined(powerpc) || \
+    defined(__powerpc__) || \
     defined(__hpux)
 #ifdef BL_USE_FLOAT
     static const RealDescriptor nrd(ieee_float, normal_float_order, 4);
@@ -101,6 +103,7 @@ FPC::Native32RealDescriptor ()
     defined(__ppc64__) || \
     defined(_SX)   || \
     defined(powerpc) || \
+    defined(__powerpc__) || \
     defined(__hpux)
     static const RealDescriptor n32rd(ieee_float, normal_float_order, 4);
 #endif
@@ -137,6 +140,7 @@ FPC::Ieee64NormalRealDescriptor ()
       defined(__x86_64) || \
       defined(__hpux)   || \
       defined(powerpc)  || \
+      defined(__powerpc__) || \
       defined(_MSC_VER) || \
       defined(_AIX))
 #error We do not yet support FAB I/O on this machine

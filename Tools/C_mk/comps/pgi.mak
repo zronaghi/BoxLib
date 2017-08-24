@@ -2,9 +2,9 @@
 # Generic setup for using PGI
 #
 CXX = pgc++
-CC  = pgcc
-FC  = pgfortran
-F90 = pgfortran
+CC  = pgcc 
+FC  = pgfortran 
+F90 = pgfortran 
 
 CXXFLAGS =
 CFLAGS   =
@@ -54,7 +54,7 @@ ifeq ($(USE_OMP),TRUE)
 endif
 
 ifeq ($(USE_ACC),TRUE)
-  GENERIC_COMP_FLAGS += -acc -Minfo=acc -ta=nvidia -lcudart -mcmodel=medium
+  GENERIC_COMP_FLAGS += -acc -Minfo=all -ta=tesla -mcmodel=medium
 else
   GENERIC_COMP_FLAGS += -noacc
 endif

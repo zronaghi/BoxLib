@@ -79,6 +79,10 @@ ifeq ($(USE_OMP),TRUE)
   GENERIC_COMP_FLAGS += -fopenmp
 endif
 
+ifeq ($(USE_ACC),TRUE)
+  GENERIC_COMP_FLAGS += -fopenacc
+endif
+
 CXXFLAGS += $(GENERIC_COMP_FLAGS)
 CFLAGS   += $(GENERIC_COMP_FLAGS)
 FFLAGS   += $(GENERIC_COMP_FLAGS)
@@ -103,5 +107,6 @@ ifneq ($(quadmath_liba),libquadmath.a)
 else
   quadmath_lib = $(quadmath_libso)
 endif
-
-override XTRALIBS += $(gfortran_lib) $(quadmath_lib)
+override XTRALIBS += -L/sw/summitdev/gcc/7.1.1-20170802/lib64 -lgfortran
+#override XTRALIBS += -L/sw/summitdev/gcc/5.4.0new/lib64 -lgfortran
+#override XTRALIBS += $(gfortran_lib) $(quadmath_lib)
