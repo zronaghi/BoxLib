@@ -458,10 +458,10 @@ MultiFab::define (const BoxArray&            bxs,
 void
 MultiFab::initVal ()
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	(*this)[mfi].initVal();
     }

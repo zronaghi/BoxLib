@@ -313,12 +313,12 @@ FabArrayBase::CPC::define (const BoxArray& ba_dst, const DistributionMapping& dm
 
 	BaseFab<int> localtouch, remotetouch;
 	bool check_local = false, check_remote = false;
-#ifdef _OPENMP
-	if (omp_get_max_threads() > 1) {
-	    check_local = true;
-	    check_remote = true;
-	}
-#endif    
+//#ifdef _OPENMP
+//	if (omp_get_max_threads() > 1) {
+//	    check_local = true;
+//	    check_remote = true;
+//	}
+//#endif    
 	
 	if (ParallelDescriptor::TeamSize() > 1) {
 	    check_local = true;
@@ -613,12 +613,12 @@ FabArrayBase::FB::define_fb(const FabArrayBase& fa)
 
     BaseFab<int> localtouch, remotetouch;
     bool check_local = false, check_remote = false;
-#ifdef _OPENMP
-    if (omp_get_max_threads() > 1) {
-	check_local = true;
-	check_remote = true;
-    }
-#endif
+//#ifdef _OPENMP
+//    if (omp_get_max_threads() > 1) {
+//	check_local = true;
+//	check_remote = true;
+//    }
+//#endif
 
     if (ParallelDescriptor::TeamSize() > 1) {
 	check_local = true;
@@ -837,12 +837,12 @@ FabArrayBase::FB::define_epo (const FabArrayBase& fa)
 
     BaseFab<int> localtouch, remotetouch;
     bool check_local = false, check_remote = false;
-#ifdef _OPENMP
-    if (omp_get_max_threads() > 1) {
-	check_local = true;
-	check_remote = true;
-    }
-#endif
+//#ifdef _OPENMP
+//    if (omp_get_max_threads() > 1) {
+//	check_local = true;
+//	check_remote = true;
+//    }
+//#endif
 
     if (ParallelDescriptor::TeamSize() > 1) {
 	check_local = true;
@@ -1230,9 +1230,9 @@ FabArrayBase::getTileArray (const IntVect& tilesize) const
 {
     TileArray* p;
 
-#ifdef _OPENMP
-#pragma omp critical(gettilearray)
-#endif
+//#ifdef _OPENMP
+//#pragma omp critical(gettilearray)
+//#endif
     {
 	BL_ASSERT(getBDKey() == m_bdkey);
 	p = &FabArrayBase::m_TheTileArrayCache[m_bdkey][tilesize];
@@ -1246,9 +1246,9 @@ FabArrayBase::getTileArray (const IntVect& tilesize) const
 					     m_TAC_stats.bytes);
 #endif
 	}
-#ifdef _OPENMP
-#pragma omp master
-#endif
+//#ifdef _OPENMP
+//#pragma omp master
+//#endif
 	{
 	    ++(p->nuse);
 	    m_TAC_stats.recordUse();
@@ -1557,23 +1557,23 @@ MFIter::Initialize ()
 	    }
 	}
 	
-#ifdef _OPENMP
-	int nthreads = omp_get_num_threads();
-	if (nthreads > 1)
-	{
-	    int tid = omp_get_thread_num();
-	    int ntot = endIndex - beginIndex;
-	    int nr   = ntot / nthreads;
-	    int nlft = ntot - nr * nthreads;
-	    if (tid < nlft) {  // get nr+1 items
-		beginIndex += tid * (nr + 1);
-		endIndex = beginIndex + nr + 1;
-	    } else {           // get nr items
-		beginIndex += tid * nr + nlft;
-		endIndex = beginIndex + nr;
-	    }	    
-	}
-#endif
+//#ifdef _OPENMP
+//	int nthreads = omp_get_num_threads();
+//	if (nthreads > 1)
+//	{
+//	    int tid = omp_get_thread_num();
+//	    int ntot = endIndex - beginIndex;
+//	    int nr   = ntot / nthreads;
+//	    int nlft = ntot - nr * nthreads;
+//	    if (tid < nlft) {  // get nr+1 items
+//		beginIndex += tid * (nr + 1);
+//		endIndex = beginIndex + nr + 1;
+//	    } else {           // get nr items
+//		beginIndex += tid * nr + nlft;
+//		endIndex = beginIndex + nr;
+//	    }	    
+//	}
+//#endif
 
 	currentIndex = beginIndex;
 
@@ -1706,11 +1706,11 @@ MFGhostIter::Initialize ()
 
     int tid = 0;
     int nthreads = 1;
-#ifdef _OPENMP
-    nthreads = omp_get_num_threads();
-    if (nthreads > 1)
-	tid = omp_get_thread_num();
-#endif
+//#ifdef _OPENMP
+//    nthreads = omp_get_num_threads();
+//    if (nthreads > 1)
+//	tid = omp_get_thread_num();
+//#endif
 
     int npes = nworkers*nthreads;
     int pid = rit*nthreads+tid;

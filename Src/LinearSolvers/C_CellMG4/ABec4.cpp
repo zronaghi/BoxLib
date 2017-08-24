@@ -107,10 +107,10 @@ ABec4::applyBC (MultiFab&     inout,
     const bool cross = false;
     inout.FillBoundary(src_comp,num_comp,geomarray[level].periodicity(),cross);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(inout); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(inout,false); mfi.isValid(); ++mfi)
     {
         const int gn = mfi.index();
 
@@ -166,10 +166,10 @@ ABec4::applyBC (MultiFab&     inout,
   // blocking. 
     inout.EnforcePeriodicity(geomarray[level].periodicity());
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-  for (MFIter mfi(inout); mfi.isValid(); ++mfi) {
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+  for (MFIter mfi(inout,false); mfi.isValid(); ++mfi) {
 
     const int gn = mfi.index();
 
@@ -417,11 +417,11 @@ ABec4::compFlux (D_DECL(MultiFab &xflux, MultiFab &yflux, MultiFab &zflux),
     const MultiFab& a = aCoefficients(level);
     const MultiFab& b = bCoefficients(level);
 
-    const bool tiling = true;
+    const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter inmfi(in,tiling); inmfi.isValid(); ++inmfi)
     {
         D_TERM(const Box& xbx   = inmfi.nodaltilebox(0);,
@@ -546,11 +546,11 @@ ABec4::Fapply (MultiFab&       y,
     const bool cross = false;
     const_cast<MultiFab&>(b).FillBoundary(src_comp,num_comp,geomarray[level].periodicity(),cross);
 
-    const bool tiling = true;
+    const bool tiling = false;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter ymfi(y,tiling); ymfi.isValid(); ++ymfi)
     {
         const Box&       tbx  = ymfi.tilebox();

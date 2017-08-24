@@ -1958,10 +1958,10 @@ FabArray<FAB>::setBndry (value_type val,
 {
     if (n_grow > 0)
     {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-        for (MFIter fai(*this); fai.isValid(); ++fai)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+        for (MFIter fai(*this,false); fai.isValid(); ++fai)
         {
             get(fai).setComplement(val, fai.validbox(), strt_comp, ncomp);
         }
@@ -1998,10 +1998,10 @@ FabArray<FAB>::copy (const FabArray<FAB>& src,
         // we're doing plus()s on cell-centered data.  Don't do plus()s on
         // non-cell-centered data this simplistic way.
         //
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-        for (MFIter fai(*this,true); fai.isValid(); ++fai)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+        for (MFIter fai(*this,false); fai.isValid(); ++fai)
         {
             const Box& bx = fai.tilebox();
 
@@ -2026,9 +2026,9 @@ FabArray<FAB>::copy (const FabArray<FAB>& src,
         // There can only be local work to do.
         //
 	int N_loc = (*thecpc.m_LocTags).size();
-#ifdef _OPENMP
-#pragma omp parallel for if (thecpc.m_threadsafe_loc)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for if (thecpc.m_threadsafe_loc)
+//#endif
 	for (int i=0; i<N_loc; ++i)
         {
             const CopyComTag& tag = (*thecpc.m_LocTags)[i];
@@ -2177,9 +2177,9 @@ FabArray<FAB>::copy (const FabArray<FAB>& src,
 		    send_cctc.push_back(&(m_it->second));
 	    }
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
 	    for (int j=0; j<N_snds; ++j)
 	    {
 		value_type* dptr = send_data[j];
@@ -2281,9 +2281,9 @@ FabArray<FAB>::copy (const FabArray<FAB>& src,
 	if (ParallelDescriptor::TeamSize() > 1 && thecpc.m_threadsafe_loc)
 	{
 #ifdef BL_USE_TEAM
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	    ParallelDescriptor::team_for(0, N_locs, [&] (int j) 
             {
 		const CopyComTag& tag = (*thecpc.m_LocTags)[j];
@@ -2301,9 +2301,9 @@ FabArray<FAB>::copy (const FabArray<FAB>& src,
 	}
 	else 
 	{
-#ifdef _OPENMP
-#pragma omp parallel for if (thecpc.m_threadsafe_loc)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for if (thecpc.m_threadsafe_loc)
+//#endif
 	    for (int j=0; j<N_locs; ++j)
 	    {
 		const CopyComTag& tag = (*thecpc.m_LocTags)[j];
@@ -2351,15 +2351,15 @@ FabArray<FAB>::copy (const FabArray<FAB>& src,
 	    }
 
 	    
-#ifdef _OPENMP
-#pragma omp parallel if (thecpc.m_threadsafe_rcv)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel if (thecpc.m_threadsafe_rcv)
+//#endif
 	    {
 		FAB fab;
 
-#ifdef _OPENMP
-#pragma omp for
-#endif
+//#ifdef _OPENMP
+//#pragma omp for
+//#endif
                 for (int k = 0; k < N_rcvs; k++)
 		{
 		    const value_type* dptr = recv_data[k];
@@ -2766,9 +2766,9 @@ FabArray<FAB>::copyInter (FabArray<FAB> *src, FabArray<FAB> *dest,
 	    send_cctc.push_back(&(m_it->second));
 	}
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
 	for (int j=0; j<N_snds; ++j)
 	{
 	    value_type* dptr = send_data[j];
@@ -2809,9 +2809,9 @@ FabArray<FAB>::copyInter (FabArray<FAB> *src, FabArray<FAB> *dest,
         //
 	int N_loc = (*thecpc.m_LocTags).size();
 
-#ifdef _OPENMP
-#pragma omp parallel for if (thecpc.m_threadsafe_loc)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for if (thecpc.m_threadsafe_loc)
+//#endif
 	for (int j=0; j<N_loc; ++j)
         {
             const CopyComTag& tag = (*thecpc.m_LocTags)[j];
@@ -2848,15 +2848,15 @@ FabArray<FAB>::copyInter (FabArray<FAB> *src, FabArray<FAB> *dest,
 	    stats.resize(N_rcvs);
 	    BL_MPI_REQUIRE( MPI_Waitall(N_rcvs, recv_reqs.dataPtr(), stats.dataPtr()) );
 	    
-#ifdef _OPENMP
-#pragma omp parallel if (thecpc.m_threadsafe_rcv)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel if (thecpc.m_threadsafe_rcv)
+//#endif
         {
 	    FAB fab;
 
-#ifdef _OPENMP
-#pragma omp for
-#endif
+//#ifdef _OPENMP
+//#pragma omp for
+//#endif
 	    for (int k = 0; k < N_rcvs; k++)
 	    {
 		const value_type* dptr = recv_data[k];
@@ -2914,7 +2914,7 @@ FabArray<FAB>::setVal (value_type val)
 //#ifdef _OPENMP
 //#pragma omp parallel
 //#endif
-    for (MFIter fai(*this,true); fai.isValid(); ++fai)
+    for (MFIter fai(*this,false); fai.isValid(); ++fai)
     {
 	const Box& bx = fai.growntilebox();
         get(fai).setVal(val, bx, 0, n_comp);
@@ -2938,10 +2938,10 @@ FabArray<FAB>::setVal (value_type val,
     BL_ASSERT(nghost >= 0 && nghost <= n_grow);
     BL_ASSERT(comp+ncomp <= n_comp);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter fai(*this,true); fai.isValid(); ++fai)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter fai(*this,false); fai.isValid(); ++fai)
     {
 	const Box& bx = fai.growntilebox(nghost);
         get(fai).setVal(val, bx, comp, ncomp);
@@ -2959,10 +2959,10 @@ FabArray<FAB>::setVal (value_type val,
     BL_ASSERT(nghost >= 0 && nghost <= n_grow);
     BL_ASSERT(comp+ncomp <= n_comp);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter fai(*this,true); fai.isValid(); ++fai)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter fai(*this,false); fai.isValid(); ++fai)
     {
         Box b = fai.growntilebox(nghost) & region;
 
@@ -2981,10 +2981,10 @@ FabArray<FAB>::shift (const IntVect& v)
       boxarray.shift(id, v[id]);
     }
     addThisBD();
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter fai(*this); fai.isValid(); ++fai)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter fai(*this,false); fai.isValid(); ++fai)
     {
         get(fai).shift(v);
     }
@@ -4585,9 +4585,9 @@ FabArray<FAB>::FBEP_nowait (int scomp, int ncomp, const Periodicity& period, boo
         // There can only be local work to do.
         //
 	int N_loc = (*TheFB.m_LocTags).size();
-#ifdef _OPENMP
-#pragma omp parallel for if (TheFB.m_threadsafe_loc)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for if (TheFB.m_threadsafe_loc)
+//#endif
 	for (int i=0; i<N_loc; ++i)
         {
             const CopyComTag& tag = (*TheFB.m_LocTags)[i];
@@ -4705,9 +4705,9 @@ FabArray<FAB>::FBEP_nowait (int scomp, int ncomp, const Periodicity& period, boo
 	    send_cctc.push_back(&(m_it->second));
 	}
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
 	for (int i=0; i<N_snds; ++i)
 	{
 	    value_type* dptr = send_data[i];
@@ -4805,9 +4805,9 @@ FabArray<FAB>::FBEP_nowait (int scomp, int ncomp, const Periodicity& period, boo
     if (ParallelDescriptor::TeamSize() > 1 && TheFB.m_threadsafe_loc)
     {
 #ifdef BL_USE_TEAM
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	ParallelDescriptor::team_for(0, N_locs, [&] (int i) 
         {
 	    const auto& tag = (*TheFB.m_LocTags)[i];
@@ -4821,9 +4821,9 @@ FabArray<FAB>::FBEP_nowait (int scomp, int ncomp, const Periodicity& period, boo
     }
     else
     {
-#ifdef _OPENMP
-#pragma omp parallel for if (TheFB.m_threadsafe_loc)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for if (TheFB.m_threadsafe_loc)
+//#endif
 	for (int i=0; i<N_locs; ++i)
 	{
 	    const CopyComTag& tag = (*TheFB.m_LocTags)[i];
@@ -4891,9 +4891,9 @@ FabArray<FAB>::FillBoundary_finish ()
 	    recv_cctc.push_back(&(m_it->second));
 	}	
 
-#ifdef _OPENMP
-#pragma omp parallel for if (TheFB.m_threadsafe_rcv)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for if (TheFB.m_threadsafe_rcv)
+//#endif
 	for (int k = 0; k < N_rcvs; k++) 
 	{
 	    value_type* dptr = fb_recv_data[k];
@@ -5047,10 +5047,10 @@ FabArray<FAB>::BuildMask (const Box& phys_domain, const Periodicity& period,
 	}
     }
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this, true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this, false); mfi.isValid(); ++mfi)
     {
 	FAB& fab = (*this)[mfi];
 
@@ -5065,9 +5065,9 @@ FabArray<FAB>::BuildMask (const Box& phys_domain, const Periodicity& period,
     }
 
     int N_locs = LocTags.size();
-#ifdef _OPENMP
-#pragma omp parallel for if (TheFB.m_threadsafe_loc)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for if (TheFB.m_threadsafe_loc)
+//#endif
     for (int i = 0; i < N_locs; ++i) {
 	const CopyComTag& tag = LocTags[i];
 	(*this)[tag.dstIndex].setVal(covered, tag.dbox, 0, ncomp);
@@ -5075,9 +5075,9 @@ FabArray<FAB>::BuildMask (const Box& phys_domain, const Periodicity& period,
 
     for (MapOfCopyComTagContainers::const_iterator it = RcvTags.begin(); it != RcvTags.end(); ++it) {
 	int N = it->second.size();
-#ifdef _OPENMP
-#pragma omp parallel for if (TheFB.m_threadsafe_rcv)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for if (TheFB.m_threadsafe_rcv)
+//#endif
 	for (int i = 0; i < N; ++i) {
 	    const CopyComTag& tag = it->second[i];
 	    (*this)[tag.dstIndex].setVal(covered, tag.dbox, 0, ncomp);

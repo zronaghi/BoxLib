@@ -9,9 +9,9 @@
 #include <MCLO_F.H>
 #include <MCLinOp.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 namespace
 {
@@ -188,10 +188,10 @@ MCLinOp::applyBC (MultiFab& inout,
     //
     // Fill boundary cells.
     //
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(inout); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(inout,false); mfi.isValid(); ++mfi)
     {
         const int gn = mfi.index();
 
@@ -433,10 +433,10 @@ MCLinOp::makeCoefficients (MultiFab&       cs,
     cs.define(d, nc, nGrow, Fab_allocate);
     cs.setVal(0.0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter csmfi(cs,true); csmfi.isValid(); ++csmfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter csmfi(cs,false); csmfi.isValid(); ++csmfi)
     {
         const Box&       bx    = csmfi.tilebox();
         FArrayBox&       csfab = cs[csmfi];

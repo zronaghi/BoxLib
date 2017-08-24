@@ -254,9 +254,9 @@ AmrLevel::countCells () const
 
     long cnt = 0;
 
-#ifdef _OPENMP
-#pragma omp parallel for reduction(+:cnt)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for reduction(+:cnt)
+//#endif
     for (int i = 0; i < N; i++)
     {
         cnt += grids[i].numPts();
@@ -809,11 +809,11 @@ FillPatchIterator::Initialize (int  boxGrow,
 						  desc.interp(SComp));
 		
 #ifdef CRSEGRNDOMP
-#ifdef _OPENMP
-#pragma omp parallel
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 #endif
-#endif
-		for (MFIter mfi(m_fabs); mfi.isValid(); ++mfi)
+		for (MFIter mfi(m_fabs,false); mfi.isValid(); ++mfi)
 		{
 		    fph->fill(m_fabs[mfi],DComp,mfi.index());
 		}
@@ -1323,11 +1323,11 @@ AmrLevel::FillCoarsePatch (MultiFab& mf,
 	{
 	    FillPatch(clev,crseMF,0,time,index,SComp,NComp,0);
 	}
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(mf); mfi.isValid(); ++mfi)
+    
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(mf,false); mfi.isValid(); ++mfi)
 	{
 	    const Box& dbx = BoxLib::grow(mfi.validbox(),nghost) & domain_g;
 	    
@@ -1400,10 +1400,10 @@ AmrLevel::derive (const std::string& name,
         mf = new MultiFab(dstBA, rec->numDerive(), ngrow);
 
 #ifdef CRSEGRNDOMP
-#ifdef _OPENMP
-#pragma omp parallel
+//#ifdef _OPENMP
+//#pragma omp parallel
 #endif
-        for (MFIter mfi(*mf,true); mfi.isValid(); ++mfi)
+        for (MFIter mfi(*mf,false); mfi.isValid(); ++mfi)
         {
             int         grid_no = mfi.index();
             Real*       ddat    = (*mf)[mfi].dataPtr();
@@ -1536,10 +1536,10 @@ AmrLevel::derive (const std::string& name,
         }
 
 #ifdef CRSEGRNDOMP
-#ifdef _OPENMP
-#pragma omp parallel
+//#ifdef _OPENMP
+//#pragma omp parallel
 #endif
-        for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
+        for (MFIter mfi(mf,false); mfi.isValid(); ++mfi)
         {
             int         idx     = mfi.index();
             Real*       ddat    = mf[mfi].dataPtr(dcomp);

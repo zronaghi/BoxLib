@@ -1,6 +1,6 @@
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #include <iostream>
 #include <limits>
@@ -44,18 +44,18 @@ void mempool_init()
 	pp.query("init_snan", init_snan);
 #endif
 
-#ifdef _OPENMP
-	int nthreads = omp_get_max_threads();
-#else
+//#ifdef _OPENMP
+//	int nthreads = omp_get_max_threads();
+//#else
 	int nthreads = 1;
-#endif
+    //#endif
 	the_memory_pool.resize(nthreads, PArrayManage);
 	for (int i=0; i<nthreads; ++i) {
 	    the_memory_pool.set(i, new CArena());
 	}
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	{
 	    size_t N = 1024*1024*sizeof(double);
 	    void *p = mempool_alloc(N);
@@ -77,21 +77,21 @@ void mempool_init()
 
 void* mempool_alloc (size_t nbytes)
 {
-#ifdef _OPENMP
-  int tid = omp_get_thread_num();
-#else
+//#ifdef _OPENMP
+//  int tid = omp_get_thread_num();
+//#else
   int tid = 0;
-#endif
+  //#endif
   return the_memory_pool[tid].alloc(nbytes);
 }
 
 void mempool_free (void* p) 
 {
-#ifdef _OPENMP
-  int tid = omp_get_thread_num();
-#else
+//#ifdef _OPENMP
+//  int tid = omp_get_thread_num();
+//#else
   int tid = 0;
-#endif
+  //#endif
   the_memory_pool[tid].free(p);
 }
 

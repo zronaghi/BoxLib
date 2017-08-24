@@ -344,21 +344,19 @@ const Real* h)
     C_GSRB_FUNCTOR cgsrbfunc(bx, bbx, rb, alpha, beta, phi, rhs, a, bX, bY, bZ, f0, m0, f1, m1, f2, m2, f3, m3, f4, m4, f5, m5, h);
 
 #if 1
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left> > t_policy;
     //execute
     Kokkos::fence();
     double start_time = omp_get_wtime();
     int length0 = std::floor( (hi[0]-lo[0]+1) / 2 );
     int up0 = lo[0] + length0;
-    Kokkos::parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {up0+1, hi[1]+1, hi[2]+1, nc}, {32, 1, 1, 1}), cgsrbfunc);
+    Kokkos::parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], 0}, {up0+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cgsrbfunc);
     Kokkos::fence();
     double end_time =  omp_get_wtime();
 #else
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<3, Kokkos::Experimental::Iterate::Left, Kokkos::Experimental::Iterate::Left> > t_policy;
     //execute
     Kokkos::fence();
     double start_time = omp_get_wtime();
-    Kokkos::parallel_for(t_policy({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, nc}, {32, 1, 1}), cgsrbfunc);
+    Kokkos::parallel_for(t_policy({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cgsrbfunc);
     Kokkos::fence();
     double end_time =  omp_get_wtime();
 #endif

@@ -12,7 +12,7 @@ namespace BoxLib
 //#ifdef _OPENMP
 //#pragma omp parallel
 //#endif
-	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
+	for (MFIter mfi(cc,false); mfi.isValid(); ++mfi) 
 	{
 	    const Box& bx = mfi.tilebox();
 
@@ -38,7 +38,7 @@ namespace BoxLib
 //#ifdef _OPENMP
 //#pragma omp parallel
 //#endif
-	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
+	for (MFIter mfi(cc,false); mfi.isValid(); ++mfi) 
 	{
 	    const Box& bx = mfi.tilebox();
 
@@ -65,7 +65,7 @@ namespace BoxLib
 //#ifdef _OPENMP
 //#pragma omp parallel
 //#endif
-	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
+	for (MFIter mfi(cc,false); mfi.isValid(); ++mfi) 
 	{
 	    const Box& bx = mfi.tilebox();
 
@@ -93,7 +93,7 @@ namespace BoxLib
 //#ifdef _OPENMP
 //#pragma omp parallel
 //#endif
-	for (MFIter mfi(cc,true); mfi.isValid(); ++mfi) 
+	for (MFIter mfi(cc,false); mfi.isValid(); ++mfi) 
 	{
 	    const Box& xbx = mfi.nodaltilebox(0);
 #if (BL_SPACEDIM > 1)
@@ -158,10 +158,10 @@ namespace BoxLib
 	MultiFab fvolume;
 	fgeom.GetVolume(fvolume, fine_BA, 0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-        for (MFIter mfi(crse_S_fine,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+        for (MFIter mfi(crse_S_fine,false); mfi.isValid(); ++mfi)
         {
             //  NOTE: The tilebox is defined at the coarse level.
             const Box& tbx = mfi.tilebox();
@@ -203,10 +203,10 @@ namespace BoxLib
 
         MultiFab crse_S_fine(crse_S_fine_BA,ncomp,0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-        for (MFIter mfi(crse_S_fine,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+        for (MFIter mfi(crse_S_fine,false); mfi.isValid(); ++mfi)
         {
             //  NOTE: The tilebox is defined at the coarse level.
             const Box& tbx = mfi.tilebox();
@@ -237,11 +237,11 @@ namespace BoxLib
 
 	int ncomp = crse[0].nComp();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
         for (int n=0; n<BL_SPACEDIM; ++n) {
-            for (MFIter mfi(crse[n],true); mfi.isValid(); ++mfi)
+            for (MFIter mfi(crse[n],false); mfi.isValid(); ++mfi)
             {
                 const Box& tbx = mfi.tilebox();
 

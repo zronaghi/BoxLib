@@ -11,9 +11,9 @@
 #include <ParallelDescriptor.H>
 #include <Utility.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 const Real INVALID_TIME = -1.0e200;
 
@@ -844,14 +844,14 @@ StateDataPhysBCFunct::FillBoundary (MultiFab& mf, int dest_comp, int num_comp, R
     const RealBox& prob_domain = geom.ProbDomain();
 
 #ifdef CRSEGRNDOMP
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 #endif
     {
 	FArrayBox tmp;
 
-	for (MFIter mfi(mf); mfi.isValid(); ++mfi)
+	for (MFIter mfi(mf,false); mfi.isValid(); ++mfi)
 	{
 	    FArrayBox& dest = mf[mfi];
 	    const Box& bx = dest.box();

@@ -1969,7 +1969,7 @@ BaseFab<T>::norm (const Box& subbox,
         const int *hi = subbox.hiVect();
         const int *cb = subbox.cbVect();
         
-        Kokkos::parallel_reduce(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], comp+numcomp}), 
+        Kokkos::parallel_reduce(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
             P0NormFunctor<T>(this->view_fab), nrm);
 #else
 #error "BaseFab::norm needs to be implemented for other spacedims"

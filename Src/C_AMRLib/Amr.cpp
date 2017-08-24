@@ -9,9 +9,9 @@
 #include <iomanip>
 #include <limits>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -2606,18 +2606,18 @@ Amr::printGridSummary (std::ostream& os,
 	    int lmax = -1;
 	    int smin = std::numeric_limits<int>::max();
 	    int imax, imin;
-#ifdef _OPENMP
-#pragma omp parallel
-#endif	    
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif	    
 	    {
 		long vmin_this = std::numeric_limits<long>::max();
 		long vmax_this = -1;
 		int lmax_this = -1;
 		int smin_this = std::numeric_limits<int>::max();
 		int imax_this, imin_this;
-#ifdef _OPENMP
-#pragma omp for
-#endif	    	    
+//#ifdef _OPENMP
+//#pragma omp for
+//#endif	    	    
 		for (int k = 0; k < numgrid; k++) {
 		    const Box& bx = bs[k];
 		    long v = bx.volume();
@@ -2634,9 +2634,9 @@ Amr::printGridSummary (std::ostream& os,
 			imax_this = k;
 		    }
 		}
-#ifdef _OPENMP
-#pragma omp critical (amr_prtgs)
-#endif	    	    
+//#ifdef _OPENMP
+//#pragma omp critical (amr_prtgs)
+//#endif	    	    
 		{
 		    if (vmin_this < vmin || (vmin_this == vmin && smin_this < smin)) {
 			vmin = vmin_this;
