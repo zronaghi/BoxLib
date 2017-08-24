@@ -1451,7 +1451,7 @@ BaseFab<T>::performCopy (const BaseFab<T>& src,
         ViewFab<T> fab = this->view_fab; 
         ViewFab<T> srcfab = src.view_fab; 
     
-        Kokkos::parallel_for(mdpolicy<4>({0, 0, 0, 0}, {_subbox_.length(0), _subbox_.length(1), _subbox_.length(2), numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+        Kokkos::Experimental::md_parallel_for(mdpolicy<4>({0, 0, 0, 0}, {_subbox_.length(0), _subbox_.length(1), _subbox_.length(2), numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
             fab(i+_subbox_lo[0], j+_subbox_lo[1], k+_subbox_lo[2], n) = srcfab(i+_srcbox_lo[0], j+_srcbox_lo[1], k+_srcbox_lo[2], n);
         });
@@ -1535,16 +1535,23 @@ BaseFab<T>::performSetVal (T          val,
     }
     
     //define policy
-        
-    const int *lo = bx.loVect();
-    const int *hi = bx.hiVect();
-    const int *cb = bx.cbVect();
-        
+
+    Kokkos::Array<int, 3> lo;
+    Kokkos::Array<int, 3> hi;
+    Kokkos::Array<int, 3> cb;
+
+    for (int i = 0; i < 3; ++i) {
+      lo[i] = bx.loVect()[i];
+      hi[i] = bx.hiVect()[i];
+      cb[i] = bx.cbVect()[i];
+    }
+
     ViewFab<T> fab = this->view_fab; 
+    T _val = val;
     
-    Kokkos::parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], ns}, {hi[0]+1, hi[1]+1, hi[2]+1, ns+num}, {cb[0], cb[1], cb[2], num}), 
+    Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], ns}, {hi[0]+1, hi[1]+1, hi[2]+1, ns+num}, {cb[0], cb[1], cb[2], num}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
-        fab(i,j,k,n) = val;
+        fab(i,j,k,n) = _val;
     });
 #else
 #error "BaseFab::performSetVal needs to be implemented for other spacedims"
