@@ -33,7 +33,7 @@ using devspace = Kokkos::DefaultExecutionSpace;
 template<typename T>
 using devview = Kokkos::View<T, Kokkos::LayoutLeft, Kokkos::CudaSpace>;
 //iteration policies
-static constexpr Kokkos::Experimental::Iterate outer_iter_policy = Kokkos::Experimental::Iterate::Right;
+static constexpr Kokkos::Experimental::Iterate outer_iter_policy = Kokkos::Experimental::Iterate::Left;
 static constexpr Kokkos::Experimental::Iterate inner_iter_policy = Kokkos::Experimental::Iterate::Left;
 ////subview class
 //template <typename T>
