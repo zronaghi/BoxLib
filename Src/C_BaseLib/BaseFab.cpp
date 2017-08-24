@@ -428,7 +428,6 @@ BaseFab<Real>::plus (const BaseFab<Real>& src,
     
 #if BL_SPACEDIM == 3    
     //define policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
 
     Kokkos::Array<int, 3> lo;
     Kokkos::Array<int, 3> hi;
@@ -445,7 +444,7 @@ BaseFab<Real>::plus (const BaseFab<Real>& src,
     ViewFab<Real> destfab = this->view_fab; 
     ViewFab<Real> srcfab = src.view_fab; 
     
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+    Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
         const int ioff = sblo[0] - lo[0];
         const int joff = sblo[1] - lo[1];
@@ -532,7 +531,6 @@ BaseFab<Real>::xpay (Real a, const BaseFab<Real>& src,
     
 #if BL_SPACEDIM == 3    
     //define policy
-    typedef Kokkos::Experimental::MDRangePolicy<Kokkos::Experimental::Rank<4, outer_iter_policy, inner_iter_policy> > t_policy;
 
     Kokkos::Array<int, 3> lo;
     Kokkos::Array<int, 3> hi;
@@ -548,7 +546,7 @@ BaseFab<Real>::xpay (Real a, const BaseFab<Real>& src,
     ViewFab<Real> destfab = this->view_fab; 
     ViewFab<Real> srcfab = src.view_fab; 
     
-    Kokkos::Experimental::md_parallel_for(t_policy({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
+    Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, numcomp}, {cb[0], cb[1], cb[2], numcomp}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
         const int ioff = sblo[0] - lo[0];
         const int joff = sblo[1] - lo[1];

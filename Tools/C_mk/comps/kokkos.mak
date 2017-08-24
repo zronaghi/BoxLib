@@ -1,12 +1,13 @@
 #
 # Generic setup for using kokkos
 #
-CXX = nvcc_wrapper
+#CXX = nvcc_wrapper
+CXX = g++
 CC  = gcc
 FC  = gfortran
 F90 = gfortran
-#LD = g++
-LD = nvcc_wrapper
+LD = g++
+#LD = nvcc_wrapper
 
 CXXFLAGS =
 CFLAGS   =
