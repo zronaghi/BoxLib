@@ -195,7 +195,7 @@ public:
     //m3v.syncH2D();
     //m4v.syncH2D();
     //m5v.syncH2D();
-      
+
     //some parameters
     omega= 1.15;
     dhx = beta/(h[0]*h[0]);
@@ -367,7 +367,7 @@ const Real* h)
 //
 //ADOTX Functor
 struct C_ADOTX_FUNCTOR{
-    
+
 public:
 
     C_ADOTX_FUNCTOR(const FArrayBox& y_,
@@ -387,7 +387,7 @@ public:
     bZv(bZ_.view_fab),
     alpha(alpha_),
     beta(beta_) {
-        
+
         //av.syncH2D();
         //xv.syncH2D();
         //bXv.syncH2D();
@@ -454,7 +454,7 @@ const Real* h)
 //
 //ADOTX Functor
 struct C_NORMA_FUNCTOR{
-    
+
 public:
 
     C_NORMA_FUNCTOR(const Real& alpha_,
@@ -470,7 +470,7 @@ public:
     bZv(bZ_.view_fab),
     alpha(alpha_),
     beta(beta_) {
-        
+
         //av.syncH2D();
         //bXv.syncH2D();
         //bYv.syncH2D();
@@ -508,7 +508,7 @@ public:
       if ( src > dest )
         dest = src;
     }
-  
+
     KOKKOS_INLINE_FUNCTION
     void join(volatile value_type& dest, const volatile value_type& src) const {
       if ( src > dest )
@@ -521,7 +521,7 @@ public:
       val = 0.0;
     }
 
-private:    
+private:
     ViewFab<Real> av, bXv, bYv, bZv;
     Box bx;
     int nc;
@@ -626,27 +626,28 @@ const Real* h)
 static bool is_dirichlet(int i){ return (i == LO_DIRICHLET); }
 static bool is_neumann(int i){ return (i == LO_NEUMANN); }
 
-void polyInterpCoeff(const Real& xInt, const oarray<Real>& x, const int N, oarray<Real>& c){
+template <int NN>
+void polyInterpCoeff(const Real& xInt, const oarray<Real,NN>& x, const int N, oarray<Real,NN>& c){
     Real num, den;
     //correct offset in order to correct w/ respect to fortran
     int off = x.getOffset()-1;
-    
+
     //std::cout << "N: " << N <<std::endl;
-    
+
     for(int j=1; j<=N; j++){
         num = 1.;
         den = 1.;
         for(int i=1; i<=j-1; i++){
             num *= (xInt - x[i+off]);
             den *= (x[j+off] - x[i+off]);
-            
+
             //std::cout << "num upper: " << i+1 << " " << j+1 << " " << num << std::endl;
             //std::cout << "den upper: " << i+1 << " " << j+1 << " " << den << std::endl;
         }
         for(int i=j+1; i<=N; i++){
             num *= (xInt - x[i+off]);
             den *= (x[j+off] - x[i+off]);
-            
+
             //std::cout << "num lower: " << i+1 << " " << j+1 << " " << num << std::endl;
             //std::cout << "den lower: " << i+1 << " " << j+1 << " " << den << std::endl;
         }
@@ -660,12 +661,12 @@ void C_APPLYBC (
     const int numcomp,
     const int src_comp,
     const int bndry_comp,
-    int flagden, 
-    int flagbc, 
+    int flagden,
+    int flagbc,
     int maxorder,
     FArrayBox& phi,
-    int cdir, 
-    int bct, 
+    int cdir,
+    int bct,
     int bcl,
     FArrayBox& bcval,
     const Mask& mask,
@@ -675,40 +676,41 @@ const Real* h)
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
     const int* cb = bx.cbVect();
-    
+
     //iteration policies
-     
-    const int maxmaxorder=4;
-    const Real xInt = -0.5;
+
+    constexpr int maxmaxorder=4;
+    constexpr int N=maxmaxorder;
+    constexpr Real xInt = -0.5;
     int Lmaxorder;
-    oarray<Real> x(-1,maxmaxorder-2);
-    oarray<Real> coef(-1,maxmaxorder-2);
-    
+    oarray<Real,N> x(-1,maxmaxorder-2);
+    oarray<Real,N> coef(-1,maxmaxorder-2);
+
     if ( maxorder == -1 ){
         Lmaxorder = maxmaxorder;
     }
     else{
         Lmaxorder = std::min(maxorder,maxmaxorder);
     }
-    int lenx = std::min(hi[0]-lo[0], Lmaxorder-2);
-    int leny = std::min(hi[1]-lo[1], Lmaxorder-2);
-    int lenz = std::min(hi[2]-lo[2], Lmaxorder-2);
-    
+    const int lenx = std::min(hi[0]-lo[0], Lmaxorder-2);
+    const int leny = std::min(hi[1]-lo[1], Lmaxorder-2);
+    const int lenz = std::min(hi[2]-lo[2], Lmaxorder-2);
+
     for(int m=0; m<=maxmaxorder-2; m++){
        x[m] = Real(m) + 0.5;
     }
-    
+
     ViewFab<Real> phiv = phi.view_fab;
     ViewFab<Real> bcvalv = bcval.view_fab;
     ViewFab<Real> denv = den.view_fab;
     ViewFab<int> maskv = mask.view_fab;
-    
+
     //+/- X
     if (cdir==0 || cdir == 3){
         int comp = (cdir==0 ? lo[0] : hi[0]);
         int comps = (cdir==0 ? lo[0]-1 : hi[0]+1);
         int sign = (cdir==0 ? +1 : -1);
-        
+
         if (is_neumann(bct)){
             Kokkos::Experimental::md_parallel_for(mdpolicy<3>({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, numcomp}, {cb[1], cb[2], numcomp}),
             KOKKOS_LAMBDA(const int j, const int k, const int n){
@@ -740,13 +742,18 @@ const Real* h)
                     phiv(comps, j, k, nsrc) = (maskv(comps,j,k) > 0 ? 0. : phiv(comps, j, k, nsrc));
                 });
             }
-            for(int m = 0; m<=lenx; m++){
-                const Real cf = coef[m];
-                Kokkos::Experimental::md_parallel_for(mdpolicy<3>({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, numcomp}, {cb[1], cb[2], numcomp}),
+
+            mdpolicy<3> policy( {lo[1], lo[2], 0}
+                              , {hi[1]+1, hi[2]+1, numcomp}
+                              , {cb[1], cb[2], numcomp} );
+            for (int m=0; m <= lenx; ++m) {
+              Real cf = coef[m];
+              Kokkos::Experimental::md_parallel_for(  policy,
                 KOKKOS_LAMBDA(const int j, const int k, const int n){
-                    const int nsrc=n+src_comp;
-                    phiv(comps, j, k, nsrc) = (maskv(comps,j,k) > 0 ? phiv(comps,j,k,nsrc) + phiv(comp+sign*m, j, k, nsrc)*cf : phiv(comps, j, k, nsrc));
-                });
+                  const int nsrc=n+src_comp;
+                  phiv(comps, j, k, nsrc) = (maskv(comps,j,k) > 0 ? phiv(comps,j,k,nsrc) + phiv(comp+sign*m, j, k, nsrc)*cf : phiv(comps, j, k, nsrc));
+                }
+              );
             }
             if ( flagden == 1){
                 const Real cf = coef[0];
@@ -773,13 +780,13 @@ const Real* h)
             BoxLib::Error("UNKNOWN BC ON LEFT FACE IN APPLYBC");
         }
     }
-    
+
     //+/- Y
     if (cdir==1 || cdir == 4){
         int comp = (cdir==1 ? lo[1] : hi[1]);
         int comps = (cdir==1 ? lo[1]-1 : hi[1]+1);
         int sign = (cdir==1 ? +1 : -1);
-        
+
         if (is_neumann(bct)){
             Kokkos::Experimental::md_parallel_for(mdpolicy<3>({lo[0], lo[2], 0}, {hi[0]+1, hi[2]+1, numcomp}, {cb[0], cb[2], numcomp}),
             KOKKOS_LAMBDA(const int i, const int k, const int n){
@@ -844,13 +851,13 @@ const Real* h)
             BoxLib::Error("UNKNOWN BC ON LEFT FACE IN APPLYBC");
         }
     }
-    
+
     //+/- Z
     if (cdir==2 || cdir == 5){
         int comp = (cdir==2 ? lo[2] : hi[2]);
         int comps = (cdir==2 ? lo[2]-1 : hi[2]+1);
         int sign = (cdir==2 ? +1 : -1);
-        
+
         if (is_neumann(bct)){
             Kokkos::Experimental::md_parallel_for(mdpolicy<3>({lo[0], lo[1], 0}, {hi[0]+1, hi[1]+1, numcomp}, {cb[0], cb[1], numcomp}),
             KOKKOS_LAMBDA(const int i, const int j, const int n){
@@ -923,12 +930,12 @@ void C_AVERAGECC (
     const int nc,
 FArrayBox& c,
 const FArrayBox& f){
-    
+
     //box extends:
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
     const int *cb = bx.cbVect();
-    
+
     //get fabs
     ViewFab<Real> cv = c.view_fab;
     ViewFab<Real> fv = f.view_fab;
@@ -953,12 +960,12 @@ void C_HARMONIC_AVERAGEEC (
     const int cdir,
 FArrayBox& c,
 const FArrayBox& f){
-    
+
     //box extends:
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
     const int *cb = bx.cbVect();
-    
+
     //get fabs
     ViewFab<Real> cv = c.view_fab;
     ViewFab<Real> fv = f.view_fab;
@@ -974,7 +981,7 @@ const FArrayBox& f){
                             + 1./fv(2*i,2*j+1,2*k+1,n) );
          });
          break;
-         
+
          case 1:
          Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
                 cv(i,j,k,n) = 4./(
@@ -984,7 +991,7 @@ const FArrayBox& f){
                             + 1./fv(2*i+1,2*j,2*k+1,n) );
           });
          break;
-         
+
          case 2:
          Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
                 cv(i,j,k,n) = 4./(
@@ -1004,12 +1011,12 @@ void C_AVERAGEEC (
     const int cdir,
 FArrayBox& c,
 const FArrayBox& f){
-    
+
     //box extends:
     const int *lo = bx.loVect();
     const int *hi = bx.hiVect();
     const int *cb = bx.cbVect();
-    
+
     //get fabs
     ViewFab<Real> cv = c.view_fab;
     ViewFab<Real> fv = f.view_fab;
@@ -1025,7 +1032,7 @@ const FArrayBox& f){
                             + fv(2*i,2*j+1,2*k+1,n) );
          });
          break;
-         
+
          case 1:
          Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
                 cv(i,j,k,n) = 0.25*(
@@ -1035,7 +1042,7 @@ const FArrayBox& f){
                             + fv(2*i+1,2*j,2*k+1,n) );
           });
          break;
-         
+
          case 2:
          Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], 0}, {hi[0]+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
                 cv(i,j,k,n) = 0.25*(

@@ -56,6 +56,11 @@ using mdpolicy = Kokkos::Experimental::MDRangePolicy<
     Kokkos::Experimental::Rank<dim, outer_iter_policy, inner_iter_policy>,
     Kokkos::IndexType<int> >;
 
+template <int dim, int maxthreads, int minblock>
+using mdpolicylb = Kokkos::Experimental::MDRangePolicy<
+    Kokkos::Experimental::Rank<dim, outer_iter_policy, inner_iter_policy>,
+    Kokkos::IndexType<int>, Kokkos::LaunchBounds<maxthreads,minblock> >;
+
 //a small class for wrapping kokkos views nicely
 template <typename T>
 class ViewFab {

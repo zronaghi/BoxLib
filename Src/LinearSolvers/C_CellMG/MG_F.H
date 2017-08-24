@@ -5,17 +5,17 @@
 
 #if        defined(BL_LANG_FORT)
 
-#if (BL_SPACEDIM == 1) 
+#if (BL_SPACEDIM == 1)
 #define FORT_AVERAGE   average1dgen
 #define FORT_INTERP    interp1dgen
 #endif
 
-#if (BL_SPACEDIM == 2) 
+#if (BL_SPACEDIM == 2)
 #define FORT_AVERAGE   average2dgen
 #define FORT_INTERP    interp2dgen
 #endif
 
-#if (BL_SPACEDIM == 3) 
+#if (BL_SPACEDIM == 3)
 #define FORT_AVERAGE   average3dgen
 #define FORT_INTERP    interp3dgen
 #endif
@@ -71,37 +71,34 @@
 #include <Mask.H>
 #include <Kokkos_Core.hpp>
 
-template <typename T>
+template <typename T, int N>
 class oarray {
-    
+
 public:
     //the ranges are inclusive!
     oarray(int lo_, int hi_){
         lo = lo_;
-        size = (hi_+1) - lo_;
-        data = new T[size];
+        if ( ((hi_+1) - lo_) != N) {
+          BoxLib::Error( "oarray::oarray size is not equal to N" );
+        }
     }
-    
-    ~oarray(){
-        delete [] data;
-    }
-    
+
     T& operator[](int index){
         return data[index-lo];
     }
-    
-    const T& operator[](int index) const{
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T operator[](int index) const{
         return data[index-lo];
     }
-    
-    const int getOffset() const{
+
+    int getOffset() const{
         return lo;
     }
-    
+
 private:
     int lo;
-    int size;
-    T* data;
+    T data[N];
 };
 
 void C_AVERAGE(
@@ -127,7 +124,7 @@ void C_NORMA(
 		const FArrayBox& bY,
 		const FArrayBox& bZ,
 		const Real* h);
-		
+
 void C_ADOTX(const Box& bx,
 		const int nc,
 		FArrayBox& y,
@@ -139,7 +136,7 @@ void C_ADOTX(const Box& bx,
 		const FArrayBox& bY,
 		const FArrayBox& bZ,
 		const Real* h);
-		
+
 void C_FLUX(const Box& xbx,
 		const Box& ybx,
 		const Box& zbx,
@@ -162,9 +159,9 @@ void C_FLUX(const Box& xbx,
         ////4D
         //template <typename T>
         //struct KokkosOffsetView4 {
-        //    
+        //
         //    KokkosOffsetView4(IntVect, )
-        //    
+        //
         //    devview<T****> view;
         //    int offset[4] = {};
         //}
@@ -185,7 +182,7 @@ void C_FLUX(const Box& xbx,
         //    using view_type =  Kokkos::View<Args...>;
         //    static constexpr unsigned rank = view_type::rank;
         //    using reference = typename view_type::reference;
-        //    
+        //
         //    //4D
         //    template <typename itype>
         //    typename std::enable_if< is_rank4<itype, view_type>, reference >::type
@@ -193,13 +190,13 @@ void C_FLUX(const Box& xbx,
         //    operator()(itype i, int j, int k, int n){
         //        return view(i-offset[0], j-offset[1], k-offset[2], n-offset[3]);
         //    }
-        //    
+        //
         //    template <typename itype>
         //    typename std::enable_if< is_rank4<itype, view_type>, reference >::type
         //    setOffset(const Intvect& offset_){
         //        for(unsigned int d=0; d<4; d++) offset[d]=offset_(d);
         //    }
-        //    
+        //
         //    //3D
         //    template <typename itype>
         //    typename std::enable_if< is_rank3<itype, view_type>, reference >::type
@@ -207,16 +204,16 @@ void C_FLUX(const Box& xbx,
         //    operator()(itype i, int j, int k){
         //        return view(i-offset[0], j-offset[1], k-offset[2]);
         //    }
-        //    
+        //
         //    template <typename itype>
         //    typename std::enable_if< is_rank3<itype, view_type>, reference >::type
         //    setOffset(const Intvect& offset_){
         //        for(unsigned int d=0; d<3; d++) offset[d]=offset_(d);
         //    }
-        //    
+        //
         //    template <typename... A>
         //    KokkosOffsetView(A &&... a) : view( std::forward<A>(a) ){}
-        //    
+        //
         //    //members
         //    view_type view;
         //    int offset[rank] = {};
@@ -248,18 +245,18 @@ void C_GSRB_3D(const Box& bx,
         const Mask& m5,
         const Real* h);
 #endif
-        
+
         void C_APPLYBC (
             const Box& bx,
             const int numcomp,
             const int src_comp,
             const int bndry_comp,
-            int flagden, 
-            int flagbc, 
+            int flagden,
+            int flagbc,
             int maxorder,
             FArrayBox& phi,
-            int cdir, 
-            int bct, 
+            int cdir,
+            int bct,
             int bcl,
             FArrayBox& bcval,
             const Mask& mask,
@@ -272,21 +269,21 @@ void C_GSRB_3D(const Box& bx,
             const int nc,
         FArrayBox& c,
         const FArrayBox& f);
-        
+
         void C_HARMONIC_AVERAGEEC (
             const Box& bx,
             const int nc,
             const int cdir,
         FArrayBox& c,
         const FArrayBox& f);
-        
+
         void C_AVERAGEEC (
             const Box& bx,
             const int nc,
             const int cdir,
         FArrayBox& c,
         const FArrayBox& f);
-        
+
 extern "C"
 {
     void FORT_AVERAGE (
