@@ -339,22 +339,13 @@ const Real* h)
 
 #if 1
     //execute
-    Kokkos::fence();
-    double start_time = omp_get_wtime();
     int length0 = std::floor( (hi[0]-lo[0]+1) / 2 );
     int up0 = lo[0] + length0;
     Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], 0}, {up0+1, hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cgsrbfunc);
-    Kokkos::fence();
-    double end_time =  omp_get_wtime();
 #else
     //execute
-    Kokkos::fence();
-    double start_time = omp_get_wtime();
     Kokkos::Experimental::md_parallel_for(mdpolicy<4>({lo[1], lo[2], 0}, {hi[1]+1, hi[2]+1, nc}, {cb[0], cb[1], cb[2], nc}), cgsrbfunc);
-    Kokkos::fence();
-    double end_time =  omp_get_wtime();
 #endif
-    //std::cout << "GSRB Elapsed time: " << end_time - start_time << std::endl;
 
     //copy data back from the views
     cgsrbfunc.fill();
