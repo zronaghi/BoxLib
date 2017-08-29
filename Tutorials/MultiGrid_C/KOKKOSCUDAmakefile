@@ -49,8 +49,8 @@ HPGMG_SMOOTHER = GSRB
 KOKKOS_DEVICES = OpenMP,Cuda
 KOKKOS_ARCH = Power8,Pascal60
 KOKKOS_CUDA_OPTIONS = enable_lambda 
-
 KOKKOS_OPTIONS = compiler_warnings
+KOKKOS_DEBUG = yes
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
 CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA

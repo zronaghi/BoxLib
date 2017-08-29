@@ -18,13 +18,13 @@ BndryData::BndryData ()
 BndryData::BndryData (const BoxArray& _grids,
                       int             _ncomp, 
                       const Geometry& _geom,
-		      ParallelDescriptor::Color color)
+		      ParallelDescriptor::Color _color)
     :
     geom(_geom),
     m_ncomp(_ncomp),
     m_defined(false)
 {
-    define(_grids,_ncomp,_geom,color);
+    define(_grids,_ncomp,_geom,_color);
 }
 
 void
@@ -142,6 +142,7 @@ BndryData::define (const BoxArray& _grids,
 	masks.set(face, new MultiMask(grids, bndry[face].DistributionMap(), geom,
 				      face, 0, 2, NTangHalfWidth, 1, true));
     }
+
     //
     // Define "bcond" and "bcloc".
     //

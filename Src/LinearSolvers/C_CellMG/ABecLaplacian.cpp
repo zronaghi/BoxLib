@@ -225,6 +225,7 @@ void
 	{
 		BoxArray edge_boxes(_ba);
 		edge_boxes.surroundingNodes(i);
+
 		bcoefs[0][i] = new MultiFab(edge_boxes, nComp, nGrow, clr);
 		bcoefs[0][i]->setVal(b_def);
 	}

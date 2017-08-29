@@ -13,14 +13,14 @@ BndryRegister::BndryRegister () {}
 
 BndryRegister::~BndryRegister () {}
 
-BndryRegister::BndryRegister (const BoxArray& grids,
+BndryRegister::BndryRegister (const BoxArray& _grids,
                               int             in_rad,
                               int             out_rad,
                               int             extent_rad,
                               int             ncomp,
 			      ParallelDescriptor::Color color)
     :
-    grids(grids)
+    grids(_grids)
 {
     BL_ASSERT(ncomp > 0);
     BL_ASSERT(grids[0].cellCentered());
@@ -124,7 +124,10 @@ BndryBATransformer::operator() (const Box& bx) const
     lo += m_loshft;
     hi += m_hishft;
 
-    return Box(lo, hi, m_typ);
+    Box result = Box(lo, hi, m_typ);
+    result.setCacheBlock(bx.cacheBlock());
+
+    return result;
 }
 
 bool 
@@ -154,8 +157,8 @@ BndryRegister::define (Orientation _face,
     FabSet& fabs = bndry[_face];
 
     BL_ASSERT(fabs.size() == 0);
-
     fabs.define(fsBA,_ncomp,color);
+
     // 
     // Go ahead and assign values to the boundary register fabs
     // since in some places APPLYBC (specifically in the tensor

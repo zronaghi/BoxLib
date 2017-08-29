@@ -8,6 +8,7 @@
 #include <BArena.H>
 #include <CArena.H>
 
+
 #if !(defined(BL_NO_FORT) || defined(WIN32))
 #include <BaseFab_f.H>
 #endif
@@ -279,7 +280,13 @@ BaseFab<Real>::performSetVal (Real       val,
       cb[i] = bx.cbVect()[i];
     }
 
-    ViewFab<Real> fab = this->view_fab; 
+    ViewFab<Real> fab = this->view_fab;
+
+    //DEBUG
+    std::cout << "LO: (" << lo[0] << "," << lo[1] << "," << lo[2] << "," << comp << ")" << std::endl;
+    std::cout << "HI: (" << hi[0] << "," << hi[1] << "," << hi[2] << "," << comp+ncomp << ")" << std::endl;
+    std::cout << "CB: (" << cb[0] << "," << cb[1] << "," << cb[2] << "," << ncomp << ")" << std::endl;
+    //Debug
     
     Kokkos::parallel_for(mdpolicy<4>({lo[0], lo[1], lo[2], comp}, {hi[0]+1, hi[1]+1, hi[2]+1, comp+ncomp}, {cb[0], cb[1], cb[2], ncomp}), 
     KOKKOS_LAMBDA(const int i, const int j, const int k, const int n){
