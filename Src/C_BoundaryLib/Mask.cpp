@@ -114,8 +114,8 @@ Mask::And (const Mask& src,
            int         destcomp,
            int         numcomp)
 {
-    Box domain(box());
-    ForAllThisBNNXC(int,domain,destcomp,numcomp,src,srccomp) {
+    Box _domain(box());
+    ForAllThisBNNXC(int,_domain,destcomp,numcomp,src,srccomp) {
         thisR = (thisR ? srcR : 0);
     } EndForTX;
     return *this;
@@ -163,8 +163,8 @@ Mask::Or (const Mask& src,
           int         destcomp,
           int         numcomp)
 {
-    Box domain(box());
-    ForAllThisBNNXC(int,domain,destcomp,numcomp,src,srccomp) {
+    Box _domain(box());
+    ForAllThisBNNXC(int,_domain,destcomp,numcomp,src,srccomp) {
         thisR = (thisR ? 1 : srcR);
     } EndForTX;
     return *this;

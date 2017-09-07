@@ -266,6 +266,7 @@ enum bc_t {Periodic = 0,
             PArray<MultiFab> beta(BL_SPACEDIM, PArrayManage);
             for ( int n=0; n<BL_SPACEDIM; ++n ) {
                 BoxArray bx(bs);
+
                 beta.set(n, new MultiFab(bx.surroundingNodes(n), Ncomp, 0, Fab_allocate));
             }
 
@@ -527,7 +528,7 @@ enum bc_t {Periodic = 0,
         for (int n=0; n<BL_SPACEDIM; ++n) {
             for (MFIter mfi(rhs,false); mfi.isValid(); ++mfi ) {
                 int i = mfi.index(); 
-      
+
                 const Box& bx = mfi.validbox();
       
                 // Our default will be that the face of this grid is either touching another grid
@@ -729,18 +730,18 @@ enum bc_t {Periodic = 0,
 
     void solve_with_Cpp(MultiFab& soln, MultiFab& gphi, Real a, Real b, MultiFab& alpha,
     PArray<MultiFab>& beta, MultiFab& rhs, const BoxArray& bs, const Geometry& geom,
-    const bool use_C_kernels)
+    const bool _use_C_kernels)
     {
         BL_PROFILE("solve_with_Cpp()");
 
         BndryData bd(bs, 1, geom);
-        set_boundary(bd, rhs, 0);
-        
-        ABecLaplacian abec_operator(bd, dx, use_C_kernels);
+        set_boundary(bd, rhs, 0);        
+
+        ABecLaplacian abec_operator(bd, dx, _use_C_kernels);
         abec_operator.setScalars(a, b);
         abec_operator.setCoefficients(alpha, beta);
 
-        MultiGrid mg(abec_operator, use_C_kernels);
+        MultiGrid mg(abec_operator, _use_C_kernels);
         mg.setVerbose(verbose);
   
         if (fixediter) {
