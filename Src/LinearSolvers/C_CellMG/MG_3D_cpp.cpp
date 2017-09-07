@@ -176,25 +176,6 @@ public:
     alpha(alpha_),
     beta(beta_)
   {
-    //phiv.syncH2D();
-    ////these should not be needed:
-    //rhsv.syncH2D();
-    //av.syncH2D();
-    //bXv.syncH2D();
-    //bYv.syncH2D();
-    //bZv.syncH2D();
-    //f0v.syncH2D();
-    //f1v.syncH2D();
-    //f2v.syncH2D();
-    //f3v.syncH2D();
-    //f4v.syncH2D();
-    //f5v.syncH2D();
-    //m0v.syncH2D();
-    //m1v.syncH2D();
-    //m2v.syncH2D();
-    //m3v.syncH2D();
-    //m4v.syncH2D();
-    //m5v.syncH2D();
 
     //some parameters
     omega= 1.15;
