@@ -5,6 +5,7 @@ CXX = icpc
 CC  = icc
 FC  = ifort
 F90 = ifort
+LD = icpc
 
 CXXFLAGS =
 CFLAGS   =

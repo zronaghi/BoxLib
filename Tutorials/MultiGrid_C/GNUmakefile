@@ -27,10 +27,10 @@ DEBUG	= FALSE
 DIM	= 3
 #DIM	= 2
 
-#COMP = intel
-#FCOMP = ifort
-COMP = GNU
-FCOMP = gfortran
+COMP = intel
+FCOMP = ifort
+#COMP = GNU
+#FCOMP = gfortran
 
 USE_HYPRE = FALSE
 USE_F90_SOLVERS = TRUE
@@ -45,13 +45,12 @@ HPGMG_USE_SUBCOMM = TRUE
 HPGMG_BOTTOM_SOLVER= BICGSTAB
 HPGMG_SMOOTHER = GSRB
 
-KOKKOS_DEVICES = Cuda
-KOKKOS_ARCH = Pascal60
+#KOKKOS_DEVICES = Cuda
+#KOKKOS_ARCH = Pascal60
 
-#KOKKOS_DEVICES = OpenMP
-#KOKKOS_ARCH = Power8
-
-#KOKKOS_OPTIONS = aggressive_vectorization
+KOKKOS_DEVICES = OpenMP
+KOKKOS_ARCH = KNL
+KOKKOS_OPTIONS = aggressive_vectorization
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
 CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA
