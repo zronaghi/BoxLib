@@ -12,9 +12,9 @@
 #include <MultiGrid.H>
 #include <VisMF.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 //
 // The largest value allowed for SSS - the "S" in the Communicaton-avoiding BiCGStab.
@@ -760,11 +760,11 @@ BuildGramMatrix (Real*           Gg,
     //
     // First fill the upper triangle into tmp
     //
-#ifdef _OPENMP
-    const int nthreads = omp_get_max_threads();
-#else 
+//#ifdef _OPENMP
+//    const int nthreads = omp_get_max_threads();
+//#else 
     const int nthreads = 1;
-#endif
+    //#endif
     const int Ntmp = (Nrows*(Nrows+3))/2;
     PArray<Array<Real> > tmp(nthreads, PArrayManage);
 

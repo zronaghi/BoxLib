@@ -73,7 +73,8 @@
 
           !$omp target update to(c,f)
 
-          !$omp target map(c,f)  map(to: hi, lo) if(.TRUE.)
+          !$omp target map(c, f)
+          !&omp map(to: hi, lo) if(.TRUE.)
           !$omp teams distribute parallel do simd collapse(4)
           !&omp private(n,k,j,i, k2,j2,i2, k2p1, j2p1,i2p1)
           do n = 1, nc

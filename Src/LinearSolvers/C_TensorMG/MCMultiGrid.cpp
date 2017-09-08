@@ -10,9 +10,9 @@
 #include <MG_F.H>
 #include <MCMultiGrid.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 namespace
 {
@@ -100,10 +100,10 @@ Real
 norm_inf (const MultiFab& res, bool local = false)
 {
     Real restot = 0.0;
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:restot)
-#endif
-    for (MFIter mfi(res,true); mfi.isValid(); ++mfi) 
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(max:restot)
+//#endif
+    for (MFIter mfi(res,false); mfi.isValid(); ++mfi) 
     {
       restot = std::max(restot, res[mfi].norm(mfi.tilebox(), 0, 0, res.nComp()));
     }
@@ -507,10 +507,10 @@ MCMultiGrid::average (MultiFab&       c,
     //
     // Use Fortran function to average down (restrict) f to c.
     //
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter cmfi(c,true); cmfi.isValid(); ++cmfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter cmfi(c,false); cmfi.isValid(); ++cmfi)
     {
         const Box&       bx   = cmfi.tilebox();
 	int              nc   = c.nComp();
@@ -531,10 +531,10 @@ MCMultiGrid::interpolate (MultiFab&       f,
     // Use fortran function to interpolate up (prolong) c to f
     // Note: returns f=f+P(c) , i.e. ADDS interp'd c to f
     //
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter fmfi(c,true); fmfi.isValid(); ++fmfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter fmfi(c,false); fmfi.isValid(); ++fmfi)
     {
 	const Box&       bx   = fmfi.tilebox();
 	int              nc   = f.nComp();

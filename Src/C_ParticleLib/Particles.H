@@ -26,9 +26,9 @@
 #include <Lazy.H>
 #endif
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 namespace
 {
@@ -762,9 +762,9 @@ ParticleContainer<NR,NI,C>::MoveRandom (int lev)
         //
         int tnum = 1;
 
-#ifdef _OPENMP
-        tnum = omp_get_max_threads();
-#endif
+//#ifdef _OPENMP
+//        tnum = omp_get_max_threads();
+//#endif
         rn.resize(tnum);
 
         for (int i = 0; i < tnum; i++)
@@ -787,20 +787,20 @@ ParticleContainer<NR,NI,C>::MoveRandom (int lev)
         PBox&     pbox = kv.second;
         const int n    = pbox.size();
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
         for (int i = 0; i < n; i++)
         {
             ParticleType& p = pbox[i];
 
             if (p.m_id <= 0) continue;
 
-#ifdef _OPENMP
-            int tid = omp_get_thread_num();
-#else
+//#ifdef _OPENMP
+//            int tid = omp_get_thread_num();
+//#else
             int tid = 0;
-#endif
+            //#endif
             for (int i = 0; i < BL_SPACEDIM; i++)
             {
                 p.m_pos[i] += dist[i]*(2*rn[tid].d_value()-1);
@@ -4841,9 +4841,9 @@ ParticleContainer<NR,NI,C>::AssignCellDensitySingleLevel (int rho_index,
         Array<Real>    fracs;
         Array<IntVect> cells;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none) private(fracs,cells) shared(N,plo,dx,dx_particle,gm,fab,ncomp,pbx)
-#endif
+////#ifdef _OPENMP
+//#pragma omp parallel for default(none) private(fracs,cells) shared(N,plo,dx,dx_particle,gm,fab,ncomp,pbx)
+//#endif
 	for (size_t ip = 0; ip < N; ++ip)
         {
             const ParticleType& p = pbx[ip];
@@ -4881,18 +4881,18 @@ ParticleContainer<NR,NI,C>::AssignCellDensitySingleLevel (int rho_index,
                 // Sum up mass in first component.
                 //
                 {
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
+//#ifdef _OPENMP
+//#pragma omp atomic
+//#endif
                     fab(cells[i],0) += p.m_data[0] * fracs[i];
                 }
                 // 
                 // Sum up momenta in next components.
                 //
                 for (int n = 1; n < ncomp; n++)
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
+//#ifdef _OPENMP
+//#pragma omp atomic
+//#endif
                    fab(cells[i],n) += p.m_data[n] * p.m_data[0] * fracs[i];
             }
         }
@@ -5209,9 +5209,9 @@ ParticleContainer<NR,NI,C>::moveKick (MultiFab&       acceleration,
         const int        n    = pbox.size();
         const FArrayBox& gfab = (*ac_pointer)[grid];
 
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
         for (int i = 0; i < n; i++)
         {
             ParticleType& p = pbox[i];

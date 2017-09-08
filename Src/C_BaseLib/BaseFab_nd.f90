@@ -16,7 +16,12 @@ contains
     integer :: i,j,k,n,off(3)
 
     off = sblo - lo
-
+    
+    !$omp target update to(src)
+    
+    !$omp target map(to: src) map(from: dst) map(to: hi, lo, off)
+    !$omp teams distribute parallel do collapse(4)
+    !&omp private(n,k,j,i)
     do n = 1, ncomp
        do       k = lo(3), hi(3)
           do    j = lo(2), hi(2)
@@ -26,6 +31,10 @@ contains
           end do
        end do
     end do
+    !$omp end teams distribute parallel do
+    !$omp end target
+    
+    !$omp target update from(dst)
   end subroutine fort_fab_copy
     
   
@@ -33,23 +42,37 @@ contains
   subroutine fort_fab_copytomem (lo, hi, dst, src, slo, shi, ncomp) &
        bind(c,name='fort_fab_copytomem')
     integer, intent(in) :: lo(3), hi(3), slo(3), shi(3), ncomp
-    real(c_real)             :: dst(*)
+    real(c_real)             :: dst( (hi(1)-lo(1)+1) * (hi(2)-lo(2)+1) * (hi(3)-lo(3)+1) * ncomp)
     real(c_real), intent(in) :: src(slo(1):shi(1),slo(2):shi(2),slo(3):shi(3),ncomp)
 
-    integer :: i, j, k, n, nx, offset
+    integer :: i, j, k, n, nx, ny, nz, offset
 
     nx = hi(1)-lo(1)+1
-    offset = 1-lo(1)
+    ny = hi(2)-lo(2)+1
+    nz = hi(3)-lo(3)+1
+    
+    !$omp target update to(src)
+
+    !$omp target map(to: src) map(from: dst) map(to: hi, lo, nx, ny, nz)
+    !$omp teams distribute parallel do collapse(3)
+    !&omp private(n,k,j,i, offset) firstprivate(nx, ny)
     do n = 1, ncomp
        do       k = lo(3), hi(3)
           do    j = lo(2), hi(2)
+             offset = 1-lo(1) + nx * ( (j-lo(2)) + ny * ( (k-lo(3)) + nz * (ncomp-1) ) )
+             !$omp do simd private(i)
              do i = lo(1), hi(1)
                 dst(offset+i) = src(i,j,k,n) 
              end do
-             offset = offset + nx
+             !$omp end do simd
+             !offset = offset + nx
           end do
        end do
-    end do    
+    end do
+    !$omp end teams distribute parallel do
+    !$omp end target
+    
+    !$omp target update from(dst)
   end subroutine fort_fab_copytomem
 
 

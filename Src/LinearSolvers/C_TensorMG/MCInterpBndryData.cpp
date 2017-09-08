@@ -87,10 +87,10 @@ MCInterpBndryData::setBndryValues(const MultiFab&     mf,
 
     const Real* h = geom.CellSize();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(mf); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(mf,false); mfi.isValid(); ++mfi)
     {
 	BL_ASSERT(grids[mfi.index()] == mfi.validbox());
 
@@ -168,9 +168,9 @@ MCInterpBndryData::setBndryValues (const ::BndryRegister& crse,
     //
     // Mask turned off if covered by fine grid.
     //
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     {
     Real* derives = 0;
     int tmplen    = 0;
