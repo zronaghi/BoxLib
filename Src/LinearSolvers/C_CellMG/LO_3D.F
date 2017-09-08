@@ -32,6 +32,11 @@ c-----------------------------------------------------------------------
       select case(cdir)
 
       case (0)
+         !$omp target update to(f)
+
+         !$omp target map(c, f) map(to: hi, lo)
+         !$omp teams distribute parallel do simd collapse(4)
+         !&omp private(n,k,j,i)
          do n = 1, nc
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -47,8 +52,17 @@ c-----------------------------------------------------------------------
                end do
             end do
          end do
+         !$omp end teams distribute parallel do simd
+         !$omp end target
+         
+         !$omp target update from(c)
 
       case (1)
+         !$omp target update to(f)
+
+         !$omp target map(c, f) map(to: hi, lo)
+         !$omp teams distribute parallel do simd collapse(4)
+         !&omp private(n,k,j,i)      
          do n = 1, nc
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -64,7 +78,17 @@ c-----------------------------------------------------------------------
                end do
             end do
          end do
+         !$omp end teams distribute parallel do simd
+         !$omp end target
+         
+         !$omp target update from(c)
+         
       case (2)
+         !$omp target update to(f)
+
+         !$omp target map(c, f) map(to: hi, lo)
+         !$omp teams distribute parallel do simd collapse(4)
+         !&omp private(n,k,j,i)
          do n = 1, nc
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -80,6 +104,10 @@ c-----------------------------------------------------------------------
                end do
             end do
          end do
+         !$omp end teams distribute parallel do simd
+         !$omp end target
+         
+         !$omp target update from(c)
 
       end select
 
@@ -107,6 +135,11 @@ c-----------------------------------------------------------------------
       select case(cdir)
 
       case (0)
+         !$omp target update to(f)
+
+         !$omp target map(c, f) map(to: hi, lo)
+         !$omp teams distribute parallel do simd collapse(4)
+         !&omp private(n,k,j,i)
          do n = 1, nc
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -122,8 +155,18 @@ c-----------------------------------------------------------------------
                end do
             end do
          end do
+         !$omp end teams distribute parallel do simd
+         !$omp end target
+         
+         !$omp target update from(c)
 
       case (1)
+         !$omp target update to(f)
+
+         !$omp target map(c, f) map(to: hi, lo)
+         !$omp teams distribute parallel do simd collapse(4)
+         !&omp private(n,k,j,i)
+      
          do n = 1, nc
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -139,8 +182,17 @@ c-----------------------------------------------------------------------
                end do
             end do
          end do
+         !$omp end teams distribute parallel do simd
+         !$omp end target
+         
+         !$omp target update from(c)
 
       case (2)
+         !$omp target update to(f)
+
+         !$omp target map(c, f) map(to: hi, lo)
+         !$omp teams distribute parallel do simd collapse(4)
+         !&omp private(n,k,j,i)
          do n = 1, nc
             do k = lo(3), hi(3)
                do j = lo(2), hi(2)
@@ -156,6 +208,10 @@ c-----------------------------------------------------------------------
                end do
             end do
          end do
+         !$omp end teams distribute parallel do simd
+         !$omp end target
+         
+         !$omp target update from(c)
 
       end select
 
@@ -177,7 +233,12 @@ c-----------------------------------------------------------------------
       REAL_T c(DIMV(c),nc)
 
       integer i, j, k, n
+      
+      !$omp target update to(f)
 
+      !$omp target map(c, f) map(to: hi, lo)
+      !$omp teams distribute parallel do simd collapse(4)
+      !&omp private(n,k,j,i)
       do n = 1, nc
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -197,6 +258,10 @@ c-----------------------------------------------------------------------
             end do
          end do
       end do
+      !$omp end teams distribute parallel do simd
+      !$omp end target
+      
+      !$omp target update from(c)
 
       end
 c-----------------------------------------------------------------------
@@ -287,6 +352,10 @@ c     In order for this to work with growing multigrid, must
 c     sort xa[] because it is possible for the xb value to lay
 c     within this range.
 c
+
+c     that stuff needs to be updated in any case
+      !$omp target update to(phi)
+
       select case (cdir)
 
       case (0)
@@ -294,6 +363,10 @@ c
          ! The Left face of the grid
          !
          if (is_neumann(bct)) then
+
+           !$omp target map(phi, mask) map(to: hi, lo)
+           !$omp teams distribute parallel do simd collapse(3)
+           !&omp private(n,k,j)
             do n = 1, nc
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
@@ -304,18 +377,28 @@ c
                   end do
                end do
             end do
+            !$omp end teams distribute parallel do simd
+            !$omp end target
             if ( flagden .eq. 1) then
+              !$omp target map(den) map(to: hi, lo)
+              !$omp teams distribute parallel do simd collapse(2)
+              !&omp private(k,j)
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
                      den(lo(1),j,k) = 1.0D0
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
             end if
          else if (is_dirichlet(bct)) then
             x(-1) = - bcl/h(1)
             call polyInterpCoeff(xInt, x, lenx+2, coef)
-            do n = 1, nc
-               if ( flagbc .eq. 1 ) then
+            if ( flagbc .eq. 1 ) then
+               !$omp target map(phi,mask) map(to: hi, lo, coef)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,j)
+               do n = 1, nc
                   do k = lo(3), hi(3)
                      do j = lo(2), hi(2)
                         phi(lo(1)-1, j, k, n) = merge(
@@ -324,7 +407,14 @@ c
      $                       mask(lo(1)-1,j,k) .gt. 0)
                      end do
                   end do
-               else
+               end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
+            else
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,j)
+               do n = 1, nc
                   do k = lo(3), hi(3)
                      do j = lo(2), hi(2)
                         phi(lo(1)-1, j, k, n) = merge(
@@ -333,8 +423,15 @@ c
      $                       mask(lo(1)-1,j, k) .gt. 0)
                      end do
                   end do
-               end if
-               do m = 0, lenx
+               end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
+            end if
+            do m = 0, lenx
+               !$omp target map(phi,mask) map(to: hi, lo, coef)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,j)
+               do n = 1, nc
                   do k = lo(3), hi(3)
                      do j = lo(2), hi(2)
                         phi(lo(1)-1,j,k,n) = merge(
@@ -345,16 +442,26 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
             end do
             if ( flagden .eq. 1 ) then
+               !$omp target map(den,mask) map(to: hi, lo, coef)
+               !$omp teams distribute parallel do simd collapse(2)
+               !&omp private(k,j)
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
                      den(lo(1),j,k) = merge(coef(0), 0.0D0,
      $                    mask(lo(1)-1,j,k) .gt. 0)
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
             end if
          else if ( bct .eq. LO_REFLECT_ODD ) then
+            !$omp target map(phi,mask) map(to: hi, lo)
+            !$omp teams distribute parallel do simd collapse(3)
+            !&omp private(n,k,j)
             do n = 1, nc
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
@@ -365,13 +472,20 @@ c
                   end do
                end do
             end do
+            !$omp end teams distribute parallel do simd
+            !$omp end target
             if ( flagden .eq. 1 ) then
+               !$omp target map(den,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(2)
+               !&omp private(k,j)
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
                      den(lo(1),j,k) = merge(-1.0D0, 0.0D0,
      $                    mask(lo(1)-1,j,k) .gt. 0)
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
             end if
          else
             print *,'UNKNOWN BC ON LEFT FACE IN APPLYBC'
@@ -383,6 +497,9 @@ c
          ! The Right face of the grid
          ! 
          if(is_neumann(bct)) then
+            !$omp target map(phi,mask) map(to: hi, lo)
+            !$omp teams distribute parallel do simd collapse(3)
+            !&omp private(n,k,j)
             do n = 1, nc
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
@@ -393,18 +510,28 @@ c
                   end do
                end do
             end do
-	    if ( flagden .eq. 1 ) then
+            !$omp end teams distribute parallel do simd
+            !$omp end target
+	         if ( flagden .eq. 1 ) then
+               !$omp target map(den) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(2)
+               !&omp private(k,j)
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
                      den(hi(1),j,k) = 1.0D0
                   end do
                end do
-	    end if
+               !$omp end teams distribute parallel do simd
+               !$omp end target
+            end if
          else if (is_dirichlet(bct)) then
             x(-1) = - bcl/h(1)
             call polyInterpCoeff(xInt, x, lenx+2, coef)
-            do n = 1, nc
-               if ( flagbc .eq. 1 ) then
+            if ( flagbc .eq. 1 ) then
+               !$omp target map(phi,bcval,mask) map(to: hi, lo, coef)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,j)
+               do n = 1, nc
                   do k = lo(3), hi(3)
                      do j = lo(2), hi(2)
                         phi(hi(1)+1,j,k,n) = merge(
@@ -413,7 +540,14 @@ c
      $                       mask(hi(1)+1,j,k) .gt. 0)
                      end do
                   end do
-               else
+               end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
+            else
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,j)
+               do n = 1, nc
                   do k = lo(3), hi(3)
                      do j = lo(2), hi(2)
                         phi(hi(1)+1,j,k,n) = merge(
@@ -422,8 +556,15 @@ c
      $                       mask(hi(1)+1,j,k) .gt. 0)
                      end do
                   end do
-               end if
-               do m = 0, lenx
+               end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
+            end if
+            do m = 0, lenx
+               !$omp target map(phi,mask) map(to: hi, lo, coef)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,j)
+               do n = 1, nc
                   do k = lo(3), hi(3)
                      do j = lo(2), hi(2)
                         phi(hi(1)+1,j,k,n) = merge(
@@ -434,16 +575,26 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
             end do
             if ( flagden .eq. 1 ) then
+               !$omp target map(den,mask) map(to: hi, lo, coef)
+               !$omp teams distribute parallel do simd collapse(2)
+               !&omp private(k,j)
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
                      den(hi(1),j,k)   = merge(coef(0), 0.0D0,
      $                    mask(hi(1)+1,j,k) .gt. 0)
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
             end if
          else if ( bct .eq. LO_REFLECT_ODD ) then
+            !$omp target map(phi,mask) map(to: hi, lo)
+            !$omp teams distribute parallel do simd collapse(3)
+            !&omp private(n,k,j)
             do n = 1, nc
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
@@ -454,13 +605,20 @@ c
                   end do
                end do
             end do
+            !$omp end teams distribute parallel do simd
+            !$omp end target
             if ( flagden .eq. 1 ) then
+               !$omp target map(den,mask) map(to: hi, lo, coef)
+               !$omp teams distribute parallel do simd collapse(2)
+               !&omp private(k,j)
                do k = lo(3), hi(3)
                   do j = lo(2), hi(2)
                      den(hi(1),j,k) = merge(-1.0D0, 0.0D0,
      $                    mask(hi(1)+1,j,k) .gt. 0)
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
             end if
          else
             print *,'UNKNOWN BC ON RIGHT FACE IN APPLYBC'
@@ -472,6 +630,9 @@ c
             ! The Bottom of the Grid
             !
             if(is_neumann(bct)) then
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,i)
                do n = 1, nc
                   do k = lo(3), hi(3)
                      do i = lo(1),hi(1)
@@ -482,18 +643,28 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(k,i)
                   do k = lo(3), hi(3)
                      do i = lo(1),hi(1)
                         den(i,lo(2),k)   = 1.0D0
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else if (is_dirichlet(bct)) then
                x(-1) = - bcl/h(2)
                call polyInterpCoeff(xInt, x, leny+2, coef)
-               do n = 1, nc
-                  if ( flagbc .eq. 1 ) then
+               if ( flagbc .eq. 1 ) then
+                  !$omp target map(phi,bcval,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,k,i)
+                  do n = 1, nc
                      do k = lo(3), hi(3)
                         do i = lo(1), hi(1)
                            phi(i,lo(2)-1,k,n) = merge(
@@ -502,7 +673,14 @@ c
      $                          mask(i,lo(2)-1,k) .gt. 0)
                         end do
                      end do
-                  else
+                  end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
+               else
+                  !$omp target map(phi,mask) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,k,i)
+                  do n = 1, nc
                      do k = lo(3), hi(3)
                         do i = lo(1), hi(1)
                            phi(i,lo(2)-1,k,n) = merge(
@@ -511,8 +689,15 @@ c
      $                          mask(i,lo(2)-1,k) .gt. 0)
                         end do
                      end do
-                  end if
-                  do m = 0, leny
+                  end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
+               end if
+               do m = 0, leny
+                  !$omp target map(phi,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,k,i)
+                  do n = 1, nc
                      do k = lo(3), hi(3)
                         do i = lo(1), hi(1)
                            phi(i, lo(2)-1, k, n) = merge(
@@ -523,16 +708,26 @@ c
                         end do
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end do
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(k,i)
                   do k = lo(3), hi(3)
                      do i = lo(1), hi(1)
                         den(i, lo(2),k)   = merge(coef(0), 0.0D0,
      $                       mask(i, lo(2)-1,k) .gt. 0)
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else if ( bct .eq. LO_REFLECT_ODD ) then
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,i)
                do n = 1, nc
                   do k = lo(3), hi(3)
                      do i = lo(1), hi(1)
@@ -543,13 +738,20 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den,mask) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(k,i)
                   do k = lo(3), hi(3)
                      do i = lo(1), hi(1)
                         den(i,lo(2),k) = merge(-1.0D0, 0.0D0,
      $                       mask(i,lo(2)-1,k) .gt. 0)
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else
                print *,'UNKNOWN BC ON BOTTOM FACE IN APPLYBC'
@@ -561,6 +763,9 @@ c
             ! The top of the grid
             !
             if(is_neumann(bct)) then
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,i)
                do n = 1, nc
                   do k = lo(3), hi(3)
                      do i = lo(1), hi(1)
@@ -571,18 +776,28 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(n,k,i)
                   do k = lo(3), hi(3)
                      do i = lo(1), hi(1)
                         den(i,hi(2),k)   = 1.0D0
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else if (is_dirichlet(bct)) then
                x(-1) = - bcl/h(2)
                call polyInterpCoeff(xInt, x, leny+2, coef)
-               do n = 1, nc
-                  if ( flagbc .eq. 1 ) then
+               if ( flagbc .eq. 1 ) then
+                  !$omp target map(phi,bcval,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,k,i)
+                  do n = 1, nc
                      do k = lo(3), hi(3)
                         do i = lo(1), hi(1)
                            phi(i,hi(2)+1,k,n) = merge(
@@ -591,7 +806,14 @@ c
      $                          mask(i,hi(2)+1,k) .gt. 0)
                         end do
                      end do
-                  else
+                  end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
+               else
+                  !$omp target map(phi,mask) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,k,i)
+                  do n = 1, nc
                      do k = lo(3), hi(3)
                         do i = lo(1), hi(1)
                            phi(i,hi(2)+1,k,n) = merge(
@@ -600,8 +822,15 @@ c
      $                          mask(i,hi(2)+1,k) .gt. 0)
                         end do
                      end do
-                  end if
-                  do m = 0, leny
+                  end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
+               end if
+               do m = 0, leny
+                  !$omp target map(phi,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,k,i)
+                  do n = 1, nc
                      do k = lo(3), hi(3)
                         do i = lo(1), hi(1)
                            phi(i, hi(2)+1,k,n) = merge(
@@ -612,16 +841,26 @@ c
                         end do
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end do
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(n,k,i)
                   do k = lo(3), hi(3)
                      do i = lo(1), hi(1)
                         den(i,hi(2),k)   = merge(coef(0), 0.0D0,
      $                       mask(i,hi(2)+1,k) .gt. 0)
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else if ( bct .eq. LO_REFLECT_ODD ) then
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,k,i)
                do n = 1, nc
                   do k = lo(3), hi(3)
                      do i = lo(1), hi(1)
@@ -632,13 +871,20 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den,mask) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(k,i)
                   do k = lo(3), hi(3)
                      do i = lo(1), hi(1)
                         den(i,hi(2),k) = merge(-1.0D0, 0.0D0,
      $                       mask(i,hi(2)+1,k) .gt. 0)
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else
                print *,'UNKNOWN BC ON TOP FACE IN APPLYBC'
@@ -650,6 +896,9 @@ c
             ! The Front of the Grid
             !
             if(is_neumann(bct)) then
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,j,i)
                do n = 1, nc
                   do j = lo(2), hi(2)
                      do i = lo(1),hi(1)
@@ -660,18 +909,28 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(j,i)
                   do j = lo(2), hi(2)
                      do i = lo(1),hi(1)
                         den(i,j,lo(3))   = 1.0D0
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else if (is_dirichlet(bct)) then
                x(-1) = - bcl/h(3)
                call polyInterpCoeff(xInt, x, lenz+2, coef)
-               do n = 1, nc
-                  if ( flagbc .eq. 1 ) then
+               if ( flagbc .eq. 1 ) then
+                  !$omp target map(phi,bcval,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,j,i)
+                  do n = 1, nc
                      do j = lo(2), hi(2)
                         do i = lo(1), hi(1)
                            phi(i,j,lo(3)-1,n) = merge(
@@ -680,7 +939,14 @@ c
      $                          mask(i,j,lo(3)-1) .gt. 0)
                         end do
                      end do
-                  else
+                  end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
+               else
+                  !$omp target map(phi,mask) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,j,i)
+                  do n = 1, nc
                      do j = lo(2), hi(2)
                         do i = lo(1), hi(1)
                            phi(i,j,lo(3)-1,n) = merge(
@@ -689,8 +955,15 @@ c
      $                          mask(i,j,lo(3)-1) .gt. 0)
                         end do
                      end do
-                  end if
-                  do m = 0, lenz
+                  end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
+               end if
+               do m = 0, lenz
+                  !$omp target map(phi,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,j,i)
+                  do n = 1, nc
                      do j = lo(2), hi(2)
                         do i = lo(1), hi(1)
                            phi(i, j, lo(3)-1, n) = merge(
@@ -701,16 +974,26 @@ c
                         end do
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end do
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(j,i)
                   do j = lo(2), hi(2)
                      do i = lo(1), hi(1)
                         den(i, j, lo(3))   = merge(coef(0), 0.0D0,
      $                       mask(i, j, lo(3)-1) .gt. 0)
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else if ( bct .eq. LO_REFLECT_ODD ) then
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,j,i)
                do n = 1, nc
                   do j = lo(2), hi(2)
                      do i = lo(1), hi(1)
@@ -721,13 +1004,20 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den,mask) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(n,j,i)
                   do j = lo(2), hi(2)
                      do i = lo(1), hi(1)
                         den(i,j,lo(3)) = merge(-1.0D0, 0.0D0,
      $                       mask(i,j,lo(3)-1) .gt. 0)
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else
                print *,'UNKNOWN BC ON FRONT FACE IN APPLYBC'
@@ -739,6 +1029,9 @@ c
             ! The back of the grid
             !
             if(is_neumann(bct)) then
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,j,i)
                do n = 1, nc
                   do j = lo(2), hi(2)
                      do i = lo(1), hi(1)
@@ -749,18 +1042,28 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(j,i)
                   do j = lo(2), hi(2)
                      do i = lo(1), hi(1)
                         den(i,j, hi(3))   = 1.0D0
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else if (is_dirichlet(bct)) then
                x(-1) = - bcl/h(3)
                call polyInterpCoeff(xInt, x, lenz+2, coef)
-               do n = 1, nc
-                  if ( flagbc .eq. 1 ) then
+               if ( flagbc .eq. 1 ) then
+                  !$omp target map(phi,bcval,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,j,i)
+                  do n = 1, nc
                      do j = lo(2), hi(2)
                         do i = lo(1), hi(1)
                            phi(i,j, hi(3)+1,n) = merge(
@@ -769,7 +1072,14 @@ c
      $                          mask(i,j, hi(3)+1) .gt. 0)
                         end do
                      end do
-                  else
+                  end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
+               else
+                  !$omp target map(phi,mask) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,j,i)
+                  do n = 1, nc
                      do j = lo(2), hi(2)
                         do i = lo(1), hi(1)
                            phi(i,j, hi(3)+1,n) = merge(
@@ -778,8 +1088,15 @@ c
      $                          mask(i,j, hi(3)+1) .gt. 0)
                         end do
                      end do
-                  end if
-                  do m = 0, lenz
+                  end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
+               end if
+               do m = 0, lenz
+                  !$omp target map(phi,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(3)
+                  !&omp private(n,j,i)
+                  do n = 1, nc
                      do j = lo(2), hi(2)
                         do i = lo(1), hi(1)
                            phi(i, j, hi(3)+1,n) = merge(
@@ -790,16 +1107,26 @@ c
                         end do
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end do
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den,mask) map(to: hi, lo, coef)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(j,i)
                   do j = lo(2), hi(2)
                      do i = lo(1), hi(1)
                         den(i,j, hi(3))   = merge(coef(0), 0.0D0,
      $                       mask(i,j, hi(3)+1) .gt. 0)
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else if ( bct .eq. LO_REFLECT_ODD ) then
+               !$omp target map(phi,mask) map(to: hi, lo)
+               !$omp teams distribute parallel do simd collapse(3)
+               !&omp private(n,j,i)
                do n = 1, nc
                   do j = lo(2), hi(2)
                      do i = lo(1), hi(1)
@@ -810,18 +1137,27 @@ c
                      end do
                   end do
                end do
+               !$omp end teams distribute parallel do simd
+               !$omp end target
                if ( flagden .eq. 1 ) then
+                  !$omp target map(den,mask) map(to: hi, lo)
+                  !$omp teams distribute parallel do simd collapse(2)
+                  !&omp private(j,i)
                   do j = lo(2), hi(2)
                      do i = lo(1), hi(1)
                         den(i,j,hi(3)) = merge(-1.0D0, 0.0D0,
      $                       mask(i,j,hi(3)+1) .gt. 0)
                      end do
                   end do
+                  !$omp end teams distribute parallel do simd
+                  !$omp end target
                end if
             else
                print *,'UNKNOWN BC ON BACK FACE IN APPLYBC'
                call bl_error("stop")
             end if
          end select
+
+      !$omp target update from(den,phi)
 
       end

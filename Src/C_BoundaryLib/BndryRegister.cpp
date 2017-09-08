@@ -124,7 +124,10 @@ BndryBATransformer::operator() (const Box& bx) const
     lo += m_loshft;
     hi += m_hishft;
 
-    return Box(lo, hi, m_typ);
+    Box result = Box(lo, hi, m_typ);
+    result.setCacheBlock(bx.cacheBlock());
+
+    return result;
 }
 
 bool 
