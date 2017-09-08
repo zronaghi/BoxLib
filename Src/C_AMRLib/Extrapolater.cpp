@@ -2,9 +2,9 @@
 #include <Extrapolater.H>
 #include <iMultiFab.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 extern "C"
 {
@@ -28,10 +28,10 @@ namespace Extrapolater
 
 	int N = mf.nComp();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(mf); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(mf,false); mfi.isValid(); ++mfi)
 	{
 	    const Box& bx = mfi.validbox();
 	    const IArrayBox& maskfab = mask[mfi];

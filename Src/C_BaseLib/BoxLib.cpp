@@ -32,9 +32,9 @@
 #endif
 #endif
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #include <BLBackTrace.H>
 #include <MemPool.H>
@@ -311,14 +311,14 @@ BoxLib::Initialize (int& argc, char**& argv, bool build_parm_parse, MPI_Comm mpi
     }
 #endif
 
-#ifdef _OPENMP
-    if (ParallelDescriptor::IOProcessor())
-    {
-        std::cout << "OMP initialized with "
-                  << omp_get_max_threads()
-                  << " OMP threads\n";
-    }
-#endif
+//#ifdef _OPENMP
+//    if (ParallelDescriptor::IOProcessor())
+//    {
+//        std::cout << "OMP initialized with "
+//                  << omp_get_max_threads()
+//                  << " OMP threads\n";
+//    }
+//#endif
 
     signal(SIGSEGV, BLBackTrace::handler); // catch seg falult
     signal(SIGINT,  BLBackTrace::handler);
@@ -437,10 +437,10 @@ BoxLib::Finalize (bool finalize_parallel)
 	if (ParallelDescriptor::NProcs() == 1) {
 	    if (mp_tot > 0) {
 		std::cout << "MemPool: " 
-#ifdef _OPENMP
-			  << "min used in a thread: " << mp_min << " MB, "
-			  << "max used in a thread: " << mp_max << " MB, "
-#endif
+//#ifdef _OPENMP
+//			  << "min used in a thread: " << mp_min << " MB, "
+//			  << "max used in a thread: " << mp_max << " MB, "
+//#endif
 			  << "tot used: " << mp_tot << " MB." << std::endl;
 	    }
 	} else {

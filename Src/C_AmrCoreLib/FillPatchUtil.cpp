@@ -2,9 +2,9 @@
 #include <FillPatchUtil.H>
 #include <cmath>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 namespace BoxLib
 {
@@ -67,10 +67,10 @@ namespace BoxLib
 		sameba = false;
 	    }
 
-#ifdef _OPENMP
-#pragma omp parallel 
-#endif
-	    for (MFIter mfi(*dmf,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel 
+//#endif
+	    for (MFIter mfi(*dmf,false); mfi.isValid(); ++mfi)
 	    {
 		const Box& bx = mfi.tilebox();
 		(*dmf)[mfi].linInterp(smf[0][mfi],
@@ -143,10 +143,10 @@ namespace BoxLib
 		
 		int idummy1=0, idummy2=0;
 		bool cc = fpc.ba_crse_patch.ixType().cellCentered();
-#ifdef _OPENMP
-#pragma omp parallel if (cc)
-#endif
-		for (MFIter mfi(mf_crse_patch); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel if (cc)
+//#endif
+		for (MFIter mfi(mf_crse_patch,false); mfi.isValid(); ++mfi)
 		{
 		    int li = mfi.LocalIndex();
 		    int gi = fpc.dst_idxs[li];		
@@ -217,10 +217,10 @@ namespace BoxLib
 
 	int idummy1=0, idummy2=0;
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-	for (MFIter mfi(mf_crse_patch); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+	for (MFIter mfi(mf_crse_patch,false); mfi.isValid(); ++mfi)
 	{
 	    FArrayBox& dfab = mf[mfi];
 	    const Box& dbx = dfab.box() & fdomain_g;

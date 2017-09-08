@@ -5,9 +5,9 @@
 #include <FabArray.H>
 #include <Geometry.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 //forward declarations
 class MultiMaskIter;

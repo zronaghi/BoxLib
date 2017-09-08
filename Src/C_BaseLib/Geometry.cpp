@@ -10,9 +10,9 @@
 #include <Utility.H>
 #include <SPACE.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 //
 // The definition of some static data members.
@@ -103,9 +103,9 @@ Geometry::Finalize ()
 void
 Geometry::Setup (const RealBox* rb, int coord, int* isper)
 {
-#ifdef _OPENMP
-    BL_ASSERT(!omp_in_parallel());
-#endif
+//#ifdef _OPENMP
+//    BL_ASSERT(!omp_in_parallel());
+//#endif
 
     static bool first = true;
     if (first) {
@@ -186,10 +186,10 @@ Geometry::GetVolume (MultiFab&       vol,
 void
 Geometry::GetVolume (MultiFab&       vol) const
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(vol,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(vol,false); mfi.isValid(); ++mfi)
     {
 	CoordSys::SetVolume(vol[mfi], mfi.growntilebox());
     }
@@ -212,10 +212,10 @@ Geometry::GetDLogA (MultiFab&       dloga,
                     int             ngrow) const
 {
     dloga.define(grds,1,ngrow,Fab_allocate);
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dloga,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dloga,false); mfi.isValid(); ++mfi)
     {
 	CoordSys::SetDLogA(dloga[mfi], mfi.growntilebox(), dir);
     }
@@ -239,10 +239,10 @@ void
 Geometry::GetFaceArea (MultiFab&       area,
                        int             dir) const
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(area,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(area,false); mfi.isValid(); ++mfi)
     {
 	CoordSys::SetFaceArea(area[mfi],mfi.growntilebox(),dir);
     }

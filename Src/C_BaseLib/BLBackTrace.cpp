@@ -38,9 +38,9 @@ BLBackTrace::handler(int s)
 	// ---- rank global (rg) and rank local (rl)
 	ss << "Backtrace.rg_" << ParallelDescriptor::MyProcAll()
 	   << "_rl_" << ParallelDescriptor::MyProc();
-#ifdef _OPENMP
- 	ss << "." << omp_get_thread_num();
-#endif
+//#ifdef _OPENMP
+// 	ss << "." << omp_get_thread_num();
+//#endif
 	errfilename = ss.str();
     }
 
@@ -135,47 +135,47 @@ BLBTer::BLBTer(const std::string& s, const char* file, int line)
     ss << "Line " << line << ", File " << file;
     line_file = ss.str();
     
-#ifdef _OPENMP
-    if (omp_in_parallel()) {
-	std::ostringstream ss0;
-	ss0 << "Proc. " << ParallelDescriptor::MyProc() 
-	    << ", Thread " << omp_get_thread_num()
-	    << ": \"" << s << "\"";
-	BLBackTrace::bt_stack.push(std::make_pair(ss0.str(), line_file));
-    }
-    else {
-        #pragma omp parallel
-	{
-	    std::ostringstream ss0;
-	    ss0 << "Proc. " << ParallelDescriptor::MyProc() 
-		<< ", Master Thread"
-		<< ": \"" << s << "\"";
-	    BLBackTrace::bt_stack.push(std::make_pair(ss0.str(), line_file));
-	}
-    }
-#else
+//#ifdef _OPENMP
+//    if (omp_in_parallel()) {
+//	std::ostringstream ss0;
+//	ss0 << "Proc. " << ParallelDescriptor::MyProc() 
+//	    << ", Thread " << omp_get_thread_num()
+//	    << ": \"" << s << "\"";
+//	BLBackTrace::bt_stack.push(std::make_pair(ss0.str(), line_file));
+//    }
+//    else {
+//        #pragma omp parallel
+//	{
+//	    std::ostringstream ss0;
+//	    ss0 << "Proc. " << ParallelDescriptor::MyProc() 
+//		<< ", Master Thread"
+//		<< ": \"" << s << "\"";
+//	    BLBackTrace::bt_stack.push(std::make_pair(ss0.str(), line_file));
+//	}
+//    }
+//#else
     std::ostringstream ss0;
     ss0 << "Proc. " << ParallelDescriptor::MyProc() 
 	<< ": \"" << s << "\"";
     BLBackTrace::bt_stack.push(std::make_pair(ss0.str(), line_file));
-#endif    
+    //#endif    
 }
 
 BLBTer::~BLBTer()
 {
-#ifdef _OPENMP
-    if (omp_in_parallel()) {
-	pop_bt_stack();
-    }
-    else {
-        #pragma omp parallel
-	{
-	    pop_bt_stack();
-	}	
-    }
-#else
+//#ifdef _OPENMP
+//    if (omp_in_parallel()) {
+//	pop_bt_stack();
+//    }
+//    else {
+//        #pragma omp parallel
+//	{
+//	    pop_bt_stack();
+//	}	
+//    }
+//#else
     pop_bt_stack();
-#endif
+    //#endif
 }
 
 void

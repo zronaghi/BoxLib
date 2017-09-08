@@ -42,10 +42,10 @@ MultiFab::Dot (const MultiFab& x, int xcomp,
 
     Real sm = 0.0;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:sm)
-#endif
-    for (MFIter mfi(x,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(+:sm)
+//#endif
+    for (MFIter mfi(x,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
         sm += x[mfi].dot(bx,xcomp,y[mfi],bx,ycomp,numcomp);
@@ -69,10 +69,10 @@ MultiFab::Add (MultiFab&       dst,
     BL_ASSERT(dst.distributionMap == src.distributionMap);
     BL_ASSERT(dst.nGrow() >= nghost && src.nGrow() >= nghost);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dst,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dst,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -93,10 +93,10 @@ MultiFab::Copy (MultiFab&       dst,
     BL_ASSERT(dst.distributionMap == src.distributionMap);
     BL_ASSERT(dst.nGrow() >= nghost); // && src.nGrow() >= nghost);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dst,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dst,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -117,10 +117,10 @@ MultiFab::Subtract (MultiFab&       dst,
     BL_ASSERT(dst.distributionMap == src.distributionMap);
     BL_ASSERT(dst.nGrow() >= nghost && src.nGrow() >= nghost);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dst,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dst,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -141,10 +141,10 @@ MultiFab::Multiply (MultiFab&       dst,
     BL_ASSERT(dst.distributionMap == src.distributionMap);
     BL_ASSERT(dst.nGrow() >= nghost && src.nGrow() >= nghost);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dst,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dst,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -165,10 +165,10 @@ MultiFab::Divide (MultiFab&       dst,
     BL_ASSERT(dst.distributionMap == src.distributionMap);
     BL_ASSERT(dst.nGrow() >= nghost && src.nGrow() >= nghost);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dst,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dst,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -190,10 +190,10 @@ MultiFab::Saxpy (MultiFab&       dst,
     BL_ASSERT(dst.distributionMap == src.distributionMap);
     BL_ASSERT(dst.nGrow() >= nghost && src.nGrow() >= nghost);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dst,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dst,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -215,10 +215,10 @@ MultiFab::Xpay (MultiFab&       dst,
     BL_ASSERT(dst.distributionMap == src.distributionMap);
     BL_ASSERT(dst.nGrow() >= nghost && src.nGrow() >= nghost);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dst,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dst,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -245,10 +245,10 @@ MultiFab::LinComb (MultiFab&       dst,
     BL_ASSERT(dst.distributionMap == y.distributionMap);
     BL_ASSERT(dst.nGrow() >= nghost && x.nGrow() >= nghost && y.nGrow() >= nghost);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dst,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dst,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 	
@@ -273,10 +273,10 @@ MultiFab::AddProduct (MultiFab&       dst,
     BL_ASSERT(dst.distributionMap == src2.distributionMap);
     BL_ASSERT(dst.nGrow() >= nghost && src1.nGrow() >= nghost && src2.nGrow() >= nghost);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(dst,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(dst,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 	
@@ -458,10 +458,10 @@ MultiFab::define (const BoxArray&            bxs,
 void
 MultiFab::initVal ()
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	(*this)[mfi].initVal();
     }
@@ -480,10 +480,10 @@ MultiFab::contains_nan (int scomp,
 
     bool r = false;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(|:r)
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(|:r)
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	const Box& bx = mfi.growntilebox(ngrow);
 	
@@ -516,10 +516,10 @@ MultiFab::contains_inf (int scomp,
 
     bool r = false;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(|:r)
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(|:r)
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	const Box& bx = mfi.growntilebox(ngrow);
 	
@@ -555,10 +555,10 @@ MultiFab::min (int comp,
 
     Real mn = std::numeric_limits<Real>::max();
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(min:mn)
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(min:mn)
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	const Box& bx = mfi.growntilebox(nghost);
 	mn = std::min(mn, get(mfi).min(bx,comp));
@@ -580,10 +580,10 @@ MultiFab::min (const Box& region,
 
     Real mn = std::numeric_limits<Real>::max();
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(min:mn)
-#endif
-    for ( MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(min:mn)
+//#endif
+    for ( MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	const Box& b = mfi.growntilebox(nghost) & region;
 	
@@ -606,10 +606,10 @@ MultiFab::max (int comp,
 
     Real mx = -std::numeric_limits<Real>::max();
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:mx)
-#endif
-    for ( MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(max:mx)
+//#endif
+    for ( MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	const Box& bx = mfi.growntilebox(nghost);
 	mx = std::max(mx, get(mfi).max(bx,comp));
@@ -631,10 +631,10 @@ MultiFab::max (const Box& region,
 
     Real mx = -std::numeric_limits<Real>::max();
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:mx)
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(max:mx)
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	const Box& b = mfi.growntilebox(nghost) & region;
 
@@ -659,9 +659,9 @@ MultiFab::minIndex (int comp,
 
     Real mn = std::numeric_limits<Real>::max();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     {
 	Real priv_mn = std::numeric_limits<Real>::max();
 	IntVect priv_loc;
@@ -677,9 +677,9 @@ MultiFab::minIndex (int comp,
 		priv_loc = get(mfi).minIndex(box,comp);
 	    }
 	}
-#ifdef _OPENMP
-#pragma omp critical (multifab_minindex)
-#endif
+//#ifdef _OPENMP
+//#pragma omp critical (multifab_minindex)
+//#endif
 	{
 	    if (priv_mn < mn) {
 		mn = priv_mn;
@@ -744,14 +744,14 @@ MultiFab::maxIndex (int comp,
 
     Real mx = -std::numeric_limits<Real>::max();
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     {
 	Real priv_mx = -std::numeric_limits<Real>::max();
 	IntVect priv_loc;
 	
-	for (MFIter mfi(*this); mfi.isValid(); ++mfi)
+	for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
 	{
 	    const Box& box = BoxLib::grow(mfi.validbox(),nghost);
 	    const Real lmx = get(mfi).max(box,comp);
@@ -762,9 +762,9 @@ MultiFab::maxIndex (int comp,
 		priv_loc = get(mfi).maxIndex(box,comp);
 	    }
 	}
-#ifdef _OPENMP
-#pragma omp critical (multifab_maxindex)
-#endif
+//#ifdef _OPENMP
+//#pragma omp critical (multifab_maxindex)
+//#endif
 	{
 	    if (priv_mx > mx) {
 		mx = priv_mx;
@@ -823,13 +823,13 @@ MultiFab::norm0 (int comp, const BoxArray& ba, int nghost, bool local) const
 {
     Real nm0 = -std::numeric_limits<Real>::max();
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:nm0)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(max:nm0)
+//#endif
     {
 	std::vector< std::pair<int,Box> > isects;
 
-	for (MFIter mfi(*this); mfi.isValid(); ++mfi)
+	for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
 	{
 	    ba.intersections(BoxLib::grow(mfi.validbox(),nghost),isects);
 
@@ -851,10 +851,10 @@ MultiFab::norm0 (int comp, int nghost, bool local) const
 {
     Real nm0 = -std::numeric_limits<Real>::max();
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(max:nm0)
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(max:nm0)
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
 	nm0 = std::max(nm0, get(mfi).norm(mfi.growntilebox(nghost), 0, comp, 1));
     }
@@ -872,36 +872,36 @@ MultiFab::norm0 (const Array<int>& comps, int nghost, bool local) const
     const Real rmax = std::numeric_limits<Real>::max();
     Array<Real> nm0(n, -rmax);
 
-#ifdef _OPENMP
-    int nthreads = omp_get_max_threads();
-#else
+//#ifdef _OPENMP
+//    int nthreads = omp_get_max_threads();
+//#else
     int nthreads = 1;
-#endif
+    //#endif
     PArray< Array<Real> > priv_nm0(nthreads, PArrayManage);
     for (int i=0; i<nthreads; i++) {
 	priv_nm0.set(i, new Array<Real>(n, -rmax));
     }
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     {
-#ifdef _OPENMP
-	int tid = omp_get_thread_num();
-#else
+//#ifdef _OPENMP
+//	int tid = omp_get_thread_num();
+//#else
 	int tid = 0;
-#endif
-	for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+  //#endif
+	for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
 	{
             for (int i=0; i<n; i++) {
 	        priv_nm0[tid][i] = std::max(priv_nm0[tid][i], 
 					    get(mfi).norm(mfi.growntilebox(nghost), 0, comps[i], 1));
             }
         }
-#ifdef _OPENMP
-#pragma omp barrier
-#pragma omp for
-#endif
+//#ifdef _OPENMP
+//#pragma omp barrier
+//#pragma omp for
+//#endif
 	for (int i=0; i<n; i++) {
             for (int it=0; it<nthreads; it++) {
 	        nm0[i] = std::max(priv_nm0[it][i], nm0[i]);
@@ -929,25 +929,25 @@ MultiFab::norm2 (const Array<int>& comps) const
     int n = comps.size();
     Array<Real> nm2(n, 0.e0);
 
-#ifdef _OPENMP
-    int nthreads = omp_get_max_threads();
-#else
+//#ifdef _OPENMP
+//    int nthreads = omp_get_max_threads();
+//#else
     int nthreads = 1;
-#endif
+//#endif
     PArray< Array<Real> > priv_nm2(nthreads, PArrayManage);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     {
-#ifdef _OPENMP
-	int tid = omp_get_thread_num();
-#else
+//#ifdef _OPENMP
+//	int tid = omp_get_thread_num();
+//#else
 	int tid = 0;
-#endif
+  //#endif
 	priv_nm2.set(tid, new Array<Real>(n, 0.0));
 
-	for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+	for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
 	{
 	    const Box& bx = mfi.tilebox();
 	    const FArrayBox& fab = get(mfi);
@@ -955,10 +955,10 @@ MultiFab::norm2 (const Array<int>& comps) const
 		priv_nm2[tid][i] += fab.dot(bx,comps[i],fab,bx,comps[i]);
             }
         }
-#ifdef _OPENMP
-#pragma omp barrier
-#pragma omp for
-#endif
+//#ifdef _OPENMP
+//#pragma omp barrier
+//#pragma omp for
+//#endif
 	for (int i=0; i<n; i++) {
 	    for (int it=1; it<nthreads; it++) {
 		priv_nm2[0][i] += priv_nm2[it][i];
@@ -980,10 +980,10 @@ MultiFab::norm1 (int comp, int ngrow, bool local) const
 {
     Real nm1 = 0.e0;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:nm1)
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(+:nm1)
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         nm1 += get(mfi).norm(mfi.growntilebox(ngrow), 1, comp, 1);
     }
@@ -1000,25 +1000,25 @@ MultiFab::norm1 (const Array<int>& comps, int ngrow, bool local) const
     int n = comps.size();
     Array<Real> nm1(n, 0.e0);
 
-#ifdef _OPENMP
-    int nthreads = omp_get_max_threads();
-#else
+//#ifdef _OPENMP
+//    int nthreads = omp_get_max_threads();
+//#else
     int nthreads = 1;
-#endif
+    //#endif
     PArray< Array<Real> > priv_nm1(nthreads, PArrayManage);
     for (int i=0; i<nthreads; i++) {
 	priv_nm1.set(i, new Array<Real>(n, 0.0));
     }
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     {
-#ifdef _OPENMP
-	int tid = omp_get_thread_num();
-#else
+//#ifdef _OPENMP
+//	int tid = omp_get_thread_num();
+//#else
 	int tid = 0;
-#endif
+  //#endif
 	for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
 	{
             const Box& b = mfi.growntilebox(ngrow);
@@ -1026,10 +1026,10 @@ MultiFab::norm1 (const Array<int>& comps, int ngrow, bool local) const
                 priv_nm1[tid][i] += get(mfi).norm(b, 1, comps[i], 1);
 	    }
         }
-#ifdef _OPENMP
-#pragma omp barrier
-#pragma omp for
-#endif
+//#ifdef _OPENMP
+//#pragma omp barrier
+//#pragma omp for
+//#endif
 	for (int i=0; i<n; i++) {
 	    for (int it=0; it<nthreads; it++) {
 		nm1[i] += priv_nm1[it][i];
@@ -1048,10 +1048,10 @@ MultiFab::sum (int comp, bool local) const
 {
     Real sm = 0.e0;
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:sm)
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(+:sm)
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         sm += get(mfi).sum(mfi.tilebox(), comp, 1);
     }
@@ -1074,10 +1074,10 @@ MultiFab::minus (const MultiFab& mf,
     BL_ASSERT(strt_comp + num_comp - 1 < n_comp && strt_comp + num_comp - 1 < mf.n_comp);
     BL_ASSERT(nghost <= n_grow && nghost <= mf.n_grow);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -1097,10 +1097,10 @@ MultiFab::divide (const MultiFab& mf,
     BL_ASSERT(strt_comp + num_comp - 1 < n_comp && strt_comp + num_comp - 1 < mf.n_comp);
     BL_ASSERT(nghost <= n_grow && nghost <= mf.n_grow);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -1118,10 +1118,10 @@ MultiFab::plus (Real val,
     BL_ASSERT(comp+num_comp <= n_comp);
     BL_ASSERT(num_comp > 0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         get(mfi).plus(val,mfi.growntilebox(nghost),comp,num_comp);
     }
@@ -1138,10 +1138,10 @@ MultiFab::plus (Real       val,
     BL_ASSERT(comp+num_comp <= n_comp);
     BL_ASSERT(num_comp > 0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         const Box& b = mfi.growntilebox(nghost) & region;
 
@@ -1162,10 +1162,10 @@ MultiFab::plus (const MultiFab& mf,
     BL_ASSERT(strt_comp + num_comp - 1 < n_comp && strt_comp + num_comp - 1 < mf.n_comp);
     BL_ASSERT(nghost <= n_grow && nghost <= mf.n_grow);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.growntilebox(nghost);
 
@@ -1183,10 +1183,10 @@ MultiFab::mult (Real val,
     BL_ASSERT(comp+num_comp <= n_comp);
     BL_ASSERT(num_comp > 0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         get(mfi).mult(val, mfi.growntilebox(nghost), comp, num_comp);
     }
@@ -1203,10 +1203,10 @@ MultiFab::mult (Real       val,
     BL_ASSERT(comp+num_comp <= n_comp);
     BL_ASSERT(num_comp > 0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         const Box& b = mfi.growntilebox(nghost) & region;
 
@@ -1225,10 +1225,10 @@ MultiFab::invert (Real numerator,
     BL_ASSERT(comp+num_comp <= n_comp);
     BL_ASSERT(num_comp > 0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         get(mfi).invert(numerator, mfi.growntilebox(nghost), comp, num_comp);
     }
@@ -1245,10 +1245,10 @@ MultiFab::invert (Real       numerator,
     BL_ASSERT(comp+num_comp <= n_comp);
     BL_ASSERT(num_comp > 0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         const Box& b = mfi.growntilebox(nghost) & region;
 
@@ -1265,10 +1265,10 @@ MultiFab::negate (int comp,
     BL_ASSERT(nghost >= 0 && nghost <= n_grow);
     BL_ASSERT(comp+num_comp <= n_comp);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         get(mfi).negate(mfi.growntilebox(nghost), comp, num_comp);
     }
@@ -1283,10 +1283,10 @@ MultiFab::negate (const Box& region,
     BL_ASSERT(nghost >= 0 && nghost <= n_grow);
     BL_ASSERT(comp+num_comp <= n_comp);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-    for (MFIter mfi(*this,true); mfi.isValid(); ++mfi)
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
+    for (MFIter mfi(*this,false); mfi.isValid(); ++mfi)
     {
         const Box& b = mfi.growntilebox(nghost) & region;
 

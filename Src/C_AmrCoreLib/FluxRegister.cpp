@@ -136,9 +136,9 @@ FluxRegister::SumReg (int comp) const
         const FabSet& lofabs = bndry[Orientation(dir,Orientation::low) ];
         const FabSet& hifabs = bndry[Orientation(dir,Orientation::high)];
 
-#ifdef _OPENMP
-#pragma omp parallel reduction(+:sum)
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel reduction(+:sum)
+//#endif
         for (FabSetIter fsi(lofabs); fsi.isValid(); ++fsi)
         {
             sum += (lofabs[fsi].sum(comp) - hifabs[fsi].sum(comp));
@@ -168,9 +168,9 @@ FluxRegister::CrseInit (const MultiFab& mflx,
  
     MultiFab mf(mflx.boxArray(),numcomp,0);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif    
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif    
     for (MFIter mfi(mflx,true); mfi.isValid(); ++mfi)
     {
 	const Box& bx = mfi.tilebox();
@@ -199,9 +199,9 @@ FluxRegister::CrseInit (const MultiFab& mflx,
 
             fs.copyFrom(mf,0,0,0,numcomp);
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
             for (FabSetIter mfi(fs); mfi.isValid(); ++mfi)
                 bndry[face][mfi].plus(fs[mfi],0,destcomp,numcomp);
         }
@@ -235,9 +235,9 @@ FluxRegister::FineAdd (const MultiFab& mflx,
                        int             numcomp,
                        Real            mult)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter mfi(mflx); mfi.isValid(); ++mfi)
     {
         const int k = mfi.index();
@@ -254,9 +254,9 @@ FluxRegister::FineAdd (const MultiFab& mflx,
                        int             numcomp,
                        Real            mult)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
     for (MFIter mfi(mflx); mfi.isValid(); ++mfi)
     {
         const int k = mfi.index();
@@ -378,9 +378,9 @@ FluxRegister::Reflux (MultiFab&       mf,
 
 	bndry[face].copyTo(flux, 0, scomp, 0, ncomp, geom.periodicity());
 
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (MFIter mfi(mf,true); mfi.isValid(); ++mfi)
 	{
 	    const Box& bx = mfi.tilebox();
@@ -437,9 +437,9 @@ FluxRegister::ClearInternalBorders (const Geometry& geom)
 	const BoxArray& balo = frlo.boxArray();
 	const BoxArray& bahi = frhi.boxArray();
 	
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	{
 	    for (FabSetIter fsi(frlo); fsi.isValid(); ++fsi) {
 		const Box& bx = fsi.validbox();

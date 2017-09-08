@@ -15,9 +15,9 @@
 #include <signal.h>
 #include <fenv.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #ifndef FORTRAN_BOXLIB
 #include <BLBackTrace.H>
@@ -113,9 +113,9 @@ extern "C"
 	{
 	    std::ostringstream ss;
 	    ss << "Backtrace." << myproc;
-#ifdef _OPENMP
-		ss << "." << omp_get_thread_num();
-#endif
+//#ifdef _OPENMP
+//		ss << "." << omp_get_thread_num();
+//#endif
 	    errfilename = ss.str();
 	}
 	if (FILE* p = fopen(errfilename.c_str(), "w")) {

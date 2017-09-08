@@ -24,9 +24,9 @@
 #include <ParallelDescriptor.H>
 #include <BoxArray.H>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #ifdef WIN32
 #include <direct.h>
@@ -720,18 +720,18 @@ BoxLib::mt19937::mt19937(unsigned long seed)
 
 BoxLib::mt19937::mt19937(unsigned long seed, int numprocs)
 {
-#ifdef _OPENMP
-#pragma omp parallel
-  {
-    init_seed = seed + omp_get_thread_num() * numprocs;
-    mti = N;
-    sgenrand(init_seed);
-  }
-#else
+//#ifdef _OPENMP
+//#pragma omp parallel
+//  {
+//    init_seed = seed + omp_get_thread_num() * numprocs;
+//    mti = N;
+//    sgenrand(init_seed);
+//  }
+//#else
     init_seed = seed;
     mti = N;
     sgenrand(init_seed);
-#endif
+    //#endif
 }
 
 BoxLib::mt19937::mt19937 (unsigned long seed_array[], int len)

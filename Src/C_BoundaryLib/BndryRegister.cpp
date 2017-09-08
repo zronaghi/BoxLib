@@ -222,9 +222,9 @@ BndryRegister::operator+= (const BndryRegister& rhs)
 {
     BL_ASSERT(grids == rhs.grids);
     for (OrientationIter face; face; ++face) {
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel
+//#endif
 	for (FabSetIter bfsi(rhs[face()]); bfsi.isValid(); ++bfsi) {
 	    bndry[face()][bfsi] += rhs[face()][bfsi];
 	}
