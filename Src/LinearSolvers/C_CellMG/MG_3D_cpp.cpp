@@ -256,17 +256,17 @@ const Real* h)
 	Real dhy = beta/(h[1]*h[1]);
 	Real dhz = beta/(h[2]*h[2]);
 	
-//#pragma omp target update to(phipt[0:phi_size],rhspt[0:rhs_size],apt[0:a_size])
-//#pragma omp target update to(bXpt[0:bX_size],bYpt[0:bY_size],bZpt[0:bZ_size])
-//#pragma omp target update to(m0pt[0:m0_size],m1pt[0:m1_size],m2pt[0:m2_size],m3pt[0:m3_size],m4pt[0:m4_size],m5pt[0:m5_size])
-//#pragma omp target update to(f0pt[0:f0_size],f1pt[0:f1_size],f2pt[0:f2_size],f3pt[0:f3_size],f4pt[0:f4_size],f5pt[0:f5_size])
-//#pragma omp target data map(to: blo[0:3], bhi[0:3], lo[0:3], hi[0:3])
-//#pragma omp target data map(to: phi_lo[0:3], phi_hi[0:3], rhs_lo[0:3], rhs_hi[0:3], a_lo[0:3], a_hi[0:3])
-//#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
-//#pragma omp target data map(to: m0_lo[0:3], m0_hi[0:3], m1_lo[0:3], m1_hi[0:3], m2_lo[0:3], m2_hi[0:3], m3_lo[0:3], m3_hi[0:3], m4_lo[0:3], m4_hi[0:3], m5_lo[0:3], m5_hi[0:3])
-//#pragma omp target data map(to: f0_lo[0:3], f0_hi[0:3], f1_lo[0:3], f1_hi[0:3], f2_lo[0:3], f2_hi[0:3], f3_lo[0:3], f3_hi[0:3], f4_lo[0:3], f4_hi[0:3], f5_lo[0:3], f5_hi[0:3]) 
+#pragma omp target update to(phipt[0:phi_size],rhspt[0:rhs_size],apt[0:a_size])
+#pragma omp target update to(bXpt[0:bX_size],bYpt[0:bY_size],bZpt[0:bZ_size])
+#pragma omp target update to(m0pt[0:m0_size],m1pt[0:m1_size],m2pt[0:m2_size],m3pt[0:m3_size],m4pt[0:m4_size],m5pt[0:m5_size])
+#pragma omp target update to(f0pt[0:f0_size],f1pt[0:f1_size],f2pt[0:f2_size],f3pt[0:f3_size],f4pt[0:f4_size],f5pt[0:f5_size])
+#pragma omp target data map(to: blo[0:3], bhi[0:3], lo[0:3], hi[0:3])
+#pragma omp target data map(to: phi_lo[0:3], phi_hi[0:3], rhs_lo[0:3], rhs_hi[0:3], a_lo[0:3], a_hi[0:3])
+#pragma omp target data map(to: bX_lo[0:3], bX_hi[0:3], bY_lo[0:3], bY_hi[0:3], bZ_lo[0:3], bZ_hi[0:3])
+#pragma omp target data map(to: m0_lo[0:3], m0_hi[0:3], m1_lo[0:3], m1_hi[0:3], m2_lo[0:3], m2_hi[0:3], m3_lo[0:3], m3_hi[0:3], m4_lo[0:3], m4_hi[0:3], m5_lo[0:3], m5_hi[0:3])
+#pragma omp target data map(to: f0_lo[0:3], f0_hi[0:3], f1_lo[0:3], f1_hi[0:3], f2_lo[0:3], f2_hi[0:3], f3_lo[0:3], f3_hi[0:3], f4_lo[0:3], f4_hi[0:3], f5_lo[0:3], f5_hi[0:3]) 
 	{
-		//#pragma omp parallel for collapse(3) firstprivate(alpha,dhx,dhy,dhz,omega) default(shared)
+#pragma omp parallel for collapse(3) firstprivate(alpha,dhx,dhy,dhz,omega) default(shared)
 		for (int n = 0; n<nc; n++){
 			for (int k = lo[2]; k <= hi[2]; ++k) {
 				for (int j = lo[1]; j <= hi[1]; ++j) {
