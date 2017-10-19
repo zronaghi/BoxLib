@@ -818,8 +818,7 @@
     const int _nc = (nc);                                               \
     T redR = (red);                                                     \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(tofrom: redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(tofrom: redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3) reduction(+:redR)") \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -853,8 +852,7 @@
     const int _nc = (nc);                                               \
     T redR = (red);                                                     \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(tofrom:redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(tofrom:redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3) reduction(max:redR)") \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -888,8 +886,7 @@
     const int _nc = (nc);                                               \
     T redR = (red);                                                     \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(tofrom:redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(tofrom:redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3) reduction(min:redR)") \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -923,8 +920,7 @@
     const int _nc = (nc);                                               \
     T redR = (red);                                                     \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(tofrom: redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(tofrom: redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3) reduction(+:redR)")\
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -958,8 +954,7 @@
     const int _nc = (nc);                                               \
     T redR = (red);                                                     \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(tofrom: redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(tofrom: redR) map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3) reduction(max:redR)")\
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -993,8 +988,7 @@
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
     _Pragma("omp target update to(_x_p[_ns*_x_plen[2]:(_ns+_nc)*_x_plen[2]])") \
-    _Pragma("omp target data map(to: _nc, _ns, _x_plo[0:3], _x_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(to: _nc, _ns, _x_plo[0:3], _x_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3)")            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -1028,8 +1022,7 @@
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]], _x_p[_ns*_x_plen[2]:(_ns+_nc)*_x_plen[2]])") \
-    _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _x_plo[0:3], _x_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _x_plo[0:3], _x_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3)")            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -1064,8 +1057,7 @@
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(4)")            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -1098,8 +1090,7 @@
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(4)")            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -1132,8 +1123,7 @@
     const int _nc = (nc);                                               \
     T redR =(red);                                                      \
     _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
-    _Pragma("omp target data map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
-    _Pragma("omp target if(1)")                                         \
+    _Pragma("omp target map(to: _nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3) reduction(+:redR)")\
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
@@ -1173,8 +1163,7 @@
         const int _nss = (nss);                                         \
         const int _nc = (nc);                                           \
         _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]], _x_p[_nss*_x_plen[2]:(_nss+_nc)*_x_plen[2]])") \
-        _Pragma("omp target data map(to: _nc, _ns, _nss, _th_plo[0:3], _th_plen[0:3], _x_plo[0:3], _x_plen[0:3], _subbox_len[0:3], _subbox_lo[0:3])") \
-        _Pragma("omp target if(1)")                                     \
+        _Pragma("omp target map(to: _nc, _ns, _nss, _th_plo[0:3], _th_plen[0:3], _x_plo[0:3], _x_plen[0:3], _subbox_len[0:3], _subbox_lo[0:3])") \
         {                                                               \
         _Pragma("omp teams distribute parallel for collapse(3)")        \
         for(int _n = 0; _n < _nc; ++_n) {                               \
@@ -1224,8 +1213,7 @@
         const int _nss = (nss);                                         \
         const int _nc = (nc);                                           \
         _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]], _x_p[_nss*_x_plen[2]:(_nss+_nc)*_x_plen[2]])") \
-        _Pragma("omp target data map(to: _nc, _ns, _nss, _th_plo[0:3], _th_plen[0:3], _x_plo[0:3], _x_plen[0:3], _bx_lo[0:3], _subbox_len[0:3], _subbox_lo[0:3])")                                                      \
-        _Pragma("omp target if(1)")                                     \
+        _Pragma("omp target map(to: _nc, _ns, _nss, _th_plo[0:3], _th_plen[0:3], _x_plo[0:3], _x_plen[0:3], _bx_lo[0:3], _subbox_len[0:3], _subbox_lo[0:3])")  \
         {                                                               \
         _Pragma("omp teams distribute parallel for collapse(3)")        \
         for(int _n = 0; _n < _nc; ++_n) {                               \
@@ -1286,8 +1274,7 @@
         const int _nsy = (nsy);                                         \
         const int _nc = (nc);                                           \
         _Pragma("omp target update to(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]], _x_p[_nsx*_x_plen[2]:(_nsx+_nc)*_x_plen[2]], _y_p[_nsy*_y_plen[2]:(_nsy+_nc)*_y_plen[2]])") \
-        _Pragma("omp target data map(to: _nc, _ns, _nsx, _nsy, _th_plo[0:3], _th_plen[0:3], _x_plo[0:3], _x_plen[0:3], _y_plo[0:3], _y_plen[0:3], _bx_lo[0:3], _by_lo[0:3], _subbox_len[0:3], _subbox_lo[0:3])")          \
-        _Pragma("omp target if(1)")                                     \
+        _Pragma("omp target map(to: _nc, _ns, _nsx, _nsy, _th_plo[0:3], _th_plen[0:3], _x_plo[0:3], _x_plen[0:3], _y_plo[0:3], _y_plen[0:3], _bx_lo[0:3], _by_lo[0:3], _subbox_len[0:3], _subbox_lo[0:3])")          \
         {                                                               \
         _Pragma("omp teams distribute parallel for collapse(3)")        \
         for(int _n = 0; _n < _nc; ++_n) {                               \
@@ -1354,8 +1341,7 @@
     const int _nsy = (nsy);                                             \
     const int _nc = (nc);                                               \
     _Pragma("omp target update to(_x_p[_nsx*_x_plen[2]:(_nsx+_nc)*_x_plen[2]], _y_p[_nsy*_y_plen[2]:(_nsy+_nc)*_y_plen[2]])") \
-    _Pragma("omp target data map(to: _nc, _nsx, _nsy, _x_plo[0:3], _x_plen[0:3], _y_plo[0:3], _y_plen[0:3], _bx_lo[0:3], _by_lo[0:3], _len[0:3])") \
-    _Pragma("omp target if(true)")                                      \
+    _Pragma("omp target map(to: _nc, _nsx, _nsy, _x_plo[0:3], _x_plen[0:3], _y_plo[0:3], _y_plen[0:3], _bx_lo[0:3], _by_lo[0:3], _len[0:3])") \
     {                                                                   \
     _Pragma("omp teams distribute parallel for collapse(3)")            \
     for(int _n = 0; _n < _nc; ++_n) {                                   \
