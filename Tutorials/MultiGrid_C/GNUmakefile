@@ -44,7 +44,7 @@ HPGMG_BOTTOM_SOLVER= BICGSTAB
 HPGMG_SMOOTHER = GSRB
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
-CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA
+CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA -DBL_ACC_FABS
 
 # USE_MPI must be TRUE if USE_HYPRE
 USE_MPI=FALSE

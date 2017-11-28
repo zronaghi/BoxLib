@@ -34,8 +34,10 @@ BoxLib::BF_init::BF_init ()
     {
         BL_ASSERT(the_arena == 0);
 
-#if defined(BL_COALESCE_FABS)
+#if defined(BL_COALESCE_FABS) & !defined(BL_ACC_FABS)
         the_arena = new CArena;
+#elif defined(BL_ACC_FABS)
+        the_arena = new ACCArena;
 #else
         the_arena = new BArena;
 #endif
