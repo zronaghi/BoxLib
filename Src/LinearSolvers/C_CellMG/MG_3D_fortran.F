@@ -23,7 +23,7 @@
       REAL_T c(DIMV(c),nc)
 
       integer i, i2, i2p1, j, j2, j2p1, k, k2, k2p1, n
-
+!$acc update device(f)
 !$acc parallel loop collapse(4)
       do n = 1, nc
          do k = lo(3), hi(3)
@@ -46,6 +46,7 @@
          end do
       end do
 !$acc end parallel loop
+!$acc update host(c)
       end
 
 
@@ -67,6 +68,8 @@
 !     MultiGrid::relax(...) does only V-cycles (not F-cycles), and for V-cycles, 
 !     piecewise-constant interpolation performs better than linear interpolation,
 !     as measured both by run-time and number of V-cycles for convergence.
+
+!$acc update device(c,f)
 !$acc parallel loop collapse(4)
       do n = 1, nc
          do k = lo(3), hi(3)
@@ -93,4 +96,5 @@
          end do
       end do
 !$acc end parallel loop
+!$acc update host(f)
       end
