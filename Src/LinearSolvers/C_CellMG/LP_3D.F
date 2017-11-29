@@ -86,6 +86,8 @@ c-----------------------------------------------------------------------
 
       parameter(gamma = 6.0D0)
 
+!$acc update device(phi)
+!$acc parallel loop collapse(3)
       do n = 1, nc
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -119,7 +121,8 @@ c-----------------------------------------------------------------------
             end do
          end do
       end do
-
+!$acc end parallel loop
+!$acc update host(phi)
       end
 c-----------------------------------------------------------------------
 c
@@ -146,6 +149,8 @@ c
 
       scal = 1.0D0/h**2
 
+!$acc update device(x)
+!$acc parallel loop collapse(4)
       do n = 1, nc
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -159,7 +164,8 @@ c
             end do
          end do
       end do
-
+!$acc end parallel loop
+!$acc update host(y)
       end
 
 c-----------------------------------------------------------------------
