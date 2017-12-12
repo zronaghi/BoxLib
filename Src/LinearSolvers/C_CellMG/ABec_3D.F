@@ -113,6 +113,10 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
       dhy = beta/h(2)**2
       dhz = beta/h(3)**2
 
+!$acc update device(phi,rhs)
+!$acc update device(f0,f1,f2,f3,f4,f5,m0,m1,m2,m3,m4,m5)
+!$acc update device(bX,bY,bZ)
+!$acc parallel loop collapse(3)
       do n = 1, nc
           do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -156,7 +160,8 @@ c     This factor of 1.15 in 3D does over-relaxation but seems to consistently r
             end do
           end do
       end do
-
+!$acc end parallel loop
+!$acc update host(phi)
       end
 c-----------------------------------------------------------------------
 c      
@@ -348,6 +353,8 @@ c
       dhy = beta/h(2)**2
       dhz = beta/h(3)**2
 
+!$acc update device(y,a,x,bX,bY,bZ)
+!$acc parallel loop collapse(4)
       do n = 1, nc
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -366,7 +373,8 @@ c
             end do
          end do
       end do
-
+!$acc end parallel loop
+!$acc update host(y)
       end
 
 c-----------------------------------------------------------------------
@@ -405,6 +413,8 @@ c
 
       res = 0.0D0
 
+!$acc update device(a,bX,bY,bZ)
+!$acc parallel loop collapse(4)
       do n = 1, nc
          do k = lo(3), hi(3)
             do j = lo(2), hi(2)
@@ -420,7 +430,7 @@ c
             end do
          end do
       end do
-
+!$acc end parallel loop
       end
 c-----------------------------------------------------------------------
 c
