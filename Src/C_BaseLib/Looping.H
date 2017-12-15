@@ -814,12 +814,14 @@
     IntVect b_length = (b).size();                                      \
     const int *_b_len = b_length.getVect();                             \
     const T* _th_p = dptr;                                              \
-    for(int _n = (ns); _n < (ns)+(nc); ++_n) {                          \
-        int nR = _n; nR += 0;                                           \
+    const int _ns = (ns);                                               \
+    const int _nc = (nc);                                               \
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
-            const int kR = _k + _b_lo[2];                               \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+        	int nR = _n; nR += 0;                                   \
                 const int jR = _j + _b_lo[1];                           \
+            	const int kR = _k + _b_lo[2];                           \
                 const T *_th_pp = _th_p                                 \
                     + ((_b_lo[0] - _th_plo[0])                          \
                        + _th_plen[0]*(                                  \
@@ -840,11 +842,13 @@
     IntVect b_length = (b).size();                                      \
     const int *_b_len = b_length.getVect();                             \
     T* _th_p = dptr;                                                    \
-    for(int _n = (ns); _n < (ns)+(nc); ++_n) {                          \
-        const int nR = _n;                                              \
+    const int _ns = (ns);                                     	        \
+    const int _nc = (nc);                            	                \
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
-            const int kR = _k + _b_lo[2];                               \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+        	const int nR = _n;                                      \
+            	const int kR = _k + _b_lo[2];                           \
                 const int jR = _j + _b_lo[1];                           \
                 T *_th_pp = _th_p                                       \
                     + ((_b_lo[0] - _th_plo[0])                          \
@@ -867,11 +871,13 @@
     IntVect b_length = (b).size();                                      \
     const int *_b_len = b_length.getVect();                             \
     T* _x_p = (x) .dataPtr();                                           \
-    for(int _n = (ns); _n < (ns)+(nc); ++_n) {                          \
-        const int nR = _n;                                              \
+    const int _ns = (ns);                                               \
+    const int _nc = (nc);                                               \
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
-            const int kR = _k + _b_lo[2];                               \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+        	const int nR = _n;                                      \
+            	const int kR = _k + _b_lo[2];                           \
                 const int jR = _j + _b_lo[1];                           \
                 T *_x_pp = _x_p                                         \
                     + ((_b_lo[0] - _x_plo[0])                           \
@@ -894,11 +900,13 @@
     IntVect b_length = (b).size();                                      \
     const int *_b_len = b_length.getVect();                             \
     const T* _x_p = (x).dataPtr();                                      \
-    for(int _n = (ns); _n < (ns)+(nc); ++_n) {                          \
-        const int nR = _n;                                              \
+    const int _ns = (ns);                                               \
+    const int _nc = (nc);                                               \
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
-            const int kR = _k + _b_lo[2];                               \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+        	const int nR = _n;                                      \
+            	const int kR = _k + _b_lo[2];                           \
                 const int jR = _j + _b_lo[1];                           \
                 const T *_x_pp = _x_p                                   \
                     + ((_b_lo[0] - _x_plo[0])                           \
@@ -922,11 +930,13 @@
     IntVect b_length = (b).size();                                      \
     const int *_b_len = b_length.getVect();                             \
     T* _th_p = dptr;                                                    \
-    for(int _n = (ns); _n < (ns)+(nc); ++_n) {                          \
-        int nR = _n; nR += 0;                                           \
+    const int _ns = (ns);                                               \
+    const int _nc = (nc);                                               \
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
-            const int kR = _k + _b_lo[2];                               \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+        	int nR = _n; nR += 0;                                   \
+            	const int kR = _k + _b_lo[2];                           \
                 const int jR = _j + _b_lo[1];                           \
                 T *_th_pp = _th_p                                       \
                     + ((_b_lo[0] - _th_plo[0])                          \
@@ -949,10 +959,12 @@
     IntVect b_length = (b).size();                                      \
     const int *_b_len = b_length.getVect();                             \
     const T* _th_p = dptr;                                              \
-    for(int _n = (ns); _n < (ns)+(nc); ++_n) {                          \
+    const int _ns = (ns);                                               \
+    const int _nc = (nc);                                               \
+    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
-            const int kR = _k + _b_lo[2];                               \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+            	const int kR = _k + _b_lo[2];                           \
                 const int jR = _j + _b_lo[1];                           \
                 const T *_th_pp = _th_p                                 \
                     + ((_b_lo[0] - _th_plo[0])                          \
@@ -982,11 +994,14 @@
         const int *_subbox_len = _subbox_length.getVect();              \
         T* _th_p = dataPtr(ns);                                         \
         const T* _x_p  = (x).dataPtr(nss);                              \
-        for(int _n = 0; _n < (nc); ++_n) {                              \
-            int nR = _n; nR += 0;                                       \
+        const int _ns  = (ns);		                                \
+        const int _nss  = (nss);	                                \
+        const int _nc  = (nc);		                                \
+        for(int _n = 0; _n < _nc; ++_n) {                               \
             for(int _k = 0; _k < _subbox_len[2]; ++_k) {                \
-                const int kR = _k + _subbox_lo[2];                      \
                 for(int _j = 0; _j < _subbox_len[1]; ++_j) {            \
+            	    int nR = _n; nR += 0;                               \
+                    const int kR = _k + _subbox_lo[2];                  \
                     const int jR = _j + _subbox_lo[1];                  \
                     T *_th_pp = _th_p                                   \
                         + ((_subbox_lo[0] - _th_plo[0])                 \
@@ -1024,15 +1039,18 @@
         const int *_bx_lo = (bx).loVect();                              \
         T* _th_p = dataPtr(ns);                                         \
         const T* _x_p  = (x).dataPtr(nss);                              \
-        for(int _n = 0; _n < (nc); ++_n) {                              \
-            int nR = _n + ns; nR += 0;                                  \
-            int n##x##R = _n + nss; n##x##R += 0;                       \
+        const int _ns  = (ns); 		                                \
+        const int _nss  = (nss); 	                                \
+        const int _nc  = (nc); 		                                \
+        for(int _n = 0; _n < _nc; ++_n) {                               \
             for(int _k = 0; _k < _subbox_len[2]; ++_k) {                \
-                const int kR = _k + _subbox_lo[2];                      \
-                const int k##x##R = _k + _bx_lo[2];                     \
                 for(int _j = 0; _j < _subbox_len[1]; ++_j) {            \
+            	    int nR = _n + _ns; nR += 0;                         \
+            	    int n##x##R = _n + _nss; n##x##R += 0;              \
+                    const int kR = _k + _subbox_lo[2];                  \
+                    const int k##x##R = _k + _bx_lo[2];                 \
                     const int jR = _j + _subbox_lo[1];                  \
-                    const int j##x##R = _j + _bx_lo[1];         \
+                    const int j##x##R = _j + _bx_lo[1];	                \
                     T *_th_pp = _th_p                                   \
                         + ((_subbox_lo[0] - _th_plo[0])                 \
                            + _th_plen[0]*(                              \
@@ -1076,16 +1094,20 @@
         T* _th_p = dataPtr(ns);                                         \
         const T* _x_p  = (x).dataPtr(nsx);                              \
         const T* _y_p  = (y).dataPtr(nsy);                              \
-        for(int _n = 0; _n < (nc); ++_n) {                              \
-            int nR = _n + ns; nR += 0;                                  \
-            int n##x##R = _n + nsx; n##x##R += 0;                       \
-            int n##y##R = _n + nsy; n##y##R += 0;                       \
+        const int _ns  = (ns); 		                                \
+        const int _nsx  = (nsx); 	                                \
+        const int _nsy  = (nsy); 	                                \
+        const int _nc  = (nc); 		                                \
+        for(int _n = 0; _n < _nc; ++_n) {                               \
             for(int _k = 0; _k < _subbox_len[2]; ++_k) {                \
-                const int kR = _k + _subbox_lo[2];                      \
-                const int k##x##R = _k + _bx_lo[2];                     \
-                const int k##y##R = _k + _by_lo[2];                     \
                 for(int _j = 0; _j < _subbox_len[1]; ++_j) {            \
-                    const int jR = _j + _subbox_lo[1];                  \
+            	    int nR = _n + _ns; nR += 0;                         \
+            	    int n##x##R = _n + _nsx; n##x##R += 0;              \
+            	    int n##y##R = _n + _nsy; n##y##R += 0;              \
+                    const int kR = _k + _subbox_lo[2];                  \
+                    const int k##x##R = _k + _bx_lo[2];                 \
+                    const int k##y##R = _k + _by_lo[2];                 \
+		    const int jR = _j + _subbox_lo[1];                  \
                     const int j##x##R = _j + _bx_lo[1];                 \
                     const int j##y##R = _j + _by_lo[1];                 \
                     T *_th_pp = _th_p                                   \
@@ -1135,14 +1157,17 @@
     const int *_len = bx_length.getVect();                              \
     T* _x_p  = (x).dataPtr(nsx);                                        \
     const T* _y_p  = (y).dataPtr(nsy);                                  \
-    for(int _n = 0; _n < (nc); ++_n) {                                  \
-        int n##x##R = _n + nsx; n##x##R += 0;                           \
-        int n##y##R = _n + nsy; n##y##R += 0;                           \
+    const int _nsx  = (nsx); 	                                        \
+    const int _nsy  = (nsy); 	                                        \
+    const int _nc  = (nc); 	                                        \
+    for(int _n = 0; _n < _nc; ++_n) {                                   \
         for(int _k = 0; _k < _len[2]; ++_k) {                           \
-            const int k##x##R = _k + _bx_lo[2];                         \
-            const int krev##x##R = _len[2]-1-_k + _bx_lo[2];            \
-            const int k##y##R = _k + _by_lo[2];                         \
             for(int _j = 0; _j < _len[1]; ++_j) {                       \
+        	int n##x##R = _n + _nsx; n##x##R += 0;                  \
+        	int n##y##R = _n + _nsy; n##y##R += 0;                  \
+                const int k##x##R = _k + _bx_lo[2];                     \
+            	const int krev##x##R = _len[2]-1-_k + _bx_lo[2];        \
+            	const int k##y##R = _k + _by_lo[2];                     \
                 const int j##x##R = _j + _bx_lo[1];                     \
                 const int jrev##x##R = _len[1]-1-_j + _bx_lo[1];        \
                 const int j##y##R = _j + _by_lo[1];                     \
