@@ -816,7 +816,9 @@
     const T* _th_p = dptr;                                              \
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
-    for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
+    /*_Pragma("acc update device(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
+    _Pragma("acc parallel loop collapse(3)")                            \
+    */for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
         	int nR = _n; nR += 0;                                   \
@@ -844,6 +846,8 @@
     T* _th_p = dptr;                                                    \
     const int _ns = (ns);                                     	        \
     const int _nc = (nc);                            	                \
+    /*_Pragma("acc update device(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
+    _Pragma("acc parallel loop collapse(3)")*/                            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
@@ -873,9 +877,12 @@
     T* _x_p = (x) .dataPtr();                                           \
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
+    const int blen2 = _b_len[2];                                        \
+    const int blen1 = _b_len[1];                                        \
+    _Pragma("acc parallel loop collapse(3)")                            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
-        for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
-            for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+        for(int _k = 0; _k < blen2; ++_k) {                             \
+            for(int _j = 0; _j < blen1; ++_j) {                         \
         	const int nR = _n;                                      \
             	const int kR = _k + _b_lo[2];                           \
                 const int jR = _j + _b_lo[1];                           \
@@ -902,9 +909,12 @@
     const T* _x_p = (x).dataPtr();                                      \
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
+    const int blen2 = _b_len[2];                                        \
+    const int blen1 = _b_len[1];                                        \
+    _Pragma("acc parallel loop collapse(3)")                            \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
-        for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
-            for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+        for(int _k = 0; _k < blen2; ++_k) {                             \
+            for(int _j = 0; _j < blen1; ++_j) {                         \
         	const int nR = _n;                                      \
             	const int kR = _k + _b_lo[2];                           \
                 const int jR = _j + _b_lo[1];                           \
@@ -926,28 +936,35 @@
     BL_ASSERT((ns) >= 0 && (ns) + (nc) <= nComp());                     \
     const int *_th_plo = loVect();                                      \
     const int *_th_plen = length();                                     \
+    const int plen2 = _th_plen[2];                                     \
     const int *_b_lo = (b).loVect();                                    \
     IntVect b_length = (b).size();                                      \
     const int *_b_len = b_length.getVect();                             \
     T* _th_p = dptr;                                                    \
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
+    const int blen2 = _b_len[2];                                        \
+    const int blen1 = _b_len[1];                                        \
+    const int blen0 = _b_len[0];                                        \
+    /*_Pragma("acc update device(_th_p[_ns*plen2:(_ns+_nc)*plen2])")	\
+    _Pragma("acc data copyin(_nc, _ns, _th_plo[0:3], _th_plen[0:3], _b_len[0:3], _b_lo[0:3])")                       \
+    _Pragma("acc parallel loop collapse(4)")                     */  	\
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
-        for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
-            for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
+        for(int _k = 0; _k < blen2; ++_k) {                             \
+            for(int _j = 0; _j < blen1; ++_j) {                         \
+                for(int _i = 0; _i < blen0; ++_i) {		        \
         	int nR = _n; nR += 0;                                   \
             	const int kR = _k + _b_lo[2];                           \
                 const int jR = _j + _b_lo[1];                           \
+                int iR = _i + _b_lo[0]; iR += 0;                        \
                 T *_th_pp = _th_p                                       \
-                    + ((_b_lo[0] - _th_plo[0])                          \
+                    + ((iR - _th_plo[0])                                \
                        + _th_plen[0]*(                                  \
                            (jR - _th_plo[1])                            \
                            + _th_plen[1]*(                              \
                                (kR - _th_plo[2])                        \
                                + _n * _th_plen[2])));                   \
-                for(int _i = 0; _i < _b_len[0]; ++_i, ++_th_pp) {       \
-                    int iR = _i + _b_lo[0]; iR += 0;                    \
-                    T &thisR = * _th_pp;
+                    T &thisR = (*_th_pp);
 
 #define ForAllThisCBNN(T,b,ns,nc)                                       \
 {                                                                       \
@@ -961,6 +978,8 @@
     const T* _th_p = dptr;                                              \
     const int _ns = (ns);                                               \
     const int _nc = (nc);                                               \
+    /*_Pragma("acc update device(_th_p[_ns*_th_plen[2]:(_ns+_nc)*_th_plen[2]])") \
+    _Pragma("acc parallel loop collapse(3)")                     */     \
     for(int _n = _ns; _n < _ns+_nc; ++_n) {                             \
         for(int _k = 0; _k < _b_len[2]; ++_k) {                         \
             for(int _j = 0; _j < _b_len[1]; ++_j) {                     \
@@ -987,8 +1006,10 @@
     if(_subbox_.ok()) {                                                 \
         const int *_th_plo = loVect();                                  \
         const int *_th_plen = length();                                 \
+        const int plen2 = _th_plen[2];                                  \
         const int *_x_plo = (x).loVect();                               \
         const int *_x_plen = (x).length();                              \
+        const int xplen2 = _x_plen[2]; 	                                \
         const int *_subbox_lo = _subbox_.loVect();                      \
         IntVect _subbox_length = _subbox_.size();                       \
         const int *_subbox_len = _subbox_length.getVect();              \
@@ -997,9 +1018,13 @@
         const int _ns  = (ns);		                                \
         const int _nss  = (nss);	                                \
         const int _nc  = (nc);		                                \
+        const int sublen2  = _subbox_len[2];                            \
+        const int sublen1  = _subbox_len[1];                            \
+    	_Pragma("acc update device(_th_p[_ns*plen2:(_ns+_nc)*plen2], _x_p[_nss*xplen2:(_nss+_nc)*xplen2])")  \
+    	_Pragma("acc parallel loop collapse(3)")                        \
         for(int _n = 0; _n < _nc; ++_n) {                               \
-            for(int _k = 0; _k < _subbox_len[2]; ++_k) {                \
-                for(int _j = 0; _j < _subbox_len[1]; ++_j) {            \
+            for(int _k = 0; _k < sublen2; ++_k) { 	                \
+                for(int _j = 0; _j < sublen1; ++_j) {    	        \
             	    int nR = _n; nR += 0;                               \
                     const int kR = _k + _subbox_lo[2];                  \
                     const int jR = _j + _subbox_lo[1];                  \
@@ -1017,9 +1042,9 @@
                                + _x_plen[1]*(                           \
                                    (kR - _x_plo[2])                     \
                                    + _n * _x_plen[2])));                \
-                    for(int _i = 0; _i < _subbox_len[0]; ++_i, ++_th_pp) { \
+                    for(int _i = 0; _i < _subbox_len[0]; ++_i) { \
                         int iR = _i + _subbox_lo[0]; iR += 0;           \
-                        T &thisR = * _th_pp; const T & x##R = _x_pp[_i];
+                        T &thisR = _th_pp[_i]; const T & x##R = _x_pp[_i];
 
 #define ForAllThisBNNXCBN(T,b,ns,nc,x,bx,nss)                           \
 {                                                                       \
@@ -1031,8 +1056,10 @@
     if(_subbox_.ok()) {                                                 \
         const int *_th_plo = loVect();                                  \
         const int *_th_plen = length();                                 \
+        const int plen2 = _th_plen[2];                                  \
         const int *_x_plo = (x).loVect();                               \
         const int *_x_plen = (x).length();                              \
+        const int xplen2 = _x_plen[2]; 	                                \
         const int *_subbox_lo = _subbox_.loVect();                      \
         IntVect _subbox_length = _subbox_.size();                       \
         const int *_subbox_len = _subbox_length.getVect();              \
@@ -1042,9 +1069,13 @@
         const int _ns  = (ns); 		                                \
         const int _nss  = (nss); 	                                \
         const int _nc  = (nc); 		                                \
+        const int sublen2  = _subbox_len[2];                            \
+        const int sublen1  = _subbox_len[1];                            \
+    	_Pragma("acc update device(_th_p[_ns*plen2:(_ns+_nc)*plen2], _x_p[_nss*xplen2:(_nss+_nc)*xplen2])")                                                                      \
+    	_Pragma("acc parallel loop collapse(3)")                        \
         for(int _n = 0; _n < _nc; ++_n) {                               \
-            for(int _k = 0; _k < _subbox_len[2]; ++_k) {                \
-                for(int _j = 0; _j < _subbox_len[1]; ++_j) {            \
+            for(int _k = 0; _k < sublen2; ++_k) {                	\
+                for(int _j = 0; _j < sublen1; ++_j) {            	\
             	    int nR = _n + _ns; nR += 0;                         \
             	    int n##x##R = _n + _nss; n##x##R += 0;              \
                     const int kR = _k + _subbox_lo[2];                  \
@@ -1065,10 +1096,10 @@
                                + _x_plen[1]*(                           \
                                    (k##x##R - _x_plo[2])                \
                                    + _n * _x_plen[2])));                \
-                    for(int _i = 0; _i < _subbox_len[0]; ++_i, ++_th_pp) { \
+                    for(int _i = 0; _i < _subbox_len[0]; ++_i) { \
                         int iR = _i + _subbox_lo[0]; iR += 0;           \
                         int i##x##R = _i + _bx_lo[0]; i##x##R += 0;     \
-                        T &thisR = * _th_pp; const T & x##R = _x_pp[_i];
+                        T &thisR = _th_pp[_i]; const T & x##R = _x_pp[_i];
 
 #define ForAllThisBNNXCBNYCBN(T,b,ns,nc,x,bx,nsx,y,by,nsy)              \
 {                                                                       \
@@ -1098,9 +1129,12 @@
         const int _nsx  = (nsx); 	                                \
         const int _nsy  = (nsy); 	                                \
         const int _nc  = (nc); 		                                \
+        const int sublen2  = _subbox_len[2];                            \
+        const int sublen1  = _subbox_len[1];                            \
+    	_Pragma("acc parallel loop collapse(3)")                        \
         for(int _n = 0; _n < _nc; ++_n) {                               \
-            for(int _k = 0; _k < _subbox_len[2]; ++_k) {                \
-                for(int _j = 0; _j < _subbox_len[1]; ++_j) {            \
+            for(int _k = 0; _k < sublen2; ++_k) {	                \
+                for(int _j = 0; _j < sublen1; ++_j) {	                \
             	    int nR = _n + _ns; nR += 0;                         \
             	    int n##x##R = _n + _nsx; n##x##R += 0;              \
             	    int n##y##R = _n + _nsy; n##y##R += 0;              \
@@ -1160,9 +1194,12 @@
     const int _nsx  = (nsx); 	                                        \
     const int _nsy  = (nsy); 	                                        \
     const int _nc  = (nc); 	                                        \
+    const int len2  = _len[2];                                          \
+    const int len1  = _len[1];                                          \
+    _Pragma("acc parallel loop collapse(3)")                            \
     for(int _n = 0; _n < _nc; ++_n) {                                   \
-        for(int _k = 0; _k < _len[2]; ++_k) {                           \
-            for(int _j = 0; _j < _len[1]; ++_j) {                       \
+        for(int _k = 0; _k < len2; ++_k) {                              \
+            for(int _j = 0; _j < len1; ++_j) {                          \
         	int n##x##R = _n + _nsx; n##x##R += 0;                  \
         	int n##y##R = _n + _nsy; n##y##R += 0;                  \
                 const int k##x##R = _k + _bx_lo[2];                     \
