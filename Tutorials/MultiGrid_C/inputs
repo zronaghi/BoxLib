@@ -40,8 +40,10 @@ plot_asol = 0 # plot analytic solution
 plot_err  = 0 # plot the error
 comp_norm = 0 # compute 2 norm of the error
 
-n_cell        = 128
-max_grid_size = 128
+n_cell        = 400
+max_grid_size = 400
+
+#mg.nu_0 = 4
 
 block_x = 32
 block_y = 1
