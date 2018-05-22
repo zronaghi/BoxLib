@@ -2,6 +2,7 @@
 #    then the line below will be ignored
 BOXLIB_HOME ?= ../..
 KOKKOS_PATH ?= $(HOME)/kokkos
+KOKKOS_MAKEFILE ?= $(KOKKOS_PATH)/Makefile.kokkos
 # HYPRE_DIR defines the directory in which you can find hypre -- if this is already defined 
 #    then the line below will be ignored
 HYPRE_DIR ?= $(HOME)/lib/hypre
@@ -27,10 +28,10 @@ DEBUG	= FALSE
 DIM	= 3
 #DIM	= 2
 
-COMP = intel
-FCOMP = ifort
-#COMP = GNU
-#FCOMP = gfortran
+#COMP = intel
+#FCOMP = ifort
+COMP = kokkos
+FCOMP = gfortran
 
 USE_HYPRE = FALSE
 USE_F90_SOLVERS = TRUE
@@ -45,20 +46,20 @@ HPGMG_USE_SUBCOMM = TRUE
 HPGMG_BOTTOM_SOLVER= BICGSTAB
 HPGMG_SMOOTHER = GSRB
 
-#KOKKOS_DEVICES = Cuda
-#KOKKOS_ARCH = Pascal60
+KOKKOS_DEVICES = Cuda
+KOKKOS_ARCH = Pascal60
+KOKKOS_CUDA_OPTIONS = enable_lambda
 
-KOKKOS_DEVICES = OpenMP
-KOKKOS_ARCH = KNL
-KOKKOS_OPTIONS = aggressive_vectorization
+#KOKKOS_DEVICES = OpenMP
+#KOKKOS_ARCH = KNL
+#KOKKOS_OPTIONS = aggressive_vectorization
 
 # Make BoxLib_C bottom CG solver use the old convergence criteria for comparison with BoxLib_F
 CPPFLAGS += -g -DCG_USE_OLD_CONVERGENCE_CRITERIA
 
 # USE_MPI must be TRUE if USE_HYPRE
 USE_MPI=FALSE
-#USE_OMP=TRUE
-USE_OMP=TRUE
+USE_OMP=FALSE
 
 EBASE = main
 
@@ -69,10 +70,8 @@ CEXE_sources += $(EBASE).cpp
 #backup CXXFLAGS
 LDFLAGS += ${CXXFLAGS}
 include $(KOKKOS_MAKEFILE)
-KOKKOS_DEVICES = Cuda
-KOKKOS_ARCH = Pascal60
-CXXFLAGS += 
-CPPFLAGS += 
+CXXFLAGS += $(KOKKOS_CPPFLAGS)
+CPPFLAGS += $(KOKKOS_CPPFLAGS)
 
 include Make.package
 include $(BOXLIB_HOME)/Src/C_BoundaryLib/Make.package
